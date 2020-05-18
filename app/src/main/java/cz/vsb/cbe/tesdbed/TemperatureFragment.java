@@ -62,11 +62,6 @@ public class TemperatureFragment extends Fragment {
         chart.setData(barData);
         chart.invalidate(); // refresh
 
-        BarDataSet set2 = new BarDataSet(entries, "test");
-        BarData barData1 = new BarData(set2);
-
-        startIntentSenderForResult(Integer);
-
         }
 
 
