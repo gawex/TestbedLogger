@@ -58,7 +58,6 @@ public class TemperatureFragment extends Fragment {
         }
 
         BarDataSet barDataSet= new BarDataSet(entries, "Label"); // add entries to dataset
-        barDataSet.
         BarData barData = new BarData(barDataSet);
         chart.setData(barData);
         chart.invalidate(); // refresh
