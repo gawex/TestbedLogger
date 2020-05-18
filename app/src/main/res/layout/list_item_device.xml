@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="30dp"
+        android:orientation="horizontal"
+        android:padding="2dp"
+        android:weightSum="120">
+
+        <TextView
+            android:id="@+id/devices_list_txv_name"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="60"
+            android:text="Testbed"
+            android:textColor="@android:color/background_dark"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+        <ImageView
+            android:id="@+id/devices_list_imv_database"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="10"
+            app:srcCompat="@drawable/ic_database_unknown" />
+
+        <TextView
+            android:id="@+id/devices_list_txv_id"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="20"
+            android:fontFamily="@font/digital7"
+            android:gravity="clip_vertical"
+            android:text="10000"
+            android:textAlignment="textStart"
+            android:textAllCaps="false"
+            android:textColor="@android:color/background_dark"
+            android:textSize="30sp"
+            android:textStyle="italic" />
+
+        <ImageView
+            android:id="@+id/device_list_imv_signal_strenght"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="10"
+            app:srcCompat="@drawable/ic_singnal_no_signal" />
+
+        <TextView
+            android:id="@+id/device_list_txv_rssi"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="20"
+            android:gravity="center"
+            android:text="-127 dBm"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="25dp"
+        android:orientation="horizontal"
+        android:padding="2dp"
+        android:weightSum="120">
+
+        <ImageView
+            android:id="@+id/devices_list_imv_pedometer"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="10"
+            app:srcCompat="@drawable/ic_pedometer_no_available"
+            tools:srcCompat="@drawable/ic_pedometer_no_available" />
+
+        <ImageView
+            android:id="@+id/devices_list_imv_heart_rate_meter"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="10"
+            app:srcCompat="@drawable/ic_heart_rate_meter_no_available"
+            tools:srcCompat="@drawable/ic_heart_rate_meter_no_available" />
+
+        <ImageView
+            android:id="@+id/devices_list_imv_thermometer"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="10"
+            app:srcCompat="@drawable/ic_thermometer_no_available" />
+
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="30" />
+
+        <ImageView
+            android:id="@+id/devices_list_imv_mac_address"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:layout_weight="10"
+            app:srcCompat="@drawable/ic_mac_address" />
+
+        <TextView
+            android:id="@+id/devices_list_txv_mac_address"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="50"
+            android:gravity="center"
+            android:text="AA:BB:CC:DD:EE:FF"
+            android:textAlignment="textStart" />
+
+    </LinearLayout>
+</LinearLayout>

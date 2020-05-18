@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="38dp"
+    android:gravity="center_vertical"
+    android:padding="2dp">
+
+    <RelativeLayout
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_margin="2dp">
+
+        <ImageView
+            android:id="@+id/conditions_list_imv_status"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:adjustViewBounds="true"
+            android:visibility="invisible"
+            app:srcCompat="@drawable/ic_fail" />
+
+        <ProgressBar
+            android:id="@+id/conditions_list_pgb_progress"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:indeterminateTint="@color/colorPrimary"
+            android:indeterminate="true" />
+
+    </RelativeLayout>
+
+    <TextView
+        android:id="@+id/conditions_list_txv_item"
+        android:layout_width="200dp"
+        android:layout_height="wrap_content"
+        android:layout_margin="2dp"
+        android:gravity="clip_vertical"
+        android:text="Povolení1234"
+        android:textColor="@android:color/background_dark"
+        android:textSize="18sp" />
+
+
+</LinearLayout>
