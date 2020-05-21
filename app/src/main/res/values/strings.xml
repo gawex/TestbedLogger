@@ -1,5 +1,8 @@
 <resources>
+
+
     <string name="app_name">Testbed</string>
+    <string name="activity_discover_devices_label">Dostupná zařízení</string>
     <!--
 
     -->
@@ -69,6 +72,8 @@
     <string name="activity_discover_devices_scanning_failed">Skenování dostupných zařízení selhalo. Informujte prosím vývojáře o následující chybě: </string>
     <string name="activity_discover_devices_discovering_started">Zrušit načítání</string>
     <string name="activity_discover_devices_discovering_conjunction">z</string>
+    <string name="main_menu_settings">Nastavení</string>
+    <string name="main_menu_about_application">O aplikaci</string>
 
 
     <string name="activity_discover_devices_action_bar_title">Dostupná zařízení</string>

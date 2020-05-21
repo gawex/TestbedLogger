@@ -144,7 +144,6 @@ public class DatabaseActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_test);
-        Toolbar actionBar = (Toolbar) findViewById(R.id.activity_test_action_bar);
 
         pedometerFragment = new PedometerFragment();
         heartRateFragment = new HeartRateFragment();
@@ -162,8 +161,8 @@ public class DatabaseActivity extends AppCompatActivity {
 
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_NOSENSOR);
 
-        actionBar.setTitle("[" + testbedDevice.getBluetoothDevice().getAddress() + "] (" + String.format("%04X", testbedDevice.getDeviceId()) + ")");
-        setSupportActionBar(actionBar);
+        setTitle("[" + testbedDevice.getBluetoothDevice().getAddress() + "] (" + String.format("%04X", testbedDevice.getDeviceId()) + ")");
+
 
         //write("Připraven k připojení: [" + testbedDevice.getBluetoothDevice().getAddress() + "] (" + String.format("%04X", testbedDevice.getDeviceId()) + ")");
 
@@ -326,7 +325,9 @@ public class DatabaseActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         unregisterReceiver(mGattUpdateReceiver);
+        unbindService(mServiceConnection);
         //testbedDbHelper.close();
+        Log.w(TAG, "Pausnuto");
 
     }
 
@@ -335,15 +336,16 @@ public class DatabaseActivity extends AppCompatActivity {
         super.onStop();
         //unbindService(mServiceConnection);
         //bluetoothLeService.stopSelf();
-        //bluetoothLeService = null;
+        Log.w(TAG, "Stopnuto");
 
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        unbindService(mServiceConnection);
-        bluetoothLeService=null;
+        //unbindService(mServiceConnection);
+        //bluetoothLeService=null;
+        Log.w(TAG, "Zniceno");
 
 
 

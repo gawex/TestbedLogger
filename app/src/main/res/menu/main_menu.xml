@@ -1,10 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    xmlns:app="http://schemas.android.com/apk/res-auto" >
 
     <item
         android:id="@+id/scaning_state"
-        android:title="@string/activity_discover_devices_scanning_started"
-        android:visible="true"
+        android:title="null"
         app:showAsAction="always|withText" />
+
+    <item
+        android:id="@+id/settings"
+        android:title="@string/main_menu_settings"
+        app:showAsAction="collapseActionView|withText" />
+
+    <item
+        android:id="@+id/about_application"
+        android:title="@string/main_menu_about_application"
+        app:showAsAction="collapseActionView|withText" />
+
 </menu>

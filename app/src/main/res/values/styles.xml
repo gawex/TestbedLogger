@@ -1,21 +1,39 @@
-<resources>
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
 
-        <item name="android:actionMenuTextColor">@android:color/white</item>
-        <item name="android:actionMenuTextAppearance">@style/MyActionBar.MenuTextStyle</item>
+        <item name="actionBarStyle">@style/MyActionBarStyle</item>
+        <item name="actionMenuTextAppearance">@style/MyActionBarStyle.Menu</item>
+
+
+        <item name="overlapAnchor">false</item>
+        <item name="android:dropDownVerticalOffset">?attr/actionBarSize</item>
+
+
     </style>
 
-    <style name="MyActionBar.MenuTextStyle" parent="Theme.AppCompat.Light.NoActionBar">
-        <item name="android:textStyle">bold</item>
-        <item name="android:textSize">14sp</item>
-        <item name="android:textAllCaps">true</item>
-        <item name="android:textColorPrimary">@android:color/white</item> <!-- TODO: repair -->
+    <style name="MyActionBarStyle" parent="Widget.AppCompat.ActionBar.Solid">
+        <item name="titleTextStyle">@style/MyActionBarStyle.Title</item>
+
     </style>
+
+    <style name="MyActionBarStyle.Title" parent="TextAppearance.AppCompat.Widget.ActionBar.Title">
+        <item name="android:textSize">16dp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">true</item>
+    </style>
+
+    <style name="MyActionBarStyle.Menu" parent="TextAppearance.AppCompat.Widget.ActionBar.Menu">
+        <item name="android:textStyle">normal</item>
+        <item name="android:textSize">12dp</item>
+
+    </style>
+
+
 
 </resources>
