@@ -18,6 +18,7 @@ public class TestbedDevice implements Parcelable {
     public static Integer AVAILABLE_SENSORS = 2;
     public static Integer DEVICE_ID = 3;
     public static Integer IS_STORED = 4;
+    public static Integer IS_DISCOVERED = 5;
 
     public static Integer NOT_STORED = 0;
     public static Integer STORED_BUT_MODIFIED = 1;
@@ -162,5 +163,21 @@ public class TestbedDevice implements Parcelable {
         testbedDbHelper.close();
         return status;
 
+    }
+
+    public void deviceIsDiscovered(){
+        HashMap.put(IS_DISCOVERED, true);
+    }
+
+    public boolean isDeviceDiscovered(){
+        if(HashMap.containsKey(IS_DISCOVERED)){
+            if ((boolean) HashMap.get(IS_DISCOVERED)) {
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
     }
 }

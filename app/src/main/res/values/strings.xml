@@ -71,6 +71,7 @@
     <string name="activity_discover_devices_discovering_stopped">Znovu vyhledat</string>
     <string name="activity_discover_devices_scanning_failed">Skenování dostupných zařízení selhalo. Informujte prosím vývojáře o následující chybě: </string>
     <string name="activity_discover_devices_discovering_started">Zrušit načítání</string>
+    <string name="activity_discover_devices_discovering_canceling">Probíhá rušení načítání</string>
     <string name="activity_discover_devices_discovering_conjunction">z</string>
     <string name="main_menu_settings">Nastavení</string>
     <string name="main_menu_about_application">O aplikaci</string>

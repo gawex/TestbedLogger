@@ -16,20 +16,16 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.ActivityInfo;
-import android.database.sqlite.SQLiteDatabase;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.IBinder;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -41,14 +37,13 @@ import java.util.UUID;
 public class DiscoverDevicesActivity extends AppCompatActivity {
 
 
-    private boolean optionsMenuCreated = false;
-
     private static final long SCAN_PERIOD_IN_SECOND = 5;
 
     private static final int NOT_SCANNED_YET_STATE = 0;
     private static final int SCANNING_STATE = 1;
     private static final int DISCOVERING_STATE = 2;
-    private static final int DISCOVERED_STATE = 3;
+    private static final int DISCOVERING_CANCELED = 3;
+    private static final int DISCOVERED_STATE = 4;
 
     private static final int START_SCAN = 4;
     private static final int STOP_SCAN = 5;
@@ -72,12 +67,8 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
     private long MillisUntilFinishedScanning;
     private int discoveringDeviceIndex = 0;
 
-    private TestbedDbHelper testbedDbHelper;
-    private SQLiteDatabase writabllestbedDb, readableTestbedDb;
-
-    private TextView txv;
-
     private ProgressBar progressBar;
+
 
 
     private Runnable stopScanningAfterScanPeriodRunnable = new Runnable() {
@@ -123,6 +114,10 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
                 menuItem.setTitle(getResources().getString(R.string.activity_discover_devices_discovering_started) + " (" + (discoveringDeviceIndex + 1) + " " + getResources().getString(R.string.activity_discover_devices_discovering_conjunction) + " " + devicesListAdapter.getCount() + ")");
                 break;
 
+            case DISCOVERING_CANCELED:
+                menuItem.setTitle(getResources().getString(R.string.activity_discover_devices_discovering_canceling));
+                break;
+
             case DISCOVERED_STATE:
                 menuItem.setTitle(getResources().getString(R.string.activity_discover_devices_discovering_stopped));
                 break;
@@ -145,7 +140,8 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
                         break;
 
                     case DISCOVERING_STATE:
-                        activityState = DISCOVERED_STATE;
+                        activityState = DISCOVERING_CANCELED;
+                        invalidateOptionsMenu();
                         break;
 
                     case DISCOVERED_STATE:
@@ -243,7 +239,7 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
 
 
 
-        progressBar = (ProgressBar) findViewById(R.id.activity_discover_devices_pgb_progress);
+        progressBar = findViewById(R.id.activity_discover_devices_pgb_progress);
         progressBar.setVisibility(ProgressBar.INVISIBLE);
 
 
@@ -264,11 +260,17 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
 
         } else if (state == STOP_SCAN) {
             bluetoothLeScanner.stopScan(scanLeDevicesCallback);
-            activityState = DISCOVERING_STATE;
             stopScanningAfterScanPeriodHandler.removeCallbacks(stopScanningAfterScanPeriodRunnable);
             scanningCountDownTimer.cancel();
-            discoveringDeviceIndex = 0;
-            discoverDevices();
+
+            if(devicesListAdapter.getCount() >= 1 && bluetoothLeService != null) {
+                registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
+                discoveringDeviceIndex = 0;
+                bluetoothLeService.connect(devicesListAdapter.getDevice(discoveringDeviceIndex).getBluetoothDevice().getAddress());
+                activityState = DISCOVERING_STATE;
+                invalidateOptionsMenu();
+            }
+
         } else {
             bluetoothLeScanner.stopScan(scanLeDevicesCallback);
             devicesListAdapter.clear();
@@ -299,52 +301,55 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
         }
     };
 
-
-    private void discoverDevices(){
-
-        if(discoveringDeviceIndex < devicesListAdapter.getCount()) {
-            registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
-            invalidateOptionsMenu();
-            //setDiscoveringStateMenuItem(discoveringDeviceIndex + 1,devicesListAdapter.getCount());
-            if (bluetoothLeService != null) {
-                bluetoothLeService.connect(devicesListAdapter.getDevice(discoveringDeviceIndex).getBluetoothDevice().getAddress());
-            }
-        } else {
-            discoveringDeviceIndex = 0;
-            activityState = DISCOVERED_STATE;
-
-            invalidateOptionsMenu();
-            progressBar.setVisibility(ProgressBar.INVISIBLE);
-        }
-
-    }
-
     private final BroadcastReceiver mGattUpdateReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
-            if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(action)) {
-
-            } else if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(action)) {
+            if(activityState == DISCOVERING_CANCELED){
                 unregisterReceiver(mGattUpdateReceiver);
-                discoverDevices();
-            } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
-                for(BluetoothGattService bluetoothGattService : bluetoothLeService.getSupportedGattServices()) {
-                    for (BluetoothGattCharacteristic bluetoothGattCharacteristic : bluetoothGattService.getCharacteristics()) {
-                        if(bluetoothGattCharacteristic.getUuid().equals(UUID.fromString(SampleGattAttributes.DEVICE_IDENTITY_CHARACTERISTIC))){
-                            bluetoothLeService.readCharacteristic(bluetoothGattCharacteristic);
-                        }
+                bluetoothLeService.disconnect();
+                List<TestbedDevice> devicesForRemove = new ArrayList<>();
+                for(TestbedDevice testbedDevice : devicesListAdapter.getDevices()){
+                    if(!testbedDevice.isDeviceDiscovered()){
+                        devicesForRemove.add(testbedDevice);
                     }
                 }
-
-            } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
-                TestbedDevice testbedDevice = devicesListAdapter.getDevice(discoveringDeviceIndex);
-                testbedDevice.addAvailableSensors(intent.getIntExtra(BluetoothLeService.AVAILABLE_SENSORS, 8));
-                testbedDevice.addDeviceId(intent.getIntExtra(BluetoothLeService.TESTBED_ID, 0x1FFFF));
-                devicesListAdapter.setDevice(testbedDevice);
+                devicesListAdapter.removeDevices(devicesForRemove);
                 devicesListAdapter.notifyDataSetChanged();
-                bluetoothLeService.disconnect();
-                discoveringDeviceIndex++;
+                activityState = DISCOVERED_STATE;
+                invalidateOptionsMenu();
+                progressBar.setVisibility(ProgressBar.INVISIBLE);
+            } else {
+                if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(action)) {
+                    // BluetoothLeService discover the services itself
+                } else if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(action)) {
+                    discoveringDeviceIndex++;
+                    if (discoveringDeviceIndex < devicesListAdapter.getCount() && bluetoothLeService != null) {
+                        bluetoothLeService.connect(devicesListAdapter.getDevice(discoveringDeviceIndex).getBluetoothDevice().getAddress());
+                        invalidateOptionsMenu();
+                    } else {
+                        unregisterReceiver(mGattUpdateReceiver);
+                        activityState = DISCOVERED_STATE;
+                        invalidateOptionsMenu();
+                        progressBar.setVisibility(ProgressBar.INVISIBLE);
+                    }
+                } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
+                    for (BluetoothGattService bluetoothGattService : bluetoothLeService.getSupportedGattServices()) {
+                        for (BluetoothGattCharacteristic bluetoothGattCharacteristic : bluetoothGattService.getCharacteristics()) {
+                            if (bluetoothGattCharacteristic.getUuid().equals(UUID.fromString(SampleGattAttributes.DEVICE_IDENTITY_CHARACTERISTIC))) {
+                                bluetoothLeService.readCharacteristic(bluetoothGattCharacteristic);
+                            }
+                        }
+                    }
+                } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
+                    TestbedDevice testbedDevice = devicesListAdapter.getDevice(discoveringDeviceIndex);
+                    testbedDevice.addAvailableSensors(intent.getIntExtra(BluetoothLeService.AVAILABLE_SENSORS, 8));
+                    testbedDevice.addDeviceId(intent.getIntExtra(BluetoothLeService.TESTBED_ID, 0x1FFFF));
+                    testbedDevice.deviceIsDiscovered();
+                    devicesListAdapter.setDevice(testbedDevice);
+                    devicesListAdapter.notifyDataSetChanged();
+                    bluetoothLeService.disconnect();
+                }
             }
         }
     };

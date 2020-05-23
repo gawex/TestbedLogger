@@ -44,12 +44,16 @@ public class DevicesListAdapter extends BaseAdapter {
             TestbedDevices.add(testbedDevice);
     }
 
-    public void removeAll(List<TestbedDevice> testbedDevicesforRemove){
-            TestbedDevices.removeAll(testbedDevicesforRemove);
+    public void removeDevices(List<TestbedDevice> testbedDevices){
+            TestbedDevices.removeAll(testbedDevices);
     }
 
     public TestbedDevice getDevice(int position) {
         return TestbedDevices.get(position);
+    }
+
+    public List<TestbedDevice> getDevices(){
+        return TestbedDevices;
     }
 
     public void clear() {
