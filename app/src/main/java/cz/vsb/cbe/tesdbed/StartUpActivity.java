@@ -17,18 +17,19 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.view.View;
-import android.view.Window;
-import android.view.WindowInsets;
 import android.view.WindowManager.LayoutParams;
 import android.widget.ListView;
-import android.widget.Toast;
+
+import org.jetbrains.annotations.NotNull;
+
+import java.util.Objects;
 
 public class StartUpActivity extends AppCompatActivity {
 
-    public static final int BLUETOOTH_LOW_ENERGY = 0;
-    public static final int PERMISSION = 1;
-    public static final int BLUETOOTH = 2;
-    public static final int START_UP = 3;
+    private static final int BLUETOOTH_LOW_ENERGY = 0;
+    private static final int PERMISSION = 1;
+    private static final int BLUETOOTH = 2;
+    private static final int START_UP = 3;
 
     private static final int SPLASH_TIME = 1000; //This is 3 seconds
     private static final int CANCEL_TIME = 10000; //This is 10 seconds
@@ -41,9 +42,7 @@ public class StartUpActivity extends AppCompatActivity {
 
     private String [] permissions = {Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.BLUETOOTH, Manifest.permission.BLUETOOTH_ADMIN} ;
 
-    private ListView startUpConditionsListView;
-
-    public ConditionsListAdapter startUpConditionsListAdapter;
+    private ConditionsListAdapter startUpConditionsListAdapter;
 
     private Runnable finishAppRunnable = new Runnable() {
         @Override
@@ -52,48 +51,46 @@ public class StartUpActivity extends AppCompatActivity {
         }
     };
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        switch (requestCode) {
-            case MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION: {
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    startUpConditionsListAdapter.setCondition(PERMISSION, ConditionsListAdapter.PASS, getResources().getString(R.string.conditions_permissions));
-                    startUpConditionsListAdapter.notifyDataSetChanged();
-                    enableBluetoothAdapter();
-                } else
-                    if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_COARSE_LOCATION)) {
-                        permissionAndExplanationProcedure();
-                    } else {
-                    AlertDialog.Builder locationPermissionDeniedForeverDialogBuilder = new AlertDialog.Builder(StartUpActivity.this);
-                    locationPermissionDeniedForeverDialogBuilder.setIcon(getDrawable(R.drawable.ic_testbed_id)); //TODO: Jiná ikona
-                    locationPermissionDeniedForeverDialogBuilder.setTitle(R.string.location_permission_denied_forever_title);
-                    locationPermissionDeniedForeverDialogBuilder.setMessage(R.string.location_permission_denied_forevr_message);
-                    locationPermissionDeniedForeverDialogBuilder.setNegativeButton(R.string.location_permission_denied_forever_negative_button, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            finish();
-                        }
-                    });
-                    locationPermissionDeniedForeverDialogBuilder.setPositiveButton(R.string.location_permission_denied_forever_positive_button, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            Intent intent = new Intent();
-                            intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-                            Uri uri = Uri.fromParts("PACKAGE", StartUpActivity.this.getPackageName(), null);
-                            intent.setData(uri);
-                            startActivity(intent);
-                            finish();
-                        }
-                    });
-                    AlertDialog locationPermissionDeniedForeverDialog = locationPermissionDeniedForeverDialogBuilder.create();
-                    locationPermissionDeniedForeverDialog.setCancelable(false);
-                    locationPermissionDeniedForeverDialog.setCanceledOnTouchOutside(false);
-                    locationPermissionDeniedForeverDialog.show();
 
-                    startUpConditionsListAdapter.setCondition(PERMISSION, ConditionsListAdapter.FAIL, getResources().getString(R.string.conditions_permissions));
-                    startUpConditionsListAdapter.notifyDataSetChanged();
-                }
-                return;
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NotNull String[] permissions, @NotNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                startUpConditionsListAdapter.setCondition(PERMISSION, ConditionsListAdapter.PASS, getResources().getString(R.string.conditions_permissions));
+                startUpConditionsListAdapter.notifyDataSetChanged();
+                enableBluetoothAdapter();
+            } else if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_COARSE_LOCATION)) {
+                permissionAndExplanationProcedure();
+            } else {
+                AlertDialog.Builder locationPermissionDeniedForeverDialogBuilder = new AlertDialog.Builder(StartUpActivity.this);
+                locationPermissionDeniedForeverDialogBuilder.setIcon(getDrawable(R.drawable.ic_testbed_id)); //TODO: Jiná ikona
+                locationPermissionDeniedForeverDialogBuilder.setTitle(R.string.location_permission_denied_forever_title);
+                locationPermissionDeniedForeverDialogBuilder.setMessage(R.string.location_permission_denied_forevr_message);
+                locationPermissionDeniedForeverDialogBuilder.setNegativeButton(R.string.location_permission_denied_forever_negative_button, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        finish();
+                    }
+                });
+                locationPermissionDeniedForeverDialogBuilder.setPositiveButton(R.string.location_permission_denied_forever_positive_button, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Intent intent = new Intent();
+                        intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                        Uri uri = Uri.fromParts("PACKAGE", StartUpActivity.this.getPackageName(), null);
+                        intent.setData(uri);
+                        startActivity(intent);
+                        finish();
+                    }
+                });
+                AlertDialog locationPermissionDeniedForeverDialog = locationPermissionDeniedForeverDialogBuilder.create();
+                locationPermissionDeniedForeverDialog.setCancelable(false);
+                locationPermissionDeniedForeverDialog.setCanceledOnTouchOutside(false);
+                locationPermissionDeniedForeverDialog.show();
+
+                startUpConditionsListAdapter.setCondition(PERMISSION, ConditionsListAdapter.FAIL, getResources().getString(R.string.conditions_permissions));
+                startUpConditionsListAdapter.notifyDataSetChanged();
             }
         }
     }
@@ -158,7 +155,7 @@ public class StartUpActivity extends AppCompatActivity {
 
         finishAppHandler = new Handler();
 
-        startUpConditionsListView = (ListView) findViewById(R.id.activity_discover_lsv_devices);
+        ListView startUpConditionsListView = findViewById(R.id.activity_discover_lsv_devices);
         startUpConditionsListAdapter = new ConditionsListAdapter(this.getLayoutInflater(), this, 4);
         startUpConditionsListView.setAdapter(startUpConditionsListAdapter);
 
@@ -184,7 +181,7 @@ public class StartUpActivity extends AppCompatActivity {
 
         } else {
             final BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
-            bluetoothAdapter = bluetoothManager.getAdapter();
+            bluetoothAdapter = Objects.requireNonNull(bluetoothManager).getAdapter();
             startUpConditionsListAdapter.setCondition(BLUETOOTH_LOW_ENERGY, ConditionsListAdapter.PASS, getResources().getString(R.string.conditions_bluetooth_low_energy));
             startUpConditionsListAdapter.setCondition(PERMISSION, ConditionsListAdapter.PROGRESS, getResources().getString(R.string.conditions_permissions));
             startUpConditionsListAdapter.notifyDataSetChanged();

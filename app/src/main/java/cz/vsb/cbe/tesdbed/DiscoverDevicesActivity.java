@@ -32,6 +32,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 public class DiscoverDevicesActivity extends AppCompatActivity {
@@ -71,14 +72,14 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
 
 
 
-    private Runnable stopScanningAfterScanPeriodRunnable = new Runnable() {
+    private final Runnable stopScanningAfterScanPeriodRunnable = new Runnable() {
         @Override
         public void run() {
             scanLeDevices(STOP_SCAN);
         }
     };
 
-    private CountDownTimer scanningCountDownTimer = new CountDownTimer(SCAN_PERIOD_IN_SECOND*1000, 1000) {
+    private final CountDownTimer scanningCountDownTimer = new CountDownTimer(SCAN_PERIOD_IN_SECOND*1000, 1000) {
 
         public void onTick(long millisUntilFinishedScanning) {
             MillisUntilFinishedScanning = millisUntilFinishedScanning;
@@ -151,11 +152,11 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
                 } return true;
 
             case R.id.settings:
-                Toast.makeText(this, "Nastavení zatím není implementováno.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Setting has not been implemented yet.", Toast.LENGTH_SHORT).show();
                 return true;
 
             case R.id.about_application:
-                Toast.makeText(this, "O aplikaci zatím není implementováno.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "About has not been implemented yet.", Toast.LENGTH_SHORT).show();
                 return true;
 
             default:
@@ -170,7 +171,7 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
             bluetoothLeService = ((BluetoothLeService.LocalBinder) service).getService();
 
             if (!bluetoothLeService.initialize()) {
-                // TODO: Nepodařilo se inicializovat adaptér
+                // TODO: Adapter initialization failed.
                 finish();
             }
         }
@@ -201,7 +202,7 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_NOSENSOR);
 
         final BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
-        final BluetoothAdapter bluetoothAdapter = bluetoothManager.getAdapter();
+        final BluetoothAdapter bluetoothAdapter = Objects.requireNonNull(bluetoothManager).getAdapter();
         bluetoothLeScanner = bluetoothAdapter.getBluetoothLeScanner();
 
         scanFilters = new ArrayList<>();
@@ -231,9 +232,7 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
                 //bluetoothLeService = null;
                 startActivity(intent);
                 //finish();
-            } else
-                    Toast.makeText(getApplicationContext(), "Ještě nejsem", Toast.LENGTH_SHORT).show();
-
+            }
             }
         });
 
@@ -283,7 +282,7 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
 
     }
 
-    private ScanCallback scanLeDevicesCallback = new ScanCallback() {
+    private final ScanCallback scanLeDevicesCallback = new ScanCallback() {
 
         @Override
         public void onScanResult(int callbackType, ScanResult result) {
@@ -320,9 +319,7 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
                 invalidateOptionsMenu();
                 progressBar.setVisibility(ProgressBar.INVISIBLE);
             } else {
-                if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(action)) {
-                    // BluetoothLeService discover the services itself
-                } else if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(action)) {
+                 if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(action)) {
                     discoveringDeviceIndex++;
                     if (discoveringDeviceIndex < devicesListAdapter.getCount() && bluetoothLeService != null) {
                         bluetoothLeService.connect(devicesListAdapter.getDevice(discoveringDeviceIndex).getBluetoothDevice().getAddress());
@@ -378,12 +375,6 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
         unbindService(mServiceConnection);
         bluetoothLeService = null;
 
-
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
 
     }
 
