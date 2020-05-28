@@ -51,6 +51,8 @@ public class DatabaseActivity extends AppCompatActivity {
     private HeartRateFragment heartRateFragment;
     private TemperatureFragment temperatureFragment;
 
+    public static final String TESTBED_DEVICE = "cz.vsb.cbe.testbed.TestbedDevice";
+
     private final static String TAG = DatabaseActivity.class.getSimpleName();
     public final static String STEPS =
             "cz.vsb.cbe.testbed.STEPS";
@@ -92,14 +94,17 @@ public class DatabaseActivity extends AppCompatActivity {
             bluetoothLeService = ((BluetoothLeService.LocalBinder) service).getService();
             if (!bluetoothLeService.initialize()) {
                 Log.d(TAG, "Unable to initialize Bluetooth");
-                writePedo("Unable to initialize Bluetooth");
+
                 finish();
+            } else {
+
+                registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
+                if (bluetoothLeService != null) {
+                    final boolean result = bluetoothLeService.connect(testbedDevice.getBluetoothDevice().getAddress());
+                    Log.d(TAG, "Connect request result=" + result);
+                }
             }
-            // Automatically connects to the device upon successful start-up initialization.
-            bluetoothLeService.connect(testbedDevice.getBluetoothDevice().getAddress());
-            //conectingDialog.setMessage("Probíhá připojování k: [" + testbedDevice.getBluetoothDevice().getAddress() + "] (" + String.format("%04X", testbedDevice.getDeviceId()) + ")...");
-            //conectingDialog.show();
-            //write("Probíhá připojování k: [" + testbedDevice.getBluetoothDevice().getAddress() + "] (" + String.format("%04X", testbedDevice.getDeviceId()) + ")...");
+
         }
 
         @Override
@@ -157,7 +162,7 @@ public class DatabaseActivity extends AppCompatActivity {
         BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.nav_view);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
 
-        testbedDevice = getIntent().getExtras().getParcelable("TestbedDevice");
+        testbedDevice = getIntent().getExtras().getParcelable(TESTBED_DEVICE);
 
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_NOSENSOR);
 
@@ -185,10 +190,11 @@ public class DatabaseActivity extends AppCompatActivity {
         conditionsListAdapter.setCondition(0, ConditionsListAdapter.PROGRESS, "Připojování zařízení...");
         conditionsListAdapter.notifyDataSetChanged();
 
-        Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
+       /* Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
         gattServiceIntent.putExtra(BluetoothLeService.TESTBED_ID, testbedDevice);
-        //startService(gattServiceIntent);
-        bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
+        bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);*/
+        startService(new Intent(this, BluetoothLeService.class));
+
     }
 
     private void writeDescriptor(int characteristic){
@@ -245,7 +251,6 @@ public class DatabaseActivity extends AppCompatActivity {
 
             } else if (BluetoothLeService.STEP_DATA_AVAILABLE.equals(action)){
                 String data = intent.getStringExtra(BluetoothLeService.EXTRA_DATA);
-                writePedo(data);
 
                 //ContentValues values = new ContentValues();
                 //values.put(TestbedDbHelper.Data.COLUMN_NAME_DEVICE_ID, testbedDevice.getDeviceId());
@@ -257,7 +262,6 @@ public class DatabaseActivity extends AppCompatActivity {
 
             } else if (BluetoothLeService.HEART_RATE_DATA_AVAILABLE.equals(action)){
                 String data = intent.getStringExtra(BluetoothLeService.EXTRA_DATA);
-                writeHeartRate(data);
             } else if (BluetoothLeService.TEMPERATURE_DATA_AVAILABLE.equals(action)){
 
                 TestbedDbHelper testbedDbHelper = TestbedDbHelper.getInstance(getApplicationContext());
@@ -294,7 +298,7 @@ public class DatabaseActivity extends AppCompatActivity {
                 //String data = intent.getStringExtra(BluetoothLeService.EXTRA_DATA);
                 SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss.SSS dd-MM-yyyy", Locale.getDefault());
                  String str = intent.getAction();
-                writePedo(str);
+
 
                 //bluetoothLeService.disconnect();
                 /*TestbedDevice testbedDevice = new TestbedDevice();
@@ -312,11 +316,10 @@ public class DatabaseActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
-        if (bluetoothLeService != null) {
-            final boolean result = bluetoothLeService.connect(testbedDevice.getBluetoothDevice().getAddress());
-            Log.d(TAG, "Connect request result=" + result);
-        }
+        Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
+        gattServiceIntent.putExtra(BluetoothLeService.TESTBED_ID, testbedDevice);
+        bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
+
         //testbedDbHelper = new TestbedDbHelper(getApplicationContext());
         //writableTestbedDb = testbedDbHelper.getWritableDatabase();
     }
@@ -324,9 +327,8 @@ public class DatabaseActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        unregisterReceiver(mGattUpdateReceiver);
-        unbindService(mServiceConnection);
-        //testbedDbHelper.close();
+        //unregisterReceiver(mGattUpdateReceiver);
+        //unbindService(mServiceConnection);
         Log.w(TAG, "Pausnuto");
 
     }
@@ -352,18 +354,6 @@ public class DatabaseActivity extends AppCompatActivity {
     }
 
 
-    private void writePedo(String text){
-        pedometerFragment.updatePedo(text);
-    }
-
-    private void writeHeartRate(String text){
-        pedometerFragment.updateHeartRate(text);
-    }
-
-    private void writeTemp(String text){
-        pedometerFragment.updateTemp(text);
-    }
-
 
 
     private class SelectFromDatabase extends AsyncTask<SQLiteDatabase, Void, List<Map<Date, Float>>> {
@@ -371,8 +361,6 @@ public class DatabaseActivity extends AppCompatActivity {
 
         @Override
         protected void onPreExecute(){
-            Log.w(TAG, "Začínáme...");
-            //pedometerFragment.updateTemp("");
         }
 
         @Override
@@ -382,7 +370,6 @@ public class DatabaseActivity extends AppCompatActivity {
 
             int count = db.length;
 
-            Log.w(TAG, "LENGHT = " + count);
 
             for (int i = 0; i < count; i++) {
 
@@ -406,7 +393,6 @@ public class DatabaseActivity extends AppCompatActivity {
                     null
             );
 
-                Log.w(TAG, "Cursor" + cursor.getCount());
 
 
             SimpleDateFormat sdf = new SimpleDateFormat("dd. MM HH:mm:ss");
@@ -422,7 +408,7 @@ public class DatabaseActivity extends AppCompatActivity {
             }
 
             cursor.close();
-            db[i].close();
+            //db[i].close();
             }
             return temp;
         }
@@ -431,7 +417,6 @@ public class DatabaseActivity extends AppCompatActivity {
         protected void onPostExecute(List<Map<Date, Float>> result) {
             super.onPostExecute(result);
 
-            temperatureFragment.postData(result);
         }
     }
 

@@ -16,19 +16,10 @@ import androidx.lifecycle.ViewModelProviders;
 
 public class HeartRateFragment extends Fragment {
 
-    TextView textView;
-
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
 
-        View root = inflater.inflate(R.layout.fragment_heart_rate, container, false);
-        textView = root.findViewById(R.id.text_dashboard);
-        textView.setText("dashs");
-
-        return root;
-    }
-
-    public void updateTextView (String string){
-        textView.setText(string);
+        View view = inflater.inflate(R.layout.fragment_heart_rate, container, false);
+        return view;
     }
 }

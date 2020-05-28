@@ -4,7 +4,7 @@
 
     <item
         android:id="@+id/scaning_state"
-        android:title="null"
+        android:title="@string/activity_discover_devices_scanning_started"
         app:showAsAction="always|withText" />
 
     <item

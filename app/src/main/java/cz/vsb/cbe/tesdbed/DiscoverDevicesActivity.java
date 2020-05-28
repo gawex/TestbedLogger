@@ -26,6 +26,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -37,40 +38,34 @@ import java.util.UUID;
 
 public class DiscoverDevicesActivity extends AppCompatActivity {
 
-
     private static final long SCAN_PERIOD_IN_SECOND = 5;
 
-    private static final int NOT_SCANNED_YET_STATE = 0;
+    private static final int NO_FOUNDED_DEVICES_STATE = 0;
     private static final int SCANNING_STATE = 1;
     private static final int DISCOVERING_STATE = 2;
     private static final int DISCOVERING_CANCELED = 3;
     private static final int DISCOVERED_STATE = 4;
 
-    private static final int START_SCAN = 4;
-    private static final int STOP_SCAN = 5;
-    private static final int CANCEL_SCAN = 6;
+    private static final int START_SCAN = 0;
+    private static final int STOP_SCAN = 1;
+    private static final int CANCEL_SCAN = 2;
 
-    private BluetoothLeScanner bluetoothLeScanner;
+    private int activityState = NO_FOUNDED_DEVICES_STATE;
 
-    private List<ScanFilter> scanFilters;
-    private ScanSettings scanSettings;
-
-    //private ListView devicesListView;
     private DevicesListAdapter devicesListAdapter;
 
-    private int activityState = NOT_SCANNED_YET_STATE;
-    //private MenuItem scanningStateMenuItem;
+    private BluetoothLeScanner bluetoothLeScanner;
+    private List<ScanFilter> scanFilters;
+    private ScanSettings scanSettings;
     private Handler stopScanningAfterScanPeriodHandler;
+    private long MillisUntilFinishedScanning;
 
     private BluetoothLeService bluetoothLeService;
-
-
-    private long MillisUntilFinishedScanning;
     private int discoveringDeviceIndex = 0;
 
-    private ProgressBar progressBar;
+    private ProgressBar scanningAndDiscoveringProgressBar;
 
-
+    private TextView noDevicesFound;
 
     private final Runnable stopScanningAfterScanPeriodRunnable = new Runnable() {
         @Override
@@ -81,13 +76,15 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
 
     private final CountDownTimer scanningCountDownTimer = new CountDownTimer(SCAN_PERIOD_IN_SECOND*1000, 1000) {
 
+        @Override
         public void onTick(long millisUntilFinishedScanning) {
             MillisUntilFinishedScanning = millisUntilFinishedScanning;
-            //scanningStateMenuItem.setTitle(getResources().getString(R.string.activity_discover_devices_scanning_started) + " (" + ((millisUntilFinished / 1000) + 1) + ")");
             invalidateOptionsMenu();
         }
 
+        @Override
         public void onFinish() {
+
         }
     };
 
@@ -99,12 +96,12 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-
         MenuItem menuItem = menu.findItem(R.id.scaning_state);
-
         switch (activityState){
-            case NOT_SCANNED_YET_STATE:
-                //menuItem.setTitle(getResources().getString(R.string.activity_discover_devices_discovering_stopped));
+            case NO_FOUNDED_DEVICES_STATE:
+
+            case DISCOVERED_STATE:
+                menuItem.setTitle(getResources().getString(R.string.activity_discover_devices_discovering_stopped));
                 break;
 
             case SCANNING_STATE:
@@ -118,13 +115,7 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
             case DISCOVERING_CANCELED:
                 menuItem.setTitle(getResources().getString(R.string.activity_discover_devices_discovering_canceling));
                 break;
-
-            case DISCOVERED_STATE:
-                menuItem.setTitle(getResources().getString(R.string.activity_discover_devices_discovering_stopped));
-                break;
-
         }
-
         return super.onPrepareOptionsMenu(menu);
     }
 
@@ -133,7 +124,10 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
         switch (item.getItemId()) {
             case R.id.scaning_state:
                 switch (activityState){
-                    case NOT_SCANNED_YET_STATE:
+                    case NO_FOUNDED_DEVICES_STATE :
+
+                    case DISCOVERED_STATE:
+                        scanLeDevices(START_SCAN);
                         break;
 
                     case SCANNING_STATE:
@@ -144,12 +138,8 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
                         activityState = DISCOVERING_CANCELED;
                         invalidateOptionsMenu();
                         break;
-
-                    case DISCOVERED_STATE:
-                        scanLeDevices(START_SCAN);
-                        break;
-
-                } return true;
+                }
+                return true;
 
             case R.id.settings:
                 Toast.makeText(this, "Setting has not been implemented yet.", Toast.LENGTH_SHORT).show();
@@ -169,7 +159,6 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder service) {
             bluetoothLeService = ((BluetoothLeService.LocalBinder) service).getService();
-
             if (!bluetoothLeService.initialize()) {
                 // TODO: Adapter initialization failed.
                 finish();
@@ -190,10 +179,6 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
         intentFilter.addAction(BluetoothLeService.ACTION_GATT_DISCONNECTED);
         return intentFilter;
     }
-
-
-
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -225,31 +210,34 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
                 if(activityState == DISCOVERED_STATE){
                     devicesListAdapter.getDevice(position).storeIntoDatabase();
                     Intent intent = new Intent(DiscoverDevicesActivity.this, DatabaseActivity.class);
-                    intent.putExtra("TestbedDevice", devicesListAdapter.getDevice(position));
-                //unbindService(mServiceConnection);
-                //bluetoothLeService = null;
-                //unbindService(mServiceConnection);
-                //bluetoothLeService = null;
-                startActivity(intent);
-                //finish();
-            }
+                    intent.putExtra(DatabaseActivity.TESTBED_DEVICE, devicesListAdapter.getDevice(position));
+                    startActivity(intent);
+
+                }
             }
         });
 
+        scanningAndDiscoveringProgressBar = findViewById(R.id.activity_discover_devices_pgb_progress);
+        scanningAndDiscoveringProgressBar.setVisibility(ProgressBar.INVISIBLE);
 
-
-        progressBar = findViewById(R.id.activity_discover_devices_pgb_progress);
-        progressBar.setVisibility(ProgressBar.INVISIBLE);
-
-
-
-
+        noDevicesFound = findViewById(R.id.activity_discover_devices_txv_no_devices_found);
+        noDevicesFound.setVisibility(View.INVISIBLE);
     }
+
+    @Override
+    protected void onResume(){
+        super.onResume();
+        Intent bluetoothLeServiceIntent = new Intent(this, BluetoothLeService.class);
+        bindService(bluetoothLeServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
+        scanLeDevices(START_SCAN);
+    }
+
 
     private void scanLeDevices(final int state) {
         if (state == START_SCAN) {
             invalidateOptionsMenu();
-            progressBar.setVisibility(ProgressBar.VISIBLE);
+            scanningAndDiscoveringProgressBar.setVisibility(ProgressBar.VISIBLE);
+            noDevicesFound.setVisibility(View.INVISIBLE);
             devicesListAdapter.clear();
             devicesListAdapter.notifyDataSetChanged();
             bluetoothLeScanner.startScan(scanFilters,scanSettings, scanLeDevicesCallback);
@@ -267,14 +255,19 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
                 discoveringDeviceIndex = 0;
                 bluetoothLeService.connect(devicesListAdapter.getDevice(discoveringDeviceIndex).getBluetoothDevice().getAddress());
                 activityState = DISCOVERING_STATE;
-                invalidateOptionsMenu();
+            } else {
+                activityState = NO_FOUNDED_DEVICES_STATE;
+                scanningAndDiscoveringProgressBar.setVisibility(ProgressBar.INVISIBLE);
+                noDevicesFound.setVisibility(View.VISIBLE);
+
             }
+            invalidateOptionsMenu();
 
         } else {
             bluetoothLeScanner.stopScan(scanLeDevicesCallback);
             devicesListAdapter.clear();
             devicesListAdapter.notifyDataSetChanged();
-            activityState = NOT_SCANNED_YET_STATE;
+            activityState = NO_FOUNDED_DEVICES_STATE;
             stopScanningAfterScanPeriodHandler.removeCallbacks(stopScanningAfterScanPeriodRunnable);
             scanningCountDownTimer.cancel();
             invalidateOptionsMenu();
@@ -317,7 +310,7 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
                 devicesListAdapter.notifyDataSetChanged();
                 activityState = DISCOVERED_STATE;
                 invalidateOptionsMenu();
-                progressBar.setVisibility(ProgressBar.INVISIBLE);
+                scanningAndDiscoveringProgressBar.setVisibility(ProgressBar.INVISIBLE);
             } else {
                  if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(action)) {
                     discoveringDeviceIndex++;
@@ -328,7 +321,7 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
                         unregisterReceiver(mGattUpdateReceiver);
                         activityState = DISCOVERED_STATE;
                         invalidateOptionsMenu();
-                        progressBar.setVisibility(ProgressBar.INVISIBLE);
+                        scanningAndDiscoveringProgressBar.setVisibility(ProgressBar.INVISIBLE);
                     }
                 } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
                     for (BluetoothGattService bluetoothGattService : bluetoothLeService.getSupportedGattServices()) {
@@ -351,34 +344,15 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
         }
     };
 
-    @Override
 
-    protected void onResume(){
-        super.onResume();
-        Intent bluetoothLeServiceIntent = new Intent(this, BluetoothLeService.class);
-        //startService(bluetoothLeServiceIntent);
-        bindService(bluetoothLeServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
-        scanLeDevices(START_SCAN);
-        //new CheckOptionsMenuCreated().execute(scanningStateMenuItem);
-
-
-
-
-
-    }
 
     @Override
-    protected void onPause()
-    {
+    protected void onPause() {
         super.onPause();
         scanLeDevices(CANCEL_SCAN);
         unbindService(mServiceConnection);
         bluetoothLeService = null;
-
-
     }
-
-
 }
 
 

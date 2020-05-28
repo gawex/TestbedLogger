@@ -59,6 +59,12 @@ public class BluetoothLeService extends Service {
     private static final int STATE_CONNECTING = 1;
     private static final int STATE_CONNECTED = 2;
 
+
+    private static final String STEPS = "cz.vsb.cbe.testbed.STEPS";
+    private static final String HEART_RATE = "cz.vsb.cbe.testbed.HEART_RATE";
+    private static final String TEMPERATURE = "cz.vsb.cbe.testbed.TEMPERATURE";
+
+
     public final static String SERVICE_STARTED =
             "cz.vsb.cbe.testbed.SERVICE_STARTED ";
 
@@ -195,89 +201,45 @@ public class BluetoothLeService extends Service {
 
         else if(UUID.fromString(SampleGattAttributes.DEVICE_IDENTITY_CHARACTERISTIC).equals(characteristic.getUuid())) {
 
-                String availableSensorsAndTestbedId = characteristic.getStringValue(0);
+               /* String availableSensorsAndTestbedId = characteristic.getStringValue(0);
                 String availableSensors = availableSensorsAndTestbedId.substring(0,1);
-                String testbedId = availableSensorsAndTestbedId.substring(1, availableSensorsAndTestbedId.length()-1);
+                String testbedId = availableSensorsAndTestbedId.substring(1, availableSensorsAndTestbedId.length()-1);*/
 
                 intent.putExtra(AVAILABLE_SENSORS, Integer.parseInt(characteristic.getStringValue(0).substring(0,1)/*availableSensors)*/));
                 intent.putExtra(TESTBED_ID, Integer.parseInt(/*testbedId*/characteristic.getStringValue(1),16));
-                //int id = Integer.parseInt(testbedId.substring(0,1));
-               // int length = testbedId.length();
-                //intent.putExtra(AVAILABLE_SENSORS, Integer.parseInt(characteristic.getStringValue(0).substring(0,1)));
-
-                //int idInt  = Integer.parseInt(id, 16);
-                //intent.putExtra(TESTBED_ID, Integer.parseInt());
-
-                Log.w(TAG,"SEN_ID: " + availableSensorsAndTestbedId + "(" + availableSensorsAndTestbedId.length() + "), "  +
-                                "SEN: " + availableSensors + "(" + availableSensors.length() + "), "+
-                                "ID " + testbedId + "(" + testbedId.length() + ")");
-                //intent.putExtra(EXTRA_DATA, characteristic.getStringValue(0));
 
 
         }
 
-        else if(UUID.fromString(SampleGattAttributes.TEMPERATURE_CHARACTERISTIC).equals(characteristic.getUuid()))
-        {
-            /*//intent.putExtra(EXTRA_DATA, characteristic.getStringValue(0));
-            NumberFormat nf = NumberFormat.getNumberInstance(Locale.US);
-            DecimalFormat df = (DecimalFormat) nf;
-            df.setMaximumIntegerDigits(3);
-            df.setMaximumIntegerDigits(3);
-            df.setMinimumFractionDigits(2);
-            df.setMaximumFractionDigits(2);
-            df.setPositivePrefix("+");*/
-            intent.putExtra(EXTRA_DATA, Float.parseFloat(characteristic.getStringValue(0)));
-            Log.w(TAG, "TEMP = " + Float.parseFloat(characteristic.getStringValue(0)));
-
-            testbedDbHelper = TestbedDbHelper.getInstance(getApplicationContext());
-            writableTestbedDb = testbedDbHelper.getWritableDatabase();
-
+        else if(UUID.fromString(SampleGattAttributes.TEMPERATURE_CHARACTERISTIC).equals(characteristic.getUuid())) {
             ContentValues values = new ContentValues();
             values.put(TestbedDbHelper.Data.COLUMN_NAME_DEVICE_ID, testbedDevice.getDeviceId());
-            values.put(TestbedDbHelper.Data.COLUMN_NAME_DATA_KEY, "TEMP");
+            values.put(TestbedDbHelper.Data.COLUMN_NAME_DATA_KEY, TEMPERATURE);
             values.put(TestbedDbHelper.Data.COLUMN_NAME_DATA_VALUE, Float.parseFloat(characteristic.getStringValue(0)));
             values.put(TestbedDbHelper.Data.COLUMN_NAME_TIMESTAMP, System.currentTimeMillis());
 
             writableTestbedDb.insert(TestbedDbHelper.Data.TABLE_NAME, null, values);
+            Log.w(TAG, TEMPERATURE + " = " + Float.parseFloat(characteristic.getStringValue(0)) + " °C.");
 
-            testbedDbHelper.close();
-
-
-        }
-
-        else if(UUID.fromString(SampleGattAttributes.STEPS_CHARACTERISTIC).equals(characteristic.getUuid()))
-        {
-            intent.putExtra(EXTRA_DATA, characteristic.getStringValue(0));
-
-            char[] str = characteristic.getStringValue(0).toCharArray();
-            String out = new String();
-
-            for (char c: str){
-                if(Character.isDigit(c)){
-                    out += c;
-                }
-            }
-
-            Log.w(TAG, "STEPS = " + out);
-
-            testbedDbHelper = TestbedDbHelper.getInstance(getApplicationContext());
-            writableTestbedDb = testbedDbHelper.getWritableDatabase();
-
+        } else if(UUID.fromString(SampleGattAttributes.STEPS_CHARACTERISTIC).equals(characteristic.getUuid())) {
             ContentValues values = new ContentValues();
             values.put(TestbedDbHelper.Data.COLUMN_NAME_DEVICE_ID, testbedDevice.getDeviceId());
-            values.put(TestbedDbHelper.Data.COLUMN_NAME_DATA_KEY, "STEPS");
-            values.put(TestbedDbHelper.Data.COLUMN_NAME_DATA_VALUE, Float.parseFloat(out));
+            values.put(TestbedDbHelper.Data.COLUMN_NAME_DATA_KEY, STEPS);
+            values.put(TestbedDbHelper.Data.COLUMN_NAME_DATA_VALUE, Float.parseFloat(characteristic.getStringValue(0)));
             values.put(TestbedDbHelper.Data.COLUMN_NAME_TIMESTAMP, System.currentTimeMillis());
 
             writableTestbedDb.insert(TestbedDbHelper.Data.TABLE_NAME, null, values);
+            Log.w(TAG, STEPS + " = " + Float.parseFloat(characteristic.getStringValue(0)) + " steps.");
 
-            testbedDbHelper.close();
-        }
+        } else if(UUID.fromString(SampleGattAttributes.HEART_RATE_CHARACTERISTIC).equals(characteristic.getUuid())) {
+            ContentValues values = new ContentValues();
+            values.put(TestbedDbHelper.Data.COLUMN_NAME_DEVICE_ID, testbedDevice.getDeviceId());
+            values.put(TestbedDbHelper.Data.COLUMN_NAME_DATA_KEY, HEART_RATE);
+            values.put(TestbedDbHelper.Data.COLUMN_NAME_DATA_VALUE, Float.parseFloat(characteristic.getStringValue(0)));
+            values.put(TestbedDbHelper.Data.COLUMN_NAME_TIMESTAMP, System.currentTimeMillis());
 
-        else if(UUID.fromString(SampleGattAttributes.HEART_RATE_CHARACTERISTIC).equals(characteristic.getUuid()))
-        {
-            intent.putExtra(EXTRA_DATA, characteristic.getStringValue(0));
-            Log.w(TAG, "HEART_RATE = " + characteristic.getStringValue(0));
+            writableTestbedDb.insert(TestbedDbHelper.Data.TABLE_NAME, null, values);
+            Log.w(TAG, HEART_RATE + " = " + Float.parseFloat(characteristic.getStringValue(0)) + " beats per one minute.");
         }
 
         else
@@ -312,8 +274,29 @@ public class BluetoothLeService extends Service {
     public boolean onUnbind(Intent intent) {
         Log.w(TAG, "SERVICE UNBINDED");
 
-        close();
+        //close();
         return super.onUnbind(intent);
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        testbedDbHelper = TestbedDbHelper.getInstance(getApplicationContext());
+        writableTestbedDb = testbedDbHelper.getWritableDatabase();
+        Log.w(TAG, "SERVICE STARTED");
+        return super.onStartCommand(intent, flags, startId);
+
+    }
+
+    @Override
+    public void onDestroy() {
+        if(writableTestbedDb != null)
+           writableTestbedDb.close();
+        if(testbedDbHelper != null) {
+            testbedDbHelper.close();
+        }
+        Log.w(TAG, "SERVICE DESTROYED");
+        this.stopSelf();
+        super.onDestroy();
     }
 
     private final IBinder mBinder = new LocalBinder();
