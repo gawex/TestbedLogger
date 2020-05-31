@@ -45,6 +45,7 @@ public class TestbedDbHelper extends SQLiteOpenHelper {
     private TestbedDbHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
+
     public void onCreate(SQLiteDatabase db) {
         db.execSQL(SQL_CREATE_DATA_TABLE);
         db.execSQL(SQL_CREATE_DEVICES_TABLE);

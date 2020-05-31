@@ -63,3 +63,7 @@ dependencies {
     implementation 'androidx.navigation:navigation-ui:+'
     implementation 'androidx.lifecycle:lifecycle-extensions:+'
 }
+
+dependencies {
+    implementation 'androidx.preference:preference:1.1+'
+}

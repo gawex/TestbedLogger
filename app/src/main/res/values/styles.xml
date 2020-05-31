@@ -7,14 +7,23 @@
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
 
+        <item name="android:datePickerStyle">@style/MyDatePickerDialogStyle</item>
+        <item name="android:timePickerStyle">@style/MyTimePickerDialogStyle</item>
         <item name="actionBarStyle">@style/MyActionBarStyle</item>
         <item name="actionMenuTextAppearance">@style/MyActionBarStyle.Menu</item>
-
 
         <item name="overlapAnchor">false</item>
         <item name="android:dropDownVerticalOffset">?attr/actionBarSize</item>
 
+    </style>
 
+    <style name="MyDatePickerDialogStyle" parent="@android:style/Widget.Material.Light.DatePicker">
+        <item name="android:headerBackground">@color/colorPrimary</item>
+    </style>
+
+    <style name="MyTimePickerDialogStyle" parent="@android:style/Widget.Material.Light.TimePicker">
+        <item name="android:headerBackground">@color/colorPrimary</item>
+        <item name="android:numbersSelectorColor">@color/colorPrimary</item>
     </style>
 
     <style name="MyActionBarStyle" parent="Widget.AppCompat.ActionBar.Solid">

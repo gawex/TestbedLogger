@@ -4,7 +4,6 @@ import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -25,14 +24,12 @@ import android.widget.Toast;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
-import androidx.loader.content.Loader;
 
-import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -40,7 +37,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 
 public class DatabaseActivity extends AppCompatActivity {
 
@@ -137,22 +133,30 @@ public class DatabaseActivity extends AppCompatActivity {
                     ft.replace(R.id.activity_test_host_fragment, currentFragment);
                     ft.commit();
                     return true;
+                default:
+                    return false;
             }
-
-            return false;
         }
-
     };
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_test);
+        setContentView(R.layout.activity_database);
+
+        testbedDevice = getIntent().getExtras().getParcelable(TESTBED_DEVICE);
+
+        Bundle bundle = new Bundle();
+        bundle.putParcelable(BluetoothLeService.TESTBED_ID, testbedDevice);
 
         pedometerFragment = new PedometerFragment();
         heartRateFragment = new HeartRateFragment();
         temperatureFragment = new TemperatureFragment();
+
+        pedometerFragment.setArguments(bundle);
+        heartRateFragment.setArguments(bundle);
+        temperatureFragment.setArguments(bundle);
 
         ft = getSupportFragmentManager().beginTransaction();
         currentFragment = temperatureFragment;
@@ -160,13 +164,18 @@ public class DatabaseActivity extends AppCompatActivity {
         ft.commit();
 
         BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.nav_view);
+        navigation.setSelectedItemId(R.id.navigation_notifications);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
 
-        testbedDevice = getIntent().getExtras().getParcelable(TESTBED_DEVICE);
+
 
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_NOSENSOR);
 
         setTitle("[" + testbedDevice.getBluetoothDevice().getAddress() + "] (" + String.format("%04X", testbedDevice.getDeviceId()) + ")");
+
+
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+
 
 
         //write("Připraven k připojení: [" + testbedDevice.getBluetoothDevice().getAddress() + "] (" + String.format("%04X", testbedDevice.getDeviceId()) + ")");
@@ -179,7 +188,7 @@ public class DatabaseActivity extends AppCompatActivity {
         conditionsListAdapter = new ConditionsListAdapter(getLayoutInflater(), getApplicationContext(), 3);
         listView.setAdapter(conditionsListAdapter);
         conectingDialogBuilder.setIcon(getDrawable(R.drawable.ic_testbed_id)); //TODO: Jiná ikona
-        conectingDialogBuilder.setTitle("Dialog no a co!");
+        conectingDialogBuilder.setTitle("Připojování");
         conectingDialogBuilder.setView(conectingDialogBuilderView);
         conectingDialog = conectingDialogBuilder.create();
         conectingDialog.setCancelable(false);
@@ -195,9 +204,10 @@ public class DatabaseActivity extends AppCompatActivity {
         bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);*/
         startService(new Intent(this, BluetoothLeService.class));
 
+
     }
 
-    private void writeDescriptor(int characteristic){
+    private void writeDescriptor(int characteristic) {
         bluetoothLeService.setCharacteristicNotification(bluetoothLeService.getSupportedGattServices().get(2).getCharacteristics().get(characteristic), true);
     }
 
@@ -209,18 +219,11 @@ public class DatabaseActivity extends AppCompatActivity {
                 conditionsListAdapter.setCondition(0, ConditionsListAdapter.PASS, "Připojeno");
                 conditionsListAdapter.setCondition(1, ConditionsListAdapter.PROGRESS, "Probíhá objevování services...");
                 conditionsListAdapter.notifyDataSetChanged();
-                //conectingDialog.setMessage("Připojeno k: [" + testbedDevice.getBluetoothDevice().getAddress() + "] (" + String.format("%04X", testbedDevice.getDeviceId()) + ")");
-                //conectingDialog.show();
-                //conectingDialog.setMessage("Objevování dostupných services u: [" + testbedDevice.getBluetoothDevice().getAddress() + "] (" + String.format("%04X", testbedDevice.getDeviceId()) + ")");
-                //conectingDialog.show();
             } else if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(action)) {
                 Toast.makeText(getApplicationContext(), "ODPOJENO!", Toast.LENGTH_SHORT).show();
-                //conectingDialog.setMessage("Odpojeno od: [" + testbedDevice.getBluetoothDevice().getAddress() + "] (" + String.format("%04X", testbedDevice.getDeviceId()) + ")");
-                //conectingDialog.show();
-                //unregisterReceiver(mGattUpdateReceiver);
             } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
                 conditionsListAdapter.setCondition(1, ConditionsListAdapter.PASS, "Services objeveny.");
-                conditionsListAdapter.setCondition(2,ConditionsListAdapter.PROGRESS,"Probíhá příprava na zápis descriptorů (1 z 3)");
+                conditionsListAdapter.setCondition(2, ConditionsListAdapter.PROGRESS, "Probíhá příprava na zápis descriptorů (1 z 3)");
                 conditionsListAdapter.notifyDataSetChanged();
                 //conectingDialog.setMessage("Objeveny dostupné sevices u: [" + testbedDevice.getBluetoothDevice().getAddress() + "] (" + String.format("%04X", testbedDevice.getDeviceId()) + ")");
                 //conectingDialog.show();
@@ -228,7 +231,7 @@ public class DatabaseActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         writeDescriptor(iterator);
-                        conditionsListAdapter.setCondition(2,ConditionsListAdapter.PROGRESS,"Probíhá zápis descriptorů (1 z 3)");
+                        conditionsListAdapter.setCondition(2, ConditionsListAdapter.PROGRESS, "Probíhá zápis descriptorů (1 z 3)");
                         conditionsListAdapter.notifyDataSetChanged();
                     }
                 }, 2000);
@@ -239,65 +242,33 @@ public class DatabaseActivity extends AppCompatActivity {
                 iterator++;
                 if (iterator <= 3) {
                     writeDescriptor(iterator);
-                    conditionsListAdapter.setCondition(2,ConditionsListAdapter.PROGRESS,"Probíhá zápis descriptorů (" + iterator + " z 3)");
+                    conditionsListAdapter.setCondition(2, ConditionsListAdapter.PROGRESS, "Probíhá zápis descriptorů (" + iterator + " z 3)");
                     conditionsListAdapter.notifyDataSetChanged();
-                } else{
-                    conditionsListAdapter.setCondition(2,ConditionsListAdapter.PASS,"Zápis descriptorů dokončen.");
+                } else {
+                    conditionsListAdapter.setCondition(2, ConditionsListAdapter.PASS, "Zápis descriptorů dokončen.");
                     conditionsListAdapter.notifyDataSetChanged();
                     conectingDialog.hide();
+                    conectingDialog.cancel();
 
                 }
-                    ;//conectingDialog.hide();
+                ;//conectingDialog.hide();
 
-            } else if (BluetoothLeService.STEP_DATA_AVAILABLE.equals(action)){
-                String data = intent.getStringExtra(BluetoothLeService.EXTRA_DATA);
-
-                //ContentValues values = new ContentValues();
-                //values.put(TestbedDbHelper.Data.COLUMN_NAME_DEVICE_ID, testbedDevice.getDeviceId());
-                //values.put(TestbedDbHelper.Data.COLUMN_NAME_DATA_KEY, STEPS);
-                //values.put(TestbedDbHelper.Data.COLUMN_NAME_DATA_VALUE, Integer.valueOf(data));
-                //values.put(TestbedDbHelper.Data.COLUMN_NAME_TIMESTAMP, System.currentTimeMillis());
-
-                //writableTestbedDb.insert(TestbedDbHelper.Data.TABLE_NAME, null, values);
-
-            } else if (BluetoothLeService.HEART_RATE_DATA_AVAILABLE.equals(action)){
-                String data = intent.getStringExtra(BluetoothLeService.EXTRA_DATA);
-            } else if (BluetoothLeService.TEMPERATURE_DATA_AVAILABLE.equals(action)){
-
-                TestbedDbHelper testbedDbHelper = TestbedDbHelper.getInstance(getApplicationContext());
-                SQLiteDatabase db = testbedDbHelper.getReadableDatabase();
+            } else if (BluetoothLeService.STEP_DATA_AVAILABLE.equals(action)) {
 
 
+            } else if (BluetoothLeService.HEART_RATE_DATA_AVAILABLE.equals(action)) {
 
-/*
-                //Map<Float, Long> mapa = new HashMap<>();
-                SimpleDateFormat sdf = new SimpleDateFormat("dd. MM HH:mm:ss");
-
-                while(readCursor.moveToNext()) {
-                    //mapa.put(readCursor.getFloat(readCursor.getColumnIndexOrThrow(TestbedDbHelper.Data.COLUMN_NAME_DATA_VALUE)),
-                    //         readCursor.getLong(readCursor.getColumnIndexOrThrow(TestbedDbHelper.Data.COLUMN_NAME_TIMESTAMP)));
-                    Date resultdate = new Date(readCursor.getLong(readCursor.getColumnIndexOrThrow(TestbedDbHelper.Data.COLUMN_NAME_TIMESTAMP)));
-                    writeTemp("[" + readCursor.getFloat(readCursor.getColumnIndexOrThrow(TestbedDbHelper.Data.COLUMN_NAME_DATA_VALUE)) + ", " +
-                                    sdf.format(resultdate) + "]");
+            } else if (BluetoothLeService.TEMPERATURE_DATA_AVAILABLE.equals(action)) {
+                if(currentFragment.equals(temperatureFragment)){
+                    temperatureFragment.funkce();
                 }
 
-                readCursor.close();*/
-
-                new SelectFromDatabase().execute(db);
-
-
-
-                //testbedDbHelper.close();
-
-                //String data = intent.getStringExtra(BluetoothLeService.EXTRA_DATA);
-                //float data = intent.getFloatExtra(BluetoothLeService.EXTRA_DATA, 127.99f);
-                //writeTemp(String.valueOf(data));
             } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
 
                 byte[] data = intent.getByteArrayExtra(BluetoothLeService.EXTRA_DATA);
                 //String data = intent.getStringExtra(BluetoothLeService.EXTRA_DATA);
                 SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss.SSS dd-MM-yyyy", Locale.getDefault());
-                 String str = intent.getAction();
+                String str = intent.getAction();
 
 
                 //bluetoothLeService.disconnect();
@@ -350,74 +321,10 @@ public class DatabaseActivity extends AppCompatActivity {
         Log.w(TAG, "Zniceno");
 
 
+    }
+
 
     }
 
 
 
-
-    private class SelectFromDatabase extends AsyncTask<SQLiteDatabase, Void, List<Map<Date, Float>>> {
-
-
-        @Override
-        protected void onPreExecute(){
-        }
-
-        @Override
-        protected List<Map<Date, Float>> doInBackground(SQLiteDatabase... db) {
-
-            List<Map<Date, Float>> temp = new ArrayList<>();
-
-            int count = db.length;
-
-
-            for (int i = 0; i < count; i++) {
-
-            Cursor cursor = db[i].query(
-                    // The table to query
-                    TestbedDbHelper.Data.TABLE_NAME,
-                    // The array of columns to return (pass null to get all)
-                    new String[]{
-                            TestbedDbHelper.Data.COLUMN_NAME_DATA_VALUE,
-                            TestbedDbHelper.Data.COLUMN_NAME_TIMESTAMP},
-                    // The columns for the WHERE clause
-                    TestbedDbHelper.Data.COLUMN_NAME_DEVICE_ID + " = ? AND " +
-                            TestbedDbHelper.Data.COLUMN_NAME_DATA_KEY + " = ?",
-                    // The values for the WHERE clause
-                    new String[]{Integer.toString(testbedDevice.getDeviceId()), "TEMP"},
-                    // don't group the rows
-                    null,
-                    // don't filter by row groups
-                    null,
-                    // The sort order
-                    null
-            );
-
-
-
-            SimpleDateFormat sdf = new SimpleDateFormat("dd. MM HH:mm:ss");
-
-            while(cursor.moveToNext()) {
-
-                float tep = cursor.getFloat(cursor.getColumnIndexOrThrow(TestbedDbHelper.Data.COLUMN_NAME_DATA_VALUE));
-                Date resultdate = new Date(cursor.getLong(cursor.getColumnIndexOrThrow(TestbedDbHelper.Data.COLUMN_NAME_TIMESTAMP)));
-                Map<Date, Float > mapa = new HashMap<>();
-                mapa.put(resultdate, tep);
-                temp.add(mapa);
-
-            }
-
-            cursor.close();
-            //db[i].close();
-            }
-            return temp;
-        }
-
-        @Override
-        protected void onPostExecute(List<Map<Date, Float>> result) {
-            super.onPostExecute(result);
-
-        }
-    }
-
-}

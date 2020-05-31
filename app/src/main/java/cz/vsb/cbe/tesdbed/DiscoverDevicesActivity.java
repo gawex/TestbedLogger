@@ -142,7 +142,7 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
                 return true;
 
             case R.id.settings:
-                Toast.makeText(this, "Setting has not been implemented yet.", Toast.LENGTH_SHORT).show();
+                startActivity(new Intent(this, SettingsActivity.class));
                 return true;
 
             case R.id.about_application:
@@ -208,7 +208,9 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 if(activityState == DISCOVERED_STATE){
-                    devicesListAdapter.getDevice(position).storeIntoDatabase();
+                    if(devicesListAdapter.getDevice(position).isStored() != TestbedDevice.STORED_CONSISTENTLY) {
+                        devicesListAdapter.getDevice(position).storeIntoDatabase();
+                    }
                     Intent intent = new Intent(DiscoverDevicesActivity.this, DatabaseActivity.class);
                     intent.putExtra(DatabaseActivity.TESTBED_DEVICE, devicesListAdapter.getDevice(position));
                     startActivity(intent);
@@ -310,6 +312,9 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
                 devicesListAdapter.notifyDataSetChanged();
                 activityState = DISCOVERED_STATE;
                 invalidateOptionsMenu();
+                if(devicesListAdapter.getCount() == 0){
+                    noDevicesFound.setVisibility(View.VISIBLE);
+                }
                 scanningAndDiscoveringProgressBar.setVisibility(ProgressBar.INVISIBLE);
             } else {
                  if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(action)) {
@@ -319,8 +324,19 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
                         invalidateOptionsMenu();
                     } else {
                         unregisterReceiver(mGattUpdateReceiver);
+                        List<TestbedDevice> devicesForRemove = new ArrayList<>();
+                        for(TestbedDevice testbedDevice : devicesListAdapter.getDevices()){
+                            if(!testbedDevice.isDeviceDiscovered()){
+                                devicesForRemove.add(testbedDevice);
+                            }
+                        }
+                        devicesListAdapter.removeDevices(devicesForRemove);
+                        devicesListAdapter.notifyDataSetChanged();
                         activityState = DISCOVERED_STATE;
                         invalidateOptionsMenu();
+                        if(devicesListAdapter.getCount() == 0){
+                            noDevicesFound.setVisibility(View.VISIBLE);
+                        }
                         scanningAndDiscoveringProgressBar.setVisibility(ProgressBar.INVISIBLE);
                     }
                 } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {

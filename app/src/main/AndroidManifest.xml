@@ -6,7 +6,6 @@
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
-
     <uses-feature
         android:name="android.hardware.bluetooth_le"
         android:required="true" />
@@ -14,10 +13,13 @@
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
-        android:roundIcon="@mipmap/ic_launcher_round"
         android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <activity
+            android:name=".SettingsActivity"
+            android:label="@string/title_activity_settings"></activity>
         <activity
             android:name=".StartUpActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
@@ -30,8 +32,9 @@
         </activity>
         <activity
             android:name=".DiscoverDevicesActivity"
-            android:label="@string/activity_discover_devices_label"/>
+            android:label="@string/activity_discover_devices_label" />
         <activity android:name=".DatabaseActivity" />
+
         <service
             android:name=".BluetoothLeService"
             android:enabled="true" />

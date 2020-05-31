@@ -36,6 +36,7 @@ import android.os.IBinder;
 import android.util.Log;
 import android.widget.Toast;
 
+import java.security.PublicKey;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.List;
@@ -60,9 +61,9 @@ public class BluetoothLeService extends Service {
     private static final int STATE_CONNECTED = 2;
 
 
-    private static final String STEPS = "cz.vsb.cbe.testbed.STEPS";
-    private static final String HEART_RATE = "cz.vsb.cbe.testbed.HEART_RATE";
-    private static final String TEMPERATURE = "cz.vsb.cbe.testbed.TEMPERATURE";
+    public static final String STEPS = "cz.vsb.cbe.testbed.STEPS";
+    public static final String HEART_RATE = "cz.vsb.cbe.testbed.HEART_RATE";
+    public static final String TEMPERATURE = "cz.vsb.cbe.testbed.TEMPERATURE";
 
 
     public final static String SERVICE_STARTED =

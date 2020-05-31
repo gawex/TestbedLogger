@@ -23,21 +23,17 @@
     <autoscroll-to-editor value="false" />
     <autoscroll-from-editor value="true" />
     <show-object-properties value="true" />
-    <loaded-nodes>
-      <connection connection-id="b90819b0-b202-4fbd-8144-3ec0af41e65d">
-        <schema name="main" object-types="table, view" />
-      </connection>
-    </loaded-nodes>
+    <loaded-nodes />
   </component>
   <component name="DBNavigator.Project.DatabaseConsoleManager">
     <connection id="b90819b0-b202-4fbd-8144-3ec0af41e65d">
-      <console name="Testbed" type="STANDARD" schema="main" session="Main">select
+      <console name="Testbed" type="STANDARD" schema="main" session="Main"><![CDATA[select
     d.de_available_sensors,
     d.de_bluetooth_mac_address,
     d.de_id,
     d.de_timestamp
 from
-    devices d;</console>
+    devices d;]]></console>
     </connection>
   </component>
   <component name="DBNavigator.Project.DatabaseFileManager">
