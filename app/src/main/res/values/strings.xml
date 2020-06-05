@@ -96,4 +96,31 @@
     <string name="attachment_summary_on">Automatically download attachments for incoming emails
     </string>
     <string name="attachment_summary_off">Only download attachments when manually requested</string>
+
+    <string name="notification_chanel_name">Loggování</string>
+    <string name="notification_chanel_description">Informuje o aktuálně připojeném zařzení a logování dat.</string>
+    <string name="notification_title">Připojeno k zařízení</string>
+    <string name="notification_text"><strong>Zařízení logguje a ukládá data.</strong></string>
+
+    <string name="notification_last_step_value_header"><strong>Počet kroků:</strong></string>
+    <string name="notification_last_heart_rate_value_header"><strong>Srdeční tep:</strong></string>
+    <string name="notification_last_temperature_value_header"><strong>Teplota:</strong></string>
+    <string name="notification_last_step_value_unit"><strong>kroků.</strong></string>
+    <string name="notification_last_heart_rate_value_unit"><strong>tepů za minutu.</strong></string>
+    <string name="notification_last_temperature_value_unit"><strong>°C.</strong></string>
+
+    <string name="alert_dialog_title">Jdeme na to!</string>
+    <string name="alert_dialog_text_connecting">Připojuji se ke zvolenému zařízení...</string>
+    <string name="alert_dialog_text_connected">Připojeno k </string>
+
+    <string name="alert_dialog_text_service_discovering">Objevuji dostupné services...</string>
+    <string name="alert_dialog_text_service_discovered">Services objeveny</string>
+
+    <string name="alert_dialog_text_descriptor_write_prepare">Probíhá příprava na přijímání notifikací</string>
+    <string name="alert_dialog_text_descriptor_writing">Nastavování přijímání notifikací</string>
+    <string name="alert_dialog_text_descriptor_writing_conjuction">z</string>
+    <string name="alert_dialog_text_descriptor_write_done">Přijímání notifikací nastaveno</string>
+
+    <string name="alert_dialog_text_cancel">Už nechci</string>
+
 </resources>

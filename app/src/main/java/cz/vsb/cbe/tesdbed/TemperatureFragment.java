@@ -2,9 +2,6 @@ package cz.vsb.cbe.tesdbed;
 
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -27,6 +24,9 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
+import cz.vsb.cbe.tesdbed.sql.TestbedDatabase;
+import cz.vsb.cbe.tesdbed.sql.TestbedDatabase.Record;
+
 
 public class TemperatureFragment extends Fragment {
 
@@ -46,7 +46,7 @@ public class TemperatureFragment extends Fragment {
 
         View view = inflater.inflate(R.layout.fragment_temperature, container, false);
 
-        testbedDevice = getArguments().getParcelable(BluetoothLeService.TESTBED_ID);
+        testbedDevice = getArguments().getParcelable(DatabaseActivity.TESTBED_DEVICE);
 
         startDateAndTime = Calendar.getInstance();
         endDateAndTime = Calendar.getInstance();
@@ -162,18 +162,17 @@ public class TemperatureFragment extends Fragment {
     }
 
     public void funkce(){
-        SelectFromDatabase.SelectQuery selectQuery;
 
-        SelectFromDatabase selectFromDatabase = new SelectFromDatabase(getContext(), new SelectFromDatabase.OnRecordsSelected() {
+        TestbedDatabase.OnSelectTemperatureData onSelectTemperatureData = new TestbedDatabase.OnSelectTemperatureData() {
             @Override
-            public void onRecordsSelectedSuccessAsList(List<SelectFromDatabase.Record> records) {
+            public void onSelectSuccess(List<Record> records) {
                 float values [] = new float [records.size()];
                 double stdHelp = 0;
                 float sum = 0;
                 int index = 0;
                 recordsAdapter.clear();
                 recordsAdapter.notifyDataSetChanged();
-                for(SelectFromDatabase.Record record : records){
+                for(Record record : records){
                     recordsAdapter.addItem(record.getId(), record.getValue(), record.getStringTimeStamp());
                     values[index] = record.getValue();
                     sum = sum + record.getValue();
@@ -192,24 +191,26 @@ public class TemperatureFragment extends Fragment {
                 mean.setText(String.format("%3.2f",sum/records.size()));
 
 
-                for(SelectFromDatabase.Record record : records){
+                for(Record record : records){
 
                     stdHelp = stdHelp + Math.pow(record.getValue() - sum/records.size(), 2);
                 }
 
                 stdDeviation.setText(String.format("%3.2f",Math.sqrt(stdHelp/records.size())));
 
+            }
 
-
+            @Override
+            public void onSelectFailed() {
 
             }
-        });
+        };
+
 
         if(dateSwitch.isChecked()) {
             if (isNotEmpty(startDate) && isNotEmpty(startTime)) {
                 if (startDateAndTime.getTimeInMillis() <= System.currentTimeMillis()){
-                    selectQuery = new SelectFromDatabase.SelectQuery(testbedDevice.getDeviceId(), BluetoothLeService.TEMPERATURE, startDateAndTime.getTime(), new Date(System.currentTimeMillis()));
-                    selectFromDatabase.execute(selectQuery);
+                    TestbedDatabase.getInstance(getContext()).selectTemperatureData(testbedDevice, startDateAndTime.getTime(), new Date(System.currentTimeMillis()), onSelectTemperatureData);
                 }
                 else
                     Toast.makeText(getContext(), "Datum nemá smysl tady že", Toast.LENGTH_SHORT).show();
@@ -218,8 +219,7 @@ public class TemperatureFragment extends Fragment {
         else {
             if (isNotEmpty(startDate) && isNotEmpty(startTime) && isNotEmpty(endDate) && isNotEmpty(endTime)) {
                 if (startDateAndTime.getTimeInMillis() <= endDateAndTime.getTimeInMillis() && endDateAndTime.getTimeInMillis() <= System.currentTimeMillis()) {
-                    selectQuery = new SelectFromDatabase.SelectQuery(26407, BluetoothLeService.TEMPERATURE, startDateAndTime.getTime(), endDateAndTime.getTime());
-                    selectFromDatabase.execute(selectQuery);
+                    TestbedDatabase.getInstance(getContext()).selectTemperatureData(testbedDevice, startDateAndTime.getTime(), endDateAndTime.getTime(), onSelectTemperatureData);
                 }
                 else
                     Toast.makeText(getContext(), "Datum nemá smysl", Toast.LENGTH_SHORT).show();

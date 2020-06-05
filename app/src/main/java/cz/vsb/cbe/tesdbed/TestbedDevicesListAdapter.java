@@ -11,7 +11,9 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DevicesListAdapter extends BaseAdapter {
+import cz.vsb.cbe.tesdbed.sql.TestbedDatabase;
+
+public class TestbedDevicesListAdapter extends BaseAdapter {
 
     private static final int EXCELLENT_SIGNAL_LIMIT = -70;
     private static final int GOOD_SIGNAL_LIMIT = -85;
@@ -20,8 +22,9 @@ public class DevicesListAdapter extends BaseAdapter {
     private LayoutInflater LayoutInflater;
     private List<TestbedDevice> TestbedDevices;
     private Context Context;
+    private int storedStatus;
 
-    public DevicesListAdapter(LayoutInflater inflater, Context context) {
+    public TestbedDevicesListAdapter(LayoutInflater inflater, Context context) {
         LayoutInflater = inflater ;
         TestbedDevices = new ArrayList<>();
         Context = context;
@@ -101,9 +104,9 @@ public class DevicesListAdapter extends BaseAdapter {
             viewHolder.databaseIcon.setImageDrawable(Context.getDrawable(android.R.color.transparent));
             viewHolder.id.setText(null);
         } else {
-            if (item.isStored() == TestbedDevice.STORED_CONSISTENTLY)
+            if (item.getStoredStatus() == TestbedDevice.STORED_CONSISTENTLY)
                 viewHolder.databaseIcon.setImageDrawable(Context.getDrawable(R.drawable.ic_database_known));
-            else if (item.isStored() == TestbedDevice.STORED_BUT_MODIFIED)
+            else if (item.getStoredStatus() == TestbedDevice.STORED_BUT_MODIFIED)
                 viewHolder.databaseIcon.setImageDrawable((Context.getDrawable(R.drawable.ic_database_crashed)));
             else
                 viewHolder.databaseIcon.setImageDrawable(Context.getDrawable(R.drawable.ic_database_unknown));

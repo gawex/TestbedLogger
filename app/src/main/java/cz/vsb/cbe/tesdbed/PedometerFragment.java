@@ -1,27 +1,17 @@
 package cz.vsb.cbe.tesdbed;
 
-import android.content.Context;
-import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.graphics.Color;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.text.method.ScrollingMovementMethod;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
+import cz.vsb.cbe.tesdbed.sql.TestbedDatabaseHelper;
 
 
 public class PedometerFragment extends Fragment {
@@ -42,8 +32,6 @@ public class PedometerFragment extends Fragment {
 
         //listView.setAdapter(databaseListAdapter);
 
-        TestbedDbHelper testbedDbHelper = TestbedDbHelper.getInstance(getContext());
-        readableDatabase = testbedDbHelper.getReadableDatabase();
 
         return view;
     }

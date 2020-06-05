@@ -11,6 +11,8 @@ import android.os.Parcelable;
 import java.util.HashMap;
 import java.util.Map;
 
+import cz.vsb.cbe.tesdbed.sql.TestbedDatabaseHelper;
+
 public class TestbedDevice implements Parcelable {
 
     public static Integer BLUETOOTH_DEVICE = 0;
@@ -107,62 +109,15 @@ public class TestbedDevice implements Parcelable {
             return 0x1FFFF;
     }
 
-    public void storeIntoDatabase(){
-        TestbedDbHelper testbedDbHelper = TestbedDbHelper.getInstance(Context);
-        SQLiteDatabase writableTestbedDb = testbedDbHelper.getWritableDatabase();
-
-        ContentValues values = new ContentValues();
-        values.put(TestbedDbHelper.Device.COLUMN_NAME_DEVICE_ID, getDeviceId());
-        values.put(TestbedDbHelper.Device.COLUMN_NAME_AVAILABLE_SENSORS, getAvailableSensors());
-        values.put(TestbedDbHelper.Device.COLUMN_NAME_BLUETOOTH_MAC_ADDRESS, getBluetoothDevice().getAddress());
-        values.put(TestbedDbHelper.Device.COLUMN_NAME_TIMESTAMP, System.currentTimeMillis());
-
-        writableTestbedDb.insert(TestbedDbHelper.Device.TABLE_NAME, null, values);
-
-        testbedDbHelper.close();
+    public void setStoredStatus(int status){
+        HashMap.put(IS_STORED, status);
     }
 
-    public int isStored(){
-        TestbedDbHelper testbedDbHelper = TestbedDbHelper.getInstance(Context);
-        SQLiteDatabase readableTestbedDb = testbedDbHelper.getReadableDatabase();
-        int status = NOT_STORED;
-        Cursor storedTestbedDevices = readableTestbedDb.query(
-                // The table to query
-                TestbedDbHelper.Device.TABLE_NAME,
-                // The array of columns to return (pass null to get all)
-                new String[]{
-                        TestbedDbHelper.Device.COLUMN_NAME_DEVICE_ID,
-                        TestbedDbHelper.Device.COLUMN_NAME_AVAILABLE_SENSORS,
-                        TestbedDbHelper.Device.COLUMN_NAME_BLUETOOTH_MAC_ADDRESS,
-                        TestbedDbHelper.Device.COLUMN_NAME_TIMESTAMP},
-                // The columns for the WHERE clause
-                TestbedDbHelper.Device.COLUMN_NAME_DEVICE_ID + " = ?",
-                // The values for the WHERE clause
-                new String[]{Integer.toString(getDeviceId())},
-                // don't group the rows
-                null,
-                // don't filter by row groups
-                null,
-                // The sort order
-                null
-        );
-
-        while(storedTestbedDevices.moveToNext()) {
-            if (storedTestbedDevices.getLong(storedTestbedDevices.getColumnIndexOrThrow(TestbedDbHelper.Device.COLUMN_NAME_DEVICE_ID)) == getDeviceId()) {
-                if (storedTestbedDevices.getLong(storedTestbedDevices.getColumnIndexOrThrow(TestbedDbHelper.Device.COLUMN_NAME_AVAILABLE_SENSORS)) == getAvailableSensors() &&
-                    storedTestbedDevices.getString(storedTestbedDevices.getColumnIndexOrThrow(TestbedDbHelper.Device.COLUMN_NAME_BLUETOOTH_MAC_ADDRESS)).equals(getBluetoothDevice().getAddress()) &&
-                    storedTestbedDevices.getLong(storedTestbedDevices.getColumnIndexOrThrow(TestbedDbHelper.Device.COLUMN_NAME_TIMESTAMP)) <= System.currentTimeMillis()) {
-                    status = STORED_CONSISTENTLY;
-                } else {
-                    status = STORED_BUT_MODIFIED;
-                }
-                break;
-            }
-        }
-        storedTestbedDevices.close();
-        testbedDbHelper.close();
-        return status;
-
+    public int getStoredStatus(){
+        if(HashMap.containsKey(IS_STORED))
+            return (Integer) HashMap.get(IS_STORED);
+        else
+            return STORED_BUT_MODIFIED;
     }
 
     public void deviceIsDiscovered(){

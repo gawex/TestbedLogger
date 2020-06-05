@@ -16,4 +16,9 @@
         android:icon="@drawable/ic_thermometer_no_available"
         android:title="@string/title_notifications" />
 
+    <item
+        android:id="@+id/navigation_temperature_graph"
+        android:icon="@drawable/ic_thermometer_no_available"
+        android:title="Teplota - GRAF" />
+
 </menu>

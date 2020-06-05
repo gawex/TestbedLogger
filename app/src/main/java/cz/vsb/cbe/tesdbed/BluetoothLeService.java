@@ -18,106 +18,134 @@ package cz.vsb.cbe.tesdbed;
 
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothClass;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
-
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Typeface;
 import android.os.Binder;
 import android.os.IBinder;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.TextUtils;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.StyleSpan;
 import android.util.Log;
-import android.widget.Toast;
 
-import java.security.PublicKey;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
+
+import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
-import java.util.UUID;
+
+import cz.vsb.cbe.tesdbed.sql.TestbedDatabase;
 
 /**
  * Service for managing connection and data communication with a GATT server hosted on a
  * given Bluetooth LE device.
  */
 public class BluetoothLeService extends Service {
+
     private final static String TAG = BluetoothLeService.class.getSimpleName();
 
-    private BluetoothManager mBluetoothManager;
-    private BluetoothAdapter mBluetoothAdapter;
-    private String mBluetoothDeviceAddress;
-    private BluetoothGatt mBluetoothGatt;
-    private int mConnectionState = STATE_DISCONNECTED;
+    private static final int NOTIFICATION_ID = 0;
 
     private static final int STATE_DISCONNECTED = 0;
     private static final int STATE_CONNECTING = 1;
     private static final int STATE_CONNECTED = 2;
 
+    public final static String ACTION_GATT_CONNECTED                = "cz.vsb.cbe.testbed.ACTION_GATT_CONNECTED";
+    public final static String ACTION_GATT_SERVICES_DISCOVERED      = "cz.vsb.cbe.testbed.ACTION_GATT_SERVICES_DISCOVERED";
+    public final static String ACTION_GATT_DESCRIPTOR_WRITTEN       = "cz.vsb.cbe.testbed.ACTION_GATT_DESCRIPTOR_WRITTEN";
+    public final static String ACTION_TESTBED_ID_DATA_AVAILABLE     = "cz.vsb.cbe.testbed.ACTION_TESTBED_ID_DATA_AVAILABLE";
+    public final static String ACTION_STEP_DATA_AVAILABLE           = "cz.vsb.cbe.testbed.ACTION_STEP_DATA_AVAILABLE";
+    public final static String ACTION_HEART_RATE_DATA_AVAILABLE     = "cz.vsb.cbe.testbed.ACTION_HEART_RATE_DATA_AVAILABLE";
+    public final static String ACTION_TEMPERATURE_DATA_AVAILABLE    = "cz.vsb.cbe.testbed.ACTION_TEMPERATURE_DATA_AVAILABLE";
+    public final static String ACTION_UNKNOWN_DATA_AVAILABLE        = "cz.vsb.cbe.testbed.ACTION_UNKNOWN_DATA_AVAILABLE";
+    public final static String ACTION_GATT_DISCONNECTED             = "cz.vsb.cbe.testbed.ACTION_GATT_DISCONNECTED";
 
-    public static final String STEPS = "cz.vsb.cbe.testbed.STEPS";
-    public static final String HEART_RATE = "cz.vsb.cbe.testbed.HEART_RATE";
-    public static final String TEMPERATURE = "cz.vsb.cbe.testbed.TEMPERATURE";
+    public final static String AVAILABLE_SENSORS_DATA   = "cz.vsb.cbe.testbed.AVAILABLE_SENSORS_DATA";
+    public final static String TESTBED_ID_DATA          = "cz.vsb.cbe.testbed.TESTBED_ID_DATA";
+    public static final String STEPS_DATA               = "cz.vsb.cbe.testbed.STEPS_DATA";
+    public static final String HEART_RATE_DATA          = "cz.vsb.cbe.testbed.HEART_RATE_DATA";
+    public static final String TEMPERATURE_DATA         = "cz.vsb.cbe.testbed.TEMPERATURE_DATA";
+    public final static String UNKNOWN_DATA           = "cz.vsb.cbe.testbed.UNKNOWN_DATA";
+
+    private TestbedDevice TestbedDevice;
+
+    private BluetoothManager BluetoothManager;
+    private BluetoothAdapter BluetoothAdapter;
+    private String BluetoothDeviceAddress;
+    private BluetoothGatt BluetoothGatt;
+
+    private NotificationManagerCompat NotificationManager;
+
+    private int LastStepValue = -100;
+    private int LastHeartRateValue = -100;
+    private float LastTemperatureValue = -100;
 
 
-    public final static String SERVICE_STARTED =
-            "cz.vsb.cbe.testbed.SERVICE_STARTED ";
+    public class LocalBinder extends Binder {
+        BluetoothLeService getService() {
+            return BluetoothLeService.this;
+        }
+    }
 
-    public final static String ACTION_GATT_CONNECTED =
-            "cz.vsb.cbe.testbed.ACTION_GATT_CONNECTED";
-    public final static String ACTION_GATT_DISCONNECTED =
-            "cz.vsb.cbe.testbed.ACTION_GATT_DISCONNECTED";
-    public final static String ACTION_GATT_SERVICES_DISCOVERED =
-            "cz.vsb.cbe.testbed.ACTION_GATT_SERVICES_DISCOVERED";
-    public final static String ACTION_GATT_DESCRIPTOR_WRITTEN =
-            "cz.vsb.cbe.testbed.ACTION_GATT_DESCRIPTOR_WRITTEN";
-    public final static String ACTION_DATA_AVAILABLE =
-            "cz.vsb.cbe.testbed.ACTION_DATA_AVAILABLE";
-    public final static String STEP_DATA_AVAILABLE =
-            "cz.vsb.cbe.testbed.STEP_DATA_AVAILABLE";
-    public final static String HEART_RATE_DATA_AVAILABLE =
-            "cz.vsb.cbe.testbed.HEART_RATE_DATA_AVAILABLE";
-    public final static String TEMPERATURE_DATA_AVAILABLE =
-            "cz.vsb.cbe.testbed.TEMPERATURE_DATA_AVAILABLE";
-    public final static String EXTRA_DATA =
-            "cz.vsb.cbe.testbed.EXTRA_DATA";
+    private final IBinder localBinder = new LocalBinder();
 
-    public final static String AVAILABLE_SENSORS =
-            "cz.vsb.cbe.testbed.AVAILABLE_SENSORS";
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        Log.w(TAG, "SERVICE CREATED");
+    }
 
-    public final static String TESTBED_ID =
-            "cz.vsb.cbe.testbed.TESTBED_ID";
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.w(TAG, "SERVICE STARTED");
+        return START_NOT_STICKY;
 
-    private TestbedDevice testbedDevice;
-    private TestbedDbHelper testbedDbHelper;
-    private SQLiteDatabase writableTestbedDb;
+    }
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        Log.w(TAG, "SERVICE BOUND");
+        return localBinder;
+    }
+
+    public void setTestbedDevice(TestbedDevice testbedDevice){
+        this.TestbedDevice = testbedDevice;
+    }
 
     // Implements callback methods for GATT events that the app cares about.  For example,
     // connection change and services discovered.
     private final BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
-            String intentAction;
+            //String intentAction;
             if (newState == BluetoothProfile.STATE_CONNECTED) {
-                intentAction = ACTION_GATT_CONNECTED;
-                mConnectionState = STATE_CONNECTED;
-                broadcastUpdate(intentAction);
+                broadcastUpdate(ACTION_GATT_CONNECTED);
                 Log.i(TAG, "Connected to GATT server.");
                 // Attempts to discover services after successful connection.
-                Log.i(TAG, "Attempting to start service discovery:" +
-                        mBluetoothGatt.discoverServices());
-
+                Log.i(TAG, "Attempting to start service discovery: " +
+                        BluetoothGatt.discoverServices());
+                if (TestbedDevice != null) {
+                    NotificationManager = NotificationManagerCompat.from(getApplicationContext());
+                    NotificationManager.notify(NOTIFICATION_ID, buildNotification(getColor(R.color.colorPrimary)).setSmallIcon((R.drawable.ic_mac_address)).build());
+                }
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                intentAction = ACTION_GATT_DISCONNECTED;
-                mConnectionState = STATE_DISCONNECTED;
+                broadcastUpdate(ACTION_GATT_DISCONNECTED);
                 Log.i(TAG, "Disconnected from GATT server.");
-                broadcastUpdate(intentAction);
+                if (NotificationManager != null) {
+                    NotificationManager.cancel(NOTIFICATION_ID);
+                }
             }
         }
 
@@ -125,6 +153,7 @@ public class BluetoothLeService extends Service {
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 broadcastUpdate(ACTION_GATT_SERVICES_DISCOVERED);
+                Log.i(TAG, "onServicesDiscovered received: " + status);
             } else {
                 Log.w(TAG, "onServicesDiscovered received: " + status);
             }
@@ -141,166 +170,170 @@ public class BluetoothLeService extends Service {
         }
 
         @Override
-        public void onCharacteristicRead(BluetoothGatt gatt,
-                                         BluetoothGattCharacteristic characteristic,
-                                         int status) {
+        public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
+                if(characteristic.getUuid().equals(SampleGattAttributes.STEPS_CHARACTERISTIC_UUID)) {
+                    if(!characteristic.getStringValue(0).equals("ERROR")) {
+                        broadcastUpdate(ACTION_STEP_DATA_AVAILABLE, characteristic);
+                    }
+                } else if (characteristic.getUuid().equals(SampleGattAttributes.HEART_RATE_CHARACTERISTIC_UUID)) {
+                    if(!characteristic.getStringValue(0).equals("ERROR")){
+                        broadcastUpdate(ACTION_HEART_RATE_DATA_AVAILABLE, characteristic);
+                    }
+                } else if (characteristic.getUuid().equals(SampleGattAttributes.TEMPERATURE_CHARACTERISTIC_UUID)) {
+                    if(!characteristic.getStringValue(0).equals("ERROR"))
+                        broadcastUpdate(ACTION_TEMPERATURE_DATA_AVAILABLE, characteristic);
+                }
+                else if (characteristic.getUuid().equals(SampleGattAttributes.TESTBED_ID_CHARACTERISTIC_UUID)) {
+                    if(!characteristic.getStringValue(0).equals("ERROR")) {
+                        broadcastUpdate(ACTION_TESTBED_ID_DATA_AVAILABLE, characteristic);
+                    }
+                }else {
+                    broadcastUpdate(ACTION_UNKNOWN_DATA_AVAILABLE, characteristic);
+                }
             }
         }
 
         @Override
-        public void onCharacteristicChanged(BluetoothGatt gatt,
-                                            BluetoothGattCharacteristic characteristic) {
-            if(characteristic.getUuid().equals(UUID.fromString(SampleGattAttributes.STEPS_CHARACTERISTIC))) {
-                if(!characteristic.getStringValue(0).equals("ERROR"))
-                broadcastUpdate(STEP_DATA_AVAILABLE, characteristic);
-            } else if (characteristic.getUuid().equals(UUID.fromString(SampleGattAttributes.HEART_RATE_CHARACTERISTIC))) {
-                broadcastUpdate(HEART_RATE_DATA_AVAILABLE, characteristic);
-            } else if (characteristic.getUuid().equals(UUID.fromString(SampleGattAttributes.TEMPERATURE_CHARACTERISTIC))) {
-                if(!characteristic.getStringValue(0).equals("ERROR"))
-                    broadcastUpdate(TEMPERATURE_DATA_AVAILABLE, characteristic);
+        public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
+            if(characteristic.getUuid().equals(SampleGattAttributes.STEPS_CHARACTERISTIC_UUID)) {
+                if(!characteristic.getStringValue(0).equals("ERROR")) {
+                    broadcastUpdate(ACTION_STEP_DATA_AVAILABLE, characteristic);
+                }
+            } else if (characteristic.getUuid().equals(SampleGattAttributes.HEART_RATE_CHARACTERISTIC_UUID)) {
+                if(!characteristic.getStringValue(0).equals("ERROR")){
+                    broadcastUpdate(ACTION_HEART_RATE_DATA_AVAILABLE, characteristic);
+                }
+            } else if (characteristic.getUuid().equals(SampleGattAttributes.TEMPERATURE_CHARACTERISTIC_UUID)) {
+                if(!characteristic.getStringValue(0).equals("ERROR")) {
+                    broadcastUpdate(ACTION_TEMPERATURE_DATA_AVAILABLE, characteristic);
+                }
             } else {
-                broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
+                broadcastUpdate(ACTION_UNKNOWN_DATA_AVAILABLE, characteristic);
             }
         }
     };
 
     private void broadcastUpdate(final String action) {
+        sendBroadcast(new Intent(action));
+    }
+
+    private NotificationCompat.Builder buildNotification(int colorHeadlight) {
+        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(getApplicationContext(), getString(R.string.notification_channel_id));
+        NotificationCompat.InboxStyle inboxStyle = new NotificationCompat.InboxStyle();
+        String title;
+        int [] notificationStatus = new int [] {0, 0, 0};
+        int notificationNumber = 0;
+        if(TestbedDevice != null){
+            title = getString(R.string.notification_title) + ": " +
+                    getString(R.string.ble_devices_name) + " (#" +
+                    Integer.toHexString(TestbedDevice.getDeviceId()) + ")";
+        } else {
+            title = getString(R.string.notification_title) + ": " +
+                    getString(R.string.ble_devices_name) + " (#1FFFF)";
+        }
+
+        inboxStyle.setBigContentTitle(title);
+        inboxStyle.setSummaryText(getString(R.string.notification_text) + "muj je text");
+
+        if (LastStepValue != -100) {
+            Spannable stepHeader = new SpannableString(getString(R.string.notification_last_step_value_header));
+            stepHeader.setSpan(new StyleSpan(Typeface.BOLD), 0, stepHeader.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+            Spannable stepValue = new SpannableString(String.valueOf(LastStepValue));
+            stepValue.setSpan(new StyleSpan(Typeface.BOLD), 0, stepValue.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+            stepValue.setSpan(new ForegroundColorSpan(colorHeadlight), 0, stepValue.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+            Spannable stepUnit =  new SpannableString(getString(R.string.notification_last_step_value_unit));
+
+            inboxStyle.addLine(TextUtils.concat(stepHeader, " ", stepValue, " ", stepUnit));
+            notificationStatus[0] = 1;
+        }
+
+        if (LastHeartRateValue != -100) {
+            Spannable heartRateHeader = new SpannableString(getString(R.string.notification_last_heart_rate_value_header));
+            heartRateHeader.setSpan(new StyleSpan(Typeface.BOLD), 0, heartRateHeader.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+            Spannable heartRateValue = new SpannableString(String.valueOf(LastHeartRateValue));
+            heartRateValue.setSpan(new StyleSpan(Typeface.BOLD), 0, heartRateValue.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+            heartRateValue.setSpan(new ForegroundColorSpan(colorHeadlight), 0, heartRateValue.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+            Spannable heartRateUnit =  new SpannableString(getString(R.string.notification_last_heart_rate_value_unit));
+
+            inboxStyle.addLine(TextUtils.concat(heartRateHeader, " ", heartRateValue, " ", heartRateUnit));
+            notificationStatus[1] = 1;
+        }
+
+        if (LastTemperatureValue != -100) {
+            Spannable temperatureHeader = new SpannableString(getString(R.string.notification_last_temperature_value_header));
+            temperatureHeader.setSpan(new StyleSpan(Typeface.BOLD), 0, temperatureHeader.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+            Spannable temperatureValue = new SpannableString(String.format("%3.2f", LastTemperatureValue));
+            temperatureValue.setSpan(new StyleSpan(Typeface.BOLD), 0, temperatureValue.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+            temperatureValue.setSpan(new ForegroundColorSpan(colorHeadlight), 0, temperatureValue.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+            Spannable temperatureUnit =  new SpannableString(getString(R.string.notification_last_temperature_value_unit));
+
+            inboxStyle.addLine(TextUtils.concat(temperatureHeader, " ", temperatureValue, " ", temperatureUnit));
+            notificationStatus[2] = 1;
+        }
+
+        for (int i : notificationStatus){
+            notificationNumber += i;
+        }
+
+         return notificationBuilder.setContentTitle(title)
+                .setContentText(getString(R.string.notification_text))
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setStyle(inboxStyle)
+                .setNumber(notificationNumber > 0 ? notificationNumber : 0);
+    }
+
+
+    private void broadcastUpdate(final String action, final BluetoothGattCharacteristic characteristic) {
         final Intent intent = new Intent(action);
+
+         if(SampleGattAttributes.TESTBED_ID_CHARACTERISTIC_UUID.equals(characteristic.getUuid())) {
+             intent.putExtra(AVAILABLE_SENSORS_DATA, Integer.parseInt(characteristic.getStringValue(0).substring(0,1)));
+             intent.putExtra(TESTBED_ID_DATA, Integer.parseInt(characteristic.getStringValue(1),16));
+         } else if (SampleGattAttributes.STEPS_CHARACTERISTIC_UUID.equals(characteristic.getUuid())) {
+             int steps = Integer.parseInt(characteristic.getStringValue(0));
+             TestbedDatabase.getInstance(getApplicationContext()).insertSteps(TestbedDevice.getDeviceId(), steps);
+             LastStepValue = steps;
+             NotificationManager.notify(NOTIFICATION_ID, buildNotification(getColor(R.color.colorPrimary)).setSmallIcon((R.drawable.ic_pedometer_available)).build());
+             Log.w(TAG, STEPS_DATA + " = " + Float.parseFloat(characteristic.getStringValue(0)) + " steps.");
+         } else if (SampleGattAttributes.HEART_RATE_CHARACTERISTIC_UUID.equals(characteristic.getUuid())) {
+             int heartRate = Integer.parseInt(characteristic.getStringValue(0));
+             TestbedDatabase.getInstance(getApplicationContext()).insertHeartRate(TestbedDevice.getDeviceId(), heartRate);
+             LastHeartRateValue = heartRate;
+             NotificationManager.notify(NOTIFICATION_ID, buildNotification(getColor(R.color.colorPrimary)).setSmallIcon((R.drawable.ic_heart_rate_meter_available)).build());
+             Log.w(TAG, HEART_RATE_DATA + " = " + Float.parseFloat(characteristic.getStringValue(0)) + " beats per one minute.");
+         } else if (SampleGattAttributes.TEMPERATURE_CHARACTERISTIC_UUID.equals(characteristic.getUuid())) {
+             float temperature = Float.parseFloat(characteristic.getStringValue(0));
+             TestbedDatabase.getInstance(getApplicationContext()).insertTemperature(TestbedDevice.getDeviceId(), temperature);
+             LastTemperatureValue = temperature;
+             NotificationManager.notify(NOTIFICATION_ID, buildNotification(getColor(R.color.colorPrimary)).setSmallIcon((R.drawable.ic_thermometer_available)).build());
+             Log.w(TAG, TEMPERATURE_DATA + " = " + Float.parseFloat(characteristic.getStringValue(0)) + " °C.");
+         }  else {
+            intent.putExtra(UNKNOWN_DATA, characteristic.getStringValue(0));
+            Log.w(TAG, UNKNOWN_DATA + " = " + characteristic.getStringValue(0));
+        }
         sendBroadcast(intent);
-    }
-
-    private void broadcastUpdate(final String action,
-                                 final BluetoothGattCharacteristic characteristic) {
-        final Intent intent = new Intent(action);
-
-        // This is special handling for the Heart Rate Measurement profile.  Data parsing is
-        // carried out as per profile specifications:
-        // http://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicViewer.aspx?u=org.bluetooth.characteristic.heart_rate_measurement.xml
-        /*if (UUID_HEART_RATE_MEASUREMENT.equals(characteristic.getUuid())) {
-            int flag = characteristic.getProperties();
-            int format = -1;
-            if ((flag & 0x01) != 0) {
-                format = BluetoothGattCharacteristic.FORMAT_UINT16;
-                Log.d(TAG, "Heart rate format UINT16.");
-            } else {
-                format = BluetoothGattCharacteristic.FORMAT_UINT8;
-                Log.d(TAG, "Heart rate format UINT8.");
-            }
-            final int heartRate = characteristic.getIntValue(format, 1);
-            Log.d(TAG, String.format("Received heart rate: %d", heartRate));
-            intent.putExtra(EXTRA_DATA, String.valueOf(heartRate));
-
-        }
-
-        else
-            */if(UUID.fromString(SampleGattAttributes.DEVICE_NAME_CHARACTERISTIC).equals(characteristic.getUuid()))
-        {
-            intent.putExtra(EXTRA_DATA, String.valueOf(characteristic.getStringValue(0)));
-        }
-
-        else if(UUID.fromString(SampleGattAttributes.DEVICE_IDENTITY_CHARACTERISTIC).equals(characteristic.getUuid())) {
-
-               /* String availableSensorsAndTestbedId = characteristic.getStringValue(0);
-                String availableSensors = availableSensorsAndTestbedId.substring(0,1);
-                String testbedId = availableSensorsAndTestbedId.substring(1, availableSensorsAndTestbedId.length()-1);*/
-
-                intent.putExtra(AVAILABLE_SENSORS, Integer.parseInt(characteristic.getStringValue(0).substring(0,1)/*availableSensors)*/));
-                intent.putExtra(TESTBED_ID, Integer.parseInt(/*testbedId*/characteristic.getStringValue(1),16));
-
-
-        }
-
-        else if(UUID.fromString(SampleGattAttributes.TEMPERATURE_CHARACTERISTIC).equals(characteristic.getUuid())) {
-            ContentValues values = new ContentValues();
-            values.put(TestbedDbHelper.Data.COLUMN_NAME_DEVICE_ID, testbedDevice.getDeviceId());
-            values.put(TestbedDbHelper.Data.COLUMN_NAME_DATA_KEY, TEMPERATURE);
-            values.put(TestbedDbHelper.Data.COLUMN_NAME_DATA_VALUE, Float.parseFloat(characteristic.getStringValue(0)));
-            values.put(TestbedDbHelper.Data.COLUMN_NAME_TIMESTAMP, System.currentTimeMillis());
-
-            writableTestbedDb.insert(TestbedDbHelper.Data.TABLE_NAME, null, values);
-            Log.w(TAG, TEMPERATURE + " = " + Float.parseFloat(characteristic.getStringValue(0)) + " °C.");
-
-        } else if(UUID.fromString(SampleGattAttributes.STEPS_CHARACTERISTIC).equals(characteristic.getUuid())) {
-            ContentValues values = new ContentValues();
-            values.put(TestbedDbHelper.Data.COLUMN_NAME_DEVICE_ID, testbedDevice.getDeviceId());
-            values.put(TestbedDbHelper.Data.COLUMN_NAME_DATA_KEY, STEPS);
-            values.put(TestbedDbHelper.Data.COLUMN_NAME_DATA_VALUE, Float.parseFloat(characteristic.getStringValue(0)));
-            values.put(TestbedDbHelper.Data.COLUMN_NAME_TIMESTAMP, System.currentTimeMillis());
-
-            writableTestbedDb.insert(TestbedDbHelper.Data.TABLE_NAME, null, values);
-            Log.w(TAG, STEPS + " = " + Float.parseFloat(characteristic.getStringValue(0)) + " steps.");
-
-        } else if(UUID.fromString(SampleGattAttributes.HEART_RATE_CHARACTERISTIC).equals(characteristic.getUuid())) {
-            ContentValues values = new ContentValues();
-            values.put(TestbedDbHelper.Data.COLUMN_NAME_DEVICE_ID, testbedDevice.getDeviceId());
-            values.put(TestbedDbHelper.Data.COLUMN_NAME_DATA_KEY, HEART_RATE);
-            values.put(TestbedDbHelper.Data.COLUMN_NAME_DATA_VALUE, Float.parseFloat(characteristic.getStringValue(0)));
-            values.put(TestbedDbHelper.Data.COLUMN_NAME_TIMESTAMP, System.currentTimeMillis());
-
-            writableTestbedDb.insert(TestbedDbHelper.Data.TABLE_NAME, null, values);
-            Log.w(TAG, HEART_RATE + " = " + Float.parseFloat(characteristic.getStringValue(0)) + " beats per one minute.");
-        }
-
-        else
-        {
-            intent.putExtra(EXTRA_DATA, characteristic.getStringValue(0));
-            Log.w(TAG, "OTHER = " + characteristic.getStringValue(0));
-
-
-
-
-        }
-
-        sendBroadcast(intent);
-    }
-
-
-    public class LocalBinder extends Binder {
-        BluetoothLeService getService() {
-            return BluetoothLeService.this;
-        }
-    }
-
-    @Override
-    public IBinder onBind(Intent intent) {
-        Log.w(TAG, "SERVICE BINDED");
-        testbedDevice = intent.getParcelableExtra(TESTBED_ID);
-
-        return mBinder;
     }
 
     @Override
     public boolean onUnbind(Intent intent) {
-        Log.w(TAG, "SERVICE UNBINDED");
-
-        //close();
+        Log.w(TAG, "SERVICE UNBOUNDED");
         return super.onUnbind(intent);
     }
 
     @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        testbedDbHelper = TestbedDbHelper.getInstance(getApplicationContext());
-        writableTestbedDb = testbedDbHelper.getWritableDatabase();
-        Log.w(TAG, "SERVICE STARTED");
-        return super.onStartCommand(intent, flags, startId);
-
-    }
-
-    @Override
     public void onDestroy() {
-        if(writableTestbedDb != null)
-           writableTestbedDb.close();
-        if(testbedDbHelper != null) {
-            testbedDbHelper.close();
-        }
         Log.w(TAG, "SERVICE DESTROYED");
-        this.stopSelf();
+        close();
+        TestbedDatabase.getInstance(this).close();
         super.onDestroy();
     }
-
-    private final IBinder mBinder = new LocalBinder();
 
     /**
      * Initializes a reference to the local Bluetooth adapter.
@@ -310,20 +343,19 @@ public class BluetoothLeService extends Service {
     public boolean initialize() {
         // For API level 18 and above, get a reference to BluetoothAdapter through
         // BluetoothManager.
-        if (mBluetoothManager == null) {
-            mBluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
-            if (mBluetoothManager == null) {
+        if (BluetoothManager == null) {
+            BluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
+            if (BluetoothManager == null) {
                 Log.e(TAG, "Unable to initialize BluetoothManager.");
                 return false;
             }
         }
 
-        mBluetoothAdapter = mBluetoothManager.getAdapter();
-        if (mBluetoothAdapter == null) {
+        BluetoothAdapter = BluetoothManager.getAdapter();
+        if (BluetoothAdapter == null) {
             Log.e(TAG, "Unable to obtain a BluetoothAdapter.");
             return false;
         }
-
         return true;
     }
 
@@ -337,35 +369,35 @@ public class BluetoothLeService extends Service {
      *         {@code BluetoothGattCallback#onConnectionStateChange(android.bluetooth.BluetoothGatt, int, int)}
      *         callback.
      */
+    // Connects to given device
+
+
     public boolean connect(final String address) {
-        if (mBluetoothAdapter == null || address == null) {
+        if (BluetoothAdapter == null || address == null) {
             Log.w(TAG, "BluetoothAdapter not initialized or unspecified address.");
             return false;
         }
-
         // Previously connected device.  Try to reconnect.
-        if (mBluetoothDeviceAddress != null && address.equals(mBluetoothDeviceAddress)
-                && mBluetoothGatt != null) {
+        if (BluetoothDeviceAddress != null && address.equals(BluetoothDeviceAddress)
+                && BluetoothGatt != null) {
             Log.d(TAG, "Trying to use an existing mBluetoothGatt for connection.");
-            if (mBluetoothGatt.connect()) {
-                mConnectionState = STATE_CONNECTING;
+            if (BluetoothGatt.connect()) {
                 return true;
             } else {
                 return false;
             }
         }
 
-        final BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
+        final BluetoothDevice device = BluetoothAdapter.getRemoteDevice(address);
         if (device == null) {
             Log.w(TAG, "Device not found.  Unable to connect.");
             return false;
         }
         // We want to directly connect to the device, so we are setting the autoConnect
         // parameter to false.
-        mBluetoothGatt = device.connectGatt(this, false, mGattCallback);
+        BluetoothGatt = device.connectGatt(this, false, mGattCallback);
         Log.d(TAG, "Trying to create a new connection.");
-        mBluetoothDeviceAddress = address;
-        mConnectionState = STATE_CONNECTING;
+        BluetoothDeviceAddress = address;
         return true;
     }
 
@@ -376,11 +408,11 @@ public class BluetoothLeService extends Service {
      * callback.
      */
     public void disconnect() {
-        if (mBluetoothAdapter == null || mBluetoothGatt == null) {
+        if (BluetoothAdapter == null || BluetoothGatt == null) {
             Log.w(TAG, "BluetoothAdapter not initialized");
             return;
         }
-        mBluetoothGatt.disconnect();
+        BluetoothGatt.disconnect();
     }
 
     /**
@@ -388,11 +420,11 @@ public class BluetoothLeService extends Service {
      * released properly.
      */
     public void close() {
-        if (mBluetoothGatt == null) {
+        if (BluetoothGatt == null) {
             return;
         }
-        mBluetoothGatt.close();
-        mBluetoothGatt = null;
+        BluetoothGatt.close();
+        BluetoothGatt = null;
     }
 
     /**
@@ -403,11 +435,11 @@ public class BluetoothLeService extends Service {
      * @param characteristic The characteristic to read from.
      */
     public void readCharacteristic(BluetoothGattCharacteristic characteristic) {
-        if (mBluetoothAdapter == null || mBluetoothGatt == null) {
+        if (BluetoothAdapter == null || BluetoothGatt == null) {
             Log.w(TAG, "BluetoothAdapter not initialized");
             return;
         }
-        mBluetoothGatt.readCharacteristic(characteristic);
+        BluetoothGatt.readCharacteristic(characteristic);
     }
 
     /**
@@ -416,39 +448,21 @@ public class BluetoothLeService extends Service {
      * @param characteristic Characteristic to act on.
      * @param enabled If true, enable notification.  False otherwise.
      */
-    public void setCharacteristicNotification(BluetoothGattCharacteristic characteristic,
-                                              boolean enabled) {
-        if (mBluetoothAdapter == null || mBluetoothGatt == null) {
+    public void setCharacteristicNotification(BluetoothGattCharacteristic characteristic, boolean enabled) {
+        if (BluetoothAdapter == null || BluetoothGatt == null) {
             Log.w(TAG, "BluetoothAdapter not initialized");
             return;
         }
-        mBluetoothGatt.setCharacteristicNotification(characteristic, enabled);
+        BluetoothGatt.setCharacteristicNotification(characteristic, enabled);
 
+        if (characteristic.getUuid().equals(SampleGattAttributes.STEPS_CHARACTERISTIC_UUID) ||
+            characteristic.getUuid().equals(SampleGattAttributes.HEART_RATE_CHARACTERISTIC_UUID) ||
+            characteristic.getUuid().equals(SampleGattAttributes.TEMPERATURE_CHARACTERISTIC_UUID)) {
 
-        // This is specific to Heart Rate Measurement.
-
-
-        //if (UUID.fromString(SampleGattAttributes.TEMPERATURE_CHARACTERISTIC).equals(characteristic.getUuid())) {
-            BluetoothGattDescriptor descriptor = characteristic.getDescriptor(
-                    UUID.fromString(SampleGattAttributes.CLIENT_CHARACTERISTIC_CONFIG));
-            descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-            mBluetoothGatt.writeDescriptor(descriptor);
-        //}
-
-/*
-        if (UUID.fromString(SampleGattAttributes.TEMPERATURE_CHARACTERISTIC).equals(characteristic.getUuid())) {
-            List<BluetoothGattDescriptor> descriptors = characteristic.getDescriptors();
-
-            for (BluetoothGattDescriptor descriptor : descriptors){
-                if (descriptor.equals(UUID.fromString(SampleGattAttributes.CLIENT_CHARACTERISTIC_CONFIG))){
-                    Log.w(TAG, "Descriptor" + descriptor.getUuid().toString());
-                    if (descriptor != null) {
-                        descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-                        mBluetoothGatt.writeDescriptor(descriptor);
-                    }
-                }
-            }
-        }*/
+            BluetoothGattDescriptor bluetoothGattDescriptor = characteristic.getDescriptor(SampleGattAttributes.CLIENT_CHARACTERISTIC_CONFIGURATION_UUID);
+            bluetoothGattDescriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+            BluetoothGatt.writeDescriptor(bluetoothGattDescriptor);
+        }
     }
 
     /**
@@ -458,8 +472,8 @@ public class BluetoothLeService extends Service {
      * @return A {@code List} of supported services.
      */
     public List<BluetoothGattService> getSupportedGattServices() {
-        if (mBluetoothGatt == null) return null;
+        if (BluetoothGatt == null) return null;
 
-        return mBluetoothGatt.getServices();
+        return BluetoothGatt.getServices();
     }
 }

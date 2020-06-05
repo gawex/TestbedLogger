@@ -1,6 +1,9 @@
 package cz.vsb.cbe.tesdbed;
 
 import android.Manifest;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothManager;
 import android.content.DialogInterface;
@@ -18,6 +21,7 @@ import android.os.Bundle;
 import android.provider.Settings;
 import android.view.View;
 import android.view.WindowManager.LayoutParams;
+import android.widget.Button;
 import android.widget.ListView;
 
 import org.jetbrains.annotations.NotNull;
@@ -153,6 +157,8 @@ public class StartUpActivity extends AppCompatActivity {
         setContentView(R.layout.activity_start_up);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_NOSENSOR);
 
+        createNotificationChannel(getString(R.string.notification_channel_id));
+
         finishAppHandler = new Handler();
 
         ListView startUpConditionsListView = findViewById(R.id.activity_discover_lsv_devices);
@@ -256,9 +262,8 @@ public class StartUpActivity extends AppCompatActivity {
     }
 
     private void continueApplication(){
-        final Intent intent = new Intent(StartUpActivity.this, DiscoverDevicesActivity.class);
-        //final Intent intent = new Intent(StartUpActivity.this, TestActivity.class);
         startUpConditionsListAdapter.setCondition(START_UP, ConditionsListAdapter.PROGRESS, getResources().getString(R.string.conditions_start_application));
+        startService(new Intent(StartUpActivity.this, BluetoothLeService.class));
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -270,11 +275,26 @@ public class StartUpActivity extends AppCompatActivity {
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
-                startActivity(intent);
+                startActivity(new Intent(StartUpActivity.this, DiscoverDevicesActivity.class));
                 finish();
             }
         }, SPLASH_TIME);
     }
 
+    private void createNotificationChannel(String channelId) {
+        // Create the NotificationChannel, but only on API 26+ because
+        // the NotificationChannel class is new and not in the support library
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            String  name = getString(R.string.notification_chanel_name);
+            String description = getString(R.string.notification_chanel_description);
+            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+            NotificationChannel channel = new NotificationChannel(channelId, name, importance);
+            channel.setDescription(description);
+            // Register the channel with the system; you can't change the importance
+            // or other notification behaviors after this
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
+    }
 
 }

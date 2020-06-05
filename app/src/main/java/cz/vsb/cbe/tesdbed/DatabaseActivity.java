@@ -1,7 +1,8 @@
 package cz.vsb.cbe.tesdbed;
 
-import android.bluetooth.BluetoothGatt;
+import android.app.PendingIntent;
 import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattService;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -9,12 +10,10 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.ActivityInfo;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.Messenger;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
@@ -24,19 +23,16 @@ import android.widget.Toast;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
-import java.text.SimpleDateFormat;
+import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+
+import cz.vsb.cbe.tesdbed.sql.TestbedDatabase;
 
 public class DatabaseActivity extends AppCompatActivity {
 
@@ -46,55 +42,54 @@ public class DatabaseActivity extends AppCompatActivity {
     private PedometerFragment pedometerFragment;
     private HeartRateFragment heartRateFragment;
     private TemperatureFragment temperatureFragment;
+    private TestFragment testFragment;
 
-    public static final String TESTBED_DEVICE = "cz.vsb.cbe.testbed.TestbedDevice";
+    public static final String TESTBED_DEVICE = "cz.vsb.cbe.testbed.TESTBED_DEVICE";
 
     private final static String TAG = DatabaseActivity.class.getSimpleName();
-    public final static String STEPS =
-            "cz.vsb.cbe.testbed.STEPS";
+
 
     private TestbedDevice testbedDevice;
 
     private BluetoothLeService bluetoothLeService;
 
-    private BluetoothGatt bluetoothGatt;
-    BluetoothGattCharacteristic characteristic;
-    boolean enabled;
+    Intent gattServiceIntent;
 
     private int iterator = 1;
 
-    private TestbedDbHelper testbedDbHelper;
-    private SQLiteDatabase writableTestbedDb;
 
-    private AlertDialog conectingDialog;
 
-    ConditionsListAdapter conditionsListAdapter;
-
-    private static IntentFilter makeGattUpdateIntentFilter() {
+    private static IntentFilter makeGattUpdateIntentFilterForConnect() {
         final IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(BluetoothLeService.ACTION_GATT_CONNECTED);
         intentFilter.addAction(BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED);
         intentFilter.addAction(BluetoothLeService.ACTION_GATT_DESCRIPTOR_WRITTEN);
-        intentFilter.addAction(BluetoothLeService.ACTION_DATA_AVAILABLE);
-        intentFilter.addAction(BluetoothLeService.STEP_DATA_AVAILABLE);
-        intentFilter.addAction(BluetoothLeService.HEART_RATE_DATA_AVAILABLE);
-        intentFilter.addAction(BluetoothLeService.TEMPERATURE_DATA_AVAILABLE);
+        intentFilter.addAction(BluetoothLeService.ACTION_STEP_DATA_AVAILABLE);
+        intentFilter.addAction(BluetoothLeService.ACTION_HEART_RATE_DATA_AVAILABLE);
+        intentFilter.addAction(BluetoothLeService.ACTION_TEMPERATURE_DATA_AVAILABLE);
         intentFilter.addAction(BluetoothLeService.ACTION_GATT_DISCONNECTED);
         return intentFilter;
     }
+
+    Messenger messenger = null;
 
     private final ServiceConnection mServiceConnection = new ServiceConnection() {
 
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder service) {
             bluetoothLeService = ((BluetoothLeService.LocalBinder) service).getService();
+
+
+            bluetoothLeService.setTestbedDevice(testbedDevice);
+
             if (!bluetoothLeService.initialize()) {
                 Log.d(TAG, "Unable to initialize Bluetooth");
 
                 finish();
             } else {
 
-                registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
+                registerReceiver(mGattUpdateReceiverForConnect, makeGattUpdateIntentFilterForConnect());
+                Log.i(TAG, "bindnul jsem se");
                 if (bluetoothLeService != null) {
                     final boolean result = bluetoothLeService.connect(testbedDevice.getBluetoothDevice().getAddress());
                     Log.d(TAG, "Connect request result=" + result);
@@ -106,6 +101,7 @@ public class DatabaseActivity extends AppCompatActivity {
         @Override
         public void onServiceDisconnected(ComponentName componentName) {
             bluetoothLeService = null;
+            Log.i(TAG, "unbindnul jsem se");
         }
     };
 
@@ -133,6 +129,12 @@ public class DatabaseActivity extends AppCompatActivity {
                     ft.replace(R.id.activity_test_host_fragment, currentFragment);
                     ft.commit();
                     return true;
+                case R.id.navigation_temperature_graph:
+                    currentFragment = testFragment;
+                    ft = getSupportFragmentManager().beginTransaction();
+                    ft.replace(R.id.activity_test_host_fragment, currentFragment);
+                    ft.commit();
+                    return true;
                 default:
                     return false;
             }
@@ -145,26 +147,31 @@ public class DatabaseActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_database);
 
+
+        gattServiceIntent = new Intent(this, BluetoothLeService.class);
+
         testbedDevice = getIntent().getExtras().getParcelable(TESTBED_DEVICE);
 
         Bundle bundle = new Bundle();
-        bundle.putParcelable(BluetoothLeService.TESTBED_ID, testbedDevice);
+        bundle.putParcelable(TESTBED_DEVICE, testbedDevice);
 
         pedometerFragment = new PedometerFragment();
         heartRateFragment = new HeartRateFragment();
         temperatureFragment = new TemperatureFragment();
+        testFragment = new TestFragment();
 
         pedometerFragment.setArguments(bundle);
         heartRateFragment.setArguments(bundle);
         temperatureFragment.setArguments(bundle);
+        testFragment.setArguments(bundle);
 
         ft = getSupportFragmentManager().beginTransaction();
-        currentFragment = temperatureFragment;
+        currentFragment = testFragment;
         ft.replace(R.id.activity_test_host_fragment, currentFragment);
         ft.commit();
 
         BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.nav_view);
-        navigation.setSelectedItemId(R.id.navigation_notifications);
+        navigation.setSelectedItemId(R.id.navigation_temperature_graph);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
 
 
@@ -176,130 +183,64 @@ public class DatabaseActivity extends AppCompatActivity {
 
         getSupportActionBar().setDisplayShowHomeEnabled(true);
 
-
-
-        //write("Připraven k připojení: [" + testbedDevice.getBluetoothDevice().getAddress() + "] (" + String.format("%04X", testbedDevice.getDeviceId()) + ")");
-
-
-        AlertDialog.Builder conectingDialogBuilder = new AlertDialog.Builder(this);
-        //LayoutInflater layoutInflater = (LayoutInflater) this.getSystemService(LAYOUT_INFLATER_SERVICE);
-        View conectingDialogBuilderView = getLayoutInflater().inflate(R.layout.dialog_list_view, null);
-        ListView listView = (ListView) conectingDialogBuilderView.findViewById(R.id.dialog_list_view_lsv);
-        conditionsListAdapter = new ConditionsListAdapter(getLayoutInflater(), getApplicationContext(), 3);
-        listView.setAdapter(conditionsListAdapter);
-        conectingDialogBuilder.setIcon(getDrawable(R.drawable.ic_testbed_id)); //TODO: Jiná ikona
-        conectingDialogBuilder.setTitle("Připojování");
-        conectingDialogBuilder.setView(conectingDialogBuilderView);
-        conectingDialog = conectingDialogBuilder.create();
-        conectingDialog.setCancelable(false);
-        conectingDialog.setCanceledOnTouchOutside(false);
-        conectingDialog.show();
-
-
-        conditionsListAdapter.setCondition(0, ConditionsListAdapter.PROGRESS, "Připojování zařízení...");
-        conditionsListAdapter.notifyDataSetChanged();
-
-       /* Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
-        gattServiceIntent.putExtra(BluetoothLeService.TESTBED_ID, testbedDevice);
-        bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);*/
-        startService(new Intent(this, BluetoothLeService.class));
-
-
     }
 
-    private void writeDescriptor(int characteristic) {
-        bluetoothLeService.setCharacteristicNotification(bluetoothLeService.getSupportedGattServices().get(2).getCharacteristics().get(characteristic), true);
-    }
+    List<BluetoothGattCharacteristic> charWithNotif = new ArrayList<>();
 
-    private final BroadcastReceiver mGattUpdateReceiver = new BroadcastReceiver() {
+    private final BroadcastReceiver mGattUpdateReceiverForConnect = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
             if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(action)) {
-                conditionsListAdapter.setCondition(0, ConditionsListAdapter.PASS, "Připojeno");
-                conditionsListAdapter.setCondition(1, ConditionsListAdapter.PROGRESS, "Probíhá objevování services...");
-                conditionsListAdapter.notifyDataSetChanged();
+                Toast.makeText(getApplicationContext(), "Znovu připojeno", Toast.LENGTH_SHORT).show();
+
             } else if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(action)) {
                 Toast.makeText(getApplicationContext(), "ODPOJENO!", Toast.LENGTH_SHORT).show();
+                bluetoothLeService.connect(testbedDevice.getBluetoothDevice().getAddress());
             } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
-                conditionsListAdapter.setCondition(1, ConditionsListAdapter.PASS, "Services objeveny.");
-                conditionsListAdapter.setCondition(2, ConditionsListAdapter.PROGRESS, "Probíhá příprava na zápis descriptorů (1 z 3)");
-                conditionsListAdapter.notifyDataSetChanged();
-                //conectingDialog.setMessage("Objeveny dostupné sevices u: [" + testbedDevice.getBluetoothDevice().getAddress() + "] (" + String.format("%04X", testbedDevice.getDeviceId()) + ")");
-                //conectingDialog.show();
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        writeDescriptor(iterator);
-                        conditionsListAdapter.setCondition(2, ConditionsListAdapter.PROGRESS, "Probíhá zápis descriptorů (1 z 3)");
-                        conditionsListAdapter.notifyDataSetChanged();
-                    }
-                }, 2000);
+
 
             } else if (BluetoothLeService.ACTION_GATT_DESCRIPTOR_WRITTEN.equals(action)) {
-                //conectingDialog.setMessage("Nastaveno přijímání notifikací u: [" + testbedDevice.getBluetoothDevice().getAddress() + "] (" + String.format("%04X", testbedDevice.getDeviceId()) + ") na service: " + SampleGattAttributes.lookupFromUUID(SampleGattAttributes.TESTBED_SERVICE, "unknown)") + ", characteristic: " + iterator);
-                //conectingDialog.show();
-                iterator++;
-                if (iterator <= 3) {
-                    writeDescriptor(iterator);
-                    conditionsListAdapter.setCondition(2, ConditionsListAdapter.PROGRESS, "Probíhá zápis descriptorů (" + iterator + " z 3)");
-                    conditionsListAdapter.notifyDataSetChanged();
-                } else {
-                    conditionsListAdapter.setCondition(2, ConditionsListAdapter.PASS, "Zápis descriptorů dokončen.");
-                    conditionsListAdapter.notifyDataSetChanged();
-                    conectingDialog.hide();
-                    conectingDialog.cancel();
-
-                }
-                ;//conectingDialog.hide();
-
-            } else if (BluetoothLeService.STEP_DATA_AVAILABLE.equals(action)) {
 
 
-            } else if (BluetoothLeService.HEART_RATE_DATA_AVAILABLE.equals(action)) {
+            } else if (BluetoothLeService.ACTION_STEP_DATA_AVAILABLE.equals(action)) {
 
-            } else if (BluetoothLeService.TEMPERATURE_DATA_AVAILABLE.equals(action)) {
+
+            } else if (BluetoothLeService.ACTION_HEART_RATE_DATA_AVAILABLE.equals(action)) {
+
+            } else if (BluetoothLeService.ACTION_TEMPERATURE_DATA_AVAILABLE.equals(action)) {
                 if(currentFragment.equals(temperatureFragment)){
                     temperatureFragment.funkce();
                 }
 
-            } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
+            } else if (BluetoothLeService.ACTION_TESTBED_ID_DATA_AVAILABLE.equals(action)) {
 
-                byte[] data = intent.getByteArrayExtra(BluetoothLeService.EXTRA_DATA);
-                //String data = intent.getStringExtra(BluetoothLeService.EXTRA_DATA);
-                SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss.SSS dd-MM-yyyy", Locale.getDefault());
-                String str = intent.getAction();
-
-
-                //bluetoothLeService.disconnect();
-                /*TestbedDevice testbedDevice = new TestbedDevice();
-                testbedDevice = devicesListAdapter.getDevice(discoveringDeviceIndex);
-                testbedDevice.addAvailableSensors(data[0]);
-                testbedDevice.addDeviceId(((data[1]& 0xFF) <<8) + (data[2]& 0xFF));
-                devicesListAdapter.setDevice(testbedDevice);
-                devicesListAdapter.notifyDataSetChanged();
-                bluetoothLeService.disconnect();
-                discoveringDeviceIndex++;*/
             }
         }
     };
 
+
     @Override
     protected void onResume() {
         super.onResume();
-        Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
-        gattServiceIntent.putExtra(BluetoothLeService.TESTBED_ID, testbedDevice);
-        bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
 
-        //testbedDbHelper = new TestbedDbHelper(getApplicationContext());
-        //writableTestbedDb = testbedDbHelper.getWritableDatabase();
+        Log.i(TAG, testbedDevice.getBluetoothDevice().getAddress());
+        gattServiceIntent.putExtra(DatabaseActivity.TESTBED_DEVICE, testbedDevice);
+        boolean b = bindService(gattServiceIntent, mServiceConnection, BIND_ADJUST_WITH_ACTIVITY);
+
+        // Create an explicit intent for an Activity in your app
+        Intent intent = new Intent(this, DatabaseActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
+
     }
-
     @Override
     protected void onPause() {
         super.onPause();
-        //unregisterReceiver(mGattUpdateReceiver);
-        //unbindService(mServiceConnection);
+
+        //bluetoothLeService.disconnect();
+        this.unbindService(mServiceConnection);
+        //stopService(gattServiceIntent);
         Log.w(TAG, "Pausnuto");
 
     }
@@ -316,15 +257,14 @@ public class DatabaseActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        //unbindService(mServiceConnection);
-        //bluetoothLeService=null;
+//        unbindService(mServiceConnection);
+        stopService(new Intent(this, BluetoothLeService.class));
+        bluetoothLeService=null;
+
         Log.w(TAG, "Zniceno");
-
-
     }
 
-
-    }
+}
 
 
 
