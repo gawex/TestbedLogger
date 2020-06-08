@@ -1,4 +1,4 @@
-package cz.vsb.cbe.tesdbed;
+package cz.vsb.cbe.testbed;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothGattCharacteristic;
@@ -34,19 +34,19 @@ import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import cz.vsb.cbe.tesdbed.sql.TestbedDatabase;
-import cz.vsb.cbe.tesdbed.BluetoothLeService.LocalBinder;
+import cz.vsb.cbe.testbed.sql.TestbedDatabase;
+import cz.vsb.cbe.testbed.BluetoothLeService.LocalBinder;
 
 public class DiscoverDevicesActivity extends AppCompatActivity {
 
     private static final String TAG = DiscoverDevicesActivity.class.getSimpleName();
 
     private static final long SCAN_PERIOD_IN_SECOND = 5;
+    private static final int SPLASH_TIME = 500; //This is 0.5 seconds
 
     private static final int NO_FOUNDED_DEVICES_STATE = 0;
     private static final int SCANNING_STATE = 1;
@@ -87,7 +87,7 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
 
     private boolean destroyBackgroundService = true;
 
-    List<BluetoothGattCharacteristic> characteristicsForDescriptorWrite = new ArrayList<>();
+    private int totalDescriptorForWrite = 0;
     private int descriptorWriteIndex = 0;
 
     private enum INTENT_FILTER_TYPES {
@@ -139,22 +139,20 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
     public boolean onPrepareOptionsMenu(Menu menu) {
         MenuItem menuItem = menu.findItem(R.id.scaning_state);
         switch (activityState){
-            case NO_FOUNDED_DEVICES_STATE:
-
             case DISCOVERED_STATE:
-                menuItem.setTitle(getResources().getString(R.string.activity_discover_devices_discovering_stopped));
+                menuItem.setTitle(getResources().getString(R.string.activity_discover_devices_options_menu_title_discovering_stopped));
                 break;
 
             case SCANNING_STATE:
-                menuItem.setTitle(getResources().getString(R.string.activity_discover_devices_scanning_started) + " (" + ((MillisUntilFinishedScanning / 1000) + 1) + ")");
+                menuItem.setTitle(getResources().getString(R.string.activity_discover_devices_options_menu_title_scanning_started) + " (" + ((MillisUntilFinishedScanning / 1000) + 1) + ")");
                 break;
 
             case DISCOVERING_STATE:
-                menuItem.setTitle(getResources().getString(R.string.activity_discover_devices_discovering_started) + " (" + (discoveringDeviceIndex + 1) + " " + getResources().getString(R.string.activity_discover_devices_discovering_conjunction) + " " + testbedDevicesListAdapter.getCount() + ")");
+                menuItem.setTitle(getResources().getString(R.string.activity_discover_devices_options_menu_title_discovering_started) + " (" + (discoveringDeviceIndex + 1) + " " + getResources().getString(R.string.activity_discover_devices_options_menu_title_discovering_conjunction) + " " + testbedDevicesListAdapter.getCount() + ")");
                 break;
 
             case DISCOVERING_CANCELED:
-                menuItem.setTitle(getResources().getString(R.string.activity_discover_devices_discovering_canceling));
+                menuItem.setTitle(getResources().getString(R.string.activity_discover_devices_options_menu_title_discovering_canceling));
                 break;
         }
         return super.onPrepareOptionsMenu(menu);
@@ -176,8 +174,9 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
                         break;
 
                     case DISCOVERING_STATE:
-                        activityState = DISCOVERING_CANCELED;
-                        invalidateOptionsMenu();
+                        //activityState = DISCOVERING_CANCELED;
+                        cancelDiscovering();
+                        //invalidateOptionsMenu();
                         break;
                 }
                 return true;
@@ -187,7 +186,20 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
                 return true;
 
             case R.id.about_application:
-                Toast.makeText(this, "About has not been implemented yet.", Toast.LENGTH_SHORT).show();
+                final AlertDialog alertDialog = new AlertDialog.Builder(this)
+                        .setIcon(getDrawable(R.drawable.ic_testbed_id))
+                        .setTitle(getString(R.string.dialog_title_about_application))
+                        .setMessage(getString(R.string.dialog_message_about_application))
+                        .setNeutralButton(getString(R.string.dialog_button_neutral_close), new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+
+                            }
+                        })
+                        .create();
+                alertDialog.setCancelable(false);
+                alertDialog.setCanceledOnTouchOutside(false);
+                alertDialog.show();
                 return true;
 
             default:
@@ -248,10 +260,12 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
                                 TestbedDatabase.getInstance(getApplicationContext()).insertTestbedDevice(selectedTestbedDevice);
                             }
                             bluetoothLeService.setTestbedDevice(selectedTestbedDevice);
+                            bluetoothLeService.setAutoReconnectAndNotificationEnabled(true);
+                            totalDescriptorForWrite = Integer.bitCount(selectedTestbedDevice.getAvailableSensors());
                             bluetoothLeService.connect(selectedTestbedDevice.getBluetoothDevice().getAddress());
                             registerReceiver(connectingBroadcastReceiver, makeGattUpdateIntentFilter(INTENT_FILTER_TYPES.FOR_CONNECTING));
                             connectingDialog.show();
-                            conditionsListAdapter.setCondition(CONNECTION_STATUS, ConditionsListAdapter.PROGRESS, getString(R.string.alert_dialog_text_connecting));
+                            conditionsListAdapter.setCondition(CONNECTION_STATUS, ConditionsListAdapter.PROGRESS, getString(R.string.dialog_condition_connecting_progress_connecting));
                             conditionsListAdapter.notifyDataSetChanged();
                         }
                     });
@@ -272,14 +286,20 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
 
         connectingDialog = new AlertDialog.Builder(this)
                 .setView(dialogView)
-                .setTitle(getString(R.string.alert_dialog_title))
+                .setTitle(getString(R.string.dialog_title_connecting_progress))
                 .setIcon(getDrawable(R.drawable.ic_testbed_id))
-                .setNeutralButton(getString(R.string.alert_dialog_text_cancel), new DialogInterface.OnClickListener() {
+                .setNegativeButton(getString(R.string.dialog_button_negative_cancel), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
+                        bluetoothLeService.setAutoReconnectAndNotificationEnabled(false);
+                        bluetoothLeService.removeTestbedDevice();
                         bluetoothLeService.disconnect();
+                        unregisterReceiver(connectingBroadcastReceiver);
                         conditionsListAdapter = new ConditionsListAdapter(getLayoutInflater(), getApplicationContext(), 3);
                         conditionsListView.setAdapter(conditionsListAdapter);
+                        testbedDevicesListAdapter.clear();
+                        testbedDevicesListAdapter.notifyDataSetChanged();
+                        noDevicesFound.setVisibility(View.VISIBLE);
                     }
                 })
                 .create();
@@ -350,81 +370,86 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
 
         @Override
         public void onScanFailed(int errorCode) {
-            Toast.makeText(getApplicationContext(), getResources().getString(R.string.activity_discover_devices_scanning_failed) + errorCode, Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(), getResources().getString(R.string.activity_discover_devices_toast_message_scanning_failed) + errorCode, Toast.LENGTH_LONG).show();
             finish();
         }
     };
+
+    private void cancelDiscovering(){
+            activityState = DISCOVERING_CANCELED;
+            invalidateOptionsMenu();
+            bluetoothLeService.disconnect();
+            unregisterReceiver(discoveringBroadcastReceiver);
+            List<TestbedDevice> devicesForRemove = new ArrayList<>();
+            for(TestbedDevice testbedDevice : testbedDevicesListAdapter.getDevices()){
+                if(!testbedDevice.isDeviceDiscovered()){
+                    devicesForRemove.add(testbedDevice);
+                }
+            }
+            testbedDevicesListAdapter.removeDevices(devicesForRemove);
+            testbedDevicesListAdapter.notifyDataSetChanged();
+            activityState = DISCOVERED_STATE;
+            invalidateOptionsMenu();
+            if(testbedDevicesListAdapter.getCount() == 0){
+                noDevicesFound.setVisibility(View.VISIBLE);
+            }
+            scanningAndDiscoveringProgressBar.setVisibility(ProgressBar.INVISIBLE);
+
+    }
 
     private final BroadcastReceiver discoveringBroadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
-            if(activityState == DISCOVERING_CANCELED){
-                unregisterReceiver(discoveringBroadcastReceiver);
-                bluetoothLeService.disconnect();
-                List<TestbedDevice> devicesForRemove = new ArrayList<>();
-                for(TestbedDevice testbedDevice : testbedDevicesListAdapter.getDevices()){
-                    if(!testbedDevice.isDeviceDiscovered()){
-                        devicesForRemove.add(testbedDevice);
+            if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(action)) {
+                discoveringDeviceIndex++;
+                if (discoveringDeviceIndex < testbedDevicesListAdapter.getCount() && bluetoothLeService != null) {
+                    bluetoothLeService.connect(testbedDevicesListAdapter.getDevice(discoveringDeviceIndex).getBluetoothDevice().getAddress());
+                    invalidateOptionsMenu();
+                } else {
+                    unregisterReceiver(discoveringBroadcastReceiver);
+                    List<TestbedDevice> devicesForRemove = new ArrayList<>();
+                    for (TestbedDevice testbedDevice : testbedDevicesListAdapter.getDevices()) {
+                        if (!testbedDevice.isDeviceDiscovered()) {
+                            devicesForRemove.add(testbedDevice);
+                        }
+                    }
+                    testbedDevicesListAdapter.removeDevices(devicesForRemove);
+                    testbedDevicesListAdapter.notifyDataSetChanged();
+                    activityState = DISCOVERED_STATE;
+                    invalidateOptionsMenu();
+                    if (testbedDevicesListAdapter.getCount() == 0) {
+                        noDevicesFound.setVisibility(View.VISIBLE);
+                    }
+                    scanningAndDiscoveringProgressBar.setVisibility(ProgressBar.INVISIBLE);
+                }
+            } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
+                for (BluetoothGattService bluetoothGattService : bluetoothLeService.getSupportedGattServices()) {
+                    for (BluetoothGattCharacteristic bluetoothGattCharacteristic : bluetoothGattService.getCharacteristics()) {
+                        if (bluetoothGattCharacteristic.getUuid().equals(SampleGattAttributes.TESTBED_ID_CHARACTERISTIC_UUID)) {
+                            bluetoothLeService.readCharacteristic(bluetoothGattCharacteristic);
+                        }
                     }
                 }
-                testbedDevicesListAdapter.removeDevices(devicesForRemove);
-                testbedDevicesListAdapter.notifyDataSetChanged();
-                activityState = DISCOVERED_STATE;
-                invalidateOptionsMenu();
-                if(testbedDevicesListAdapter.getCount() == 0){
-                    noDevicesFound.setVisibility(View.VISIBLE);
-                }
-                scanningAndDiscoveringProgressBar.setVisibility(ProgressBar.INVISIBLE);
-            } else {
-                 if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(action)) {
-                    discoveringDeviceIndex++;
-                    if (discoveringDeviceIndex < testbedDevicesListAdapter.getCount() && bluetoothLeService != null) {
-                        bluetoothLeService.connect(testbedDevicesListAdapter.getDevice(discoveringDeviceIndex).getBluetoothDevice().getAddress());
-                        invalidateOptionsMenu();
-                    } else {
-                        unregisterReceiver(discoveringBroadcastReceiver);
-                        List<TestbedDevice> devicesForRemove = new ArrayList<>();
-                        for(TestbedDevice testbedDevice : testbedDevicesListAdapter.getDevices()){
-                            if(!testbedDevice.isDeviceDiscovered()){
-                                devicesForRemove.add(testbedDevice);
-                            }
-                        }
-                        testbedDevicesListAdapter.removeDevices(devicesForRemove);
+            } else if (BluetoothLeService.ACTION_TESTBED_ID_DATA_AVAILABLE.equals(action)) {
+                final TestbedDevice testbedDevice = testbedDevicesListAdapter.getDevice(discoveringDeviceIndex);
+                testbedDevice.addAvailableSensors(intent.getIntExtra(BluetoothLeService.AVAILABLE_SENSORS_DATA, 8));
+                testbedDevice.addDeviceId(intent.getIntExtra(BluetoothLeService.TESTBED_ID_DATA, 0x1FFFF));
+                testbedDevice.deviceIsDiscovered();
+                TestbedDatabase.getInstance(getApplicationContext()).selectStoredTestbedDevice(testbedDevice, new TestbedDatabase.OnIsTestbedDeviceStored() {
+                    @Override
+                    public void onStoredResult(int result) {
+                        testbedDevice.setStoredStatus(result);
+                        testbedDevicesListAdapter.setDevice(testbedDevice);
                         testbedDevicesListAdapter.notifyDataSetChanged();
-                        activityState = DISCOVERED_STATE;
-                        invalidateOptionsMenu();
-                        if(testbedDevicesListAdapter.getCount() == 0){
-                            noDevicesFound.setVisibility(View.VISIBLE);
-                        }
-                        scanningAndDiscoveringProgressBar.setVisibility(ProgressBar.INVISIBLE);
+                        bluetoothLeService.disconnect();
                     }
-                } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
-                    for (BluetoothGattService bluetoothGattService : bluetoothLeService.getSupportedGattServices()) {
-                        for (BluetoothGattCharacteristic bluetoothGattCharacteristic : bluetoothGattService.getCharacteristics()) {
-                            if (bluetoothGattCharacteristic.getUuid().equals(SampleGattAttributes.TESTBED_ID_CHARACTERISTIC_UUID)) {
-                                bluetoothLeService.readCharacteristic(bluetoothGattCharacteristic);
-                            }
-                        }
-                    }
-                } else if (BluetoothLeService.ACTION_TESTBED_ID_DATA_AVAILABLE.equals(action)) {
-                    final TestbedDevice testbedDevice = testbedDevicesListAdapter.getDevice(discoveringDeviceIndex);
-                    testbedDevice.addAvailableSensors(intent.getIntExtra(BluetoothLeService.AVAILABLE_SENSORS_DATA, 8));
-                    testbedDevice.addDeviceId(intent.getIntExtra(BluetoothLeService.TESTBED_ID_DATA, 0x1FFFF));
-                    testbedDevice.deviceIsDiscovered();
-                    TestbedDatabase.getInstance(getApplicationContext()).selectStoredTestbedDevice(testbedDevice, new TestbedDatabase.OnIsTestbedDeviceStored() {
-                        @Override
-                        public void onStoredResult(int result) {
-                            testbedDevice.setStoredStatus(result);
-                            testbedDevicesListAdapter.setDevice(testbedDevice);
-                            testbedDevicesListAdapter.notifyDataSetChanged();
-                            bluetoothLeService.disconnect();
-                        }
-                    });
-                }
+                });
             }
         }
     };
+
+
 
     private final BroadcastReceiver connectingBroadcastReceiver = new BroadcastReceiver() {
         @Override
@@ -432,68 +457,42 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
             final String action = intent.getAction();
             if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(action)) {
                 TestbedDatabase.getInstance(getApplicationContext()).updateLastConnectedTestbedDevice(selectedTestbedDevice);
-                conditionsListAdapter.setCondition(CONNECTION_STATUS, ConditionsListAdapter.PASS, getString(R.string.notification_title) + ": " +
+                conditionsListAdapter.setCondition(CONNECTION_STATUS, ConditionsListAdapter.PASS, getString(R.string.notification_logging_title) + ": " +
                         getString(R.string.ble_devices_name) + " (#" +
                         Integer.toHexString(selectedTestbedDevice.getDeviceId()) + ")");
-                conditionsListAdapter.setCondition(SERVICE_DISCOVERING_STATUS, ConditionsListAdapter.PROGRESS, getString(R.string.alert_dialog_text_service_discovering));
+                conditionsListAdapter.setCondition(SERVICE_DISCOVERING_STATUS, ConditionsListAdapter.PROGRESS, getString(R.string.dialog_condition_re_connecting_progress_services_discovering));
                 conditionsListAdapter.notifyDataSetChanged();
             } else if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(action)) {
                 Toast.makeText(getApplicationContext(), "ODPOJENO!", Toast.LENGTH_SHORT).show();
             } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
-                conditionsListAdapter.setCondition(SERVICE_DISCOVERING_STATUS, ConditionsListAdapter.PASS, getString(R.string.alert_dialog_text_service_discovered));
+                conditionsListAdapter.setCondition(SERVICE_DISCOVERING_STATUS, ConditionsListAdapter.PASS, getString(R.string.dialog_condition_re_connecting_progress_services_discovered));
+                conditionsListAdapter.setCondition(DESCRIPTOR_WRITTEN_STATUS, ConditionsListAdapter.PROGRESS,  getString(R.string.dialog_condition_re_connecting_progress_descriptor_write_prepare) + " (" + totalDescriptorForWrite + ")");
                 conditionsListAdapter.notifyDataSetChanged();
-
-
-                characteristicsForDescriptorWrite = new ArrayList<>();
-                descriptorWriteIndex = 0;
-
-                for (BluetoothGattService bluetoothGattService : bluetoothLeService.getSupportedGattServices()) {
-                    if (bluetoothGattService.getUuid().equals(SampleGattAttributes.TESTBED_SERVICE_UUID)) {
-                        for (BluetoothGattCharacteristic bluetoothGattCharacteristic : bluetoothGattService.getCharacteristics()) {
-                            if (bluetoothGattCharacteristic.getUuid().equals(SampleGattAttributes.STEPS_CHARACTERISTIC_UUID) && BigInteger.valueOf(selectedTestbedDevice.getAvailableSensors()).testBit(2)) {
-                                characteristicsForDescriptorWrite.add(bluetoothGattCharacteristic);
-                            } else if (bluetoothGattCharacteristic.getUuid().equals(SampleGattAttributes.HEART_RATE_CHARACTERISTIC_UUID) && BigInteger.valueOf(selectedTestbedDevice.getAvailableSensors()).testBit(1)) {
-                                characteristicsForDescriptorWrite.add(bluetoothGattCharacteristic);
-                            } else if (bluetoothGattCharacteristic.getUuid().equals(SampleGattAttributes.TEMPERATURE_CHARACTERISTIC_UUID) && BigInteger.valueOf(selectedTestbedDevice.getAvailableSensors()).testBit(0)) {
-                                characteristicsForDescriptorWrite.add(bluetoothGattCharacteristic);
-                            }
-                        }
-                    }
-                }
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        bluetoothLeService.setCharacteristicNotification(characteristicsForDescriptorWrite.get(descriptorWriteIndex), true);
-                        conditionsListAdapter.setCondition(DESCRIPTOR_WRITTEN_STATUS, ConditionsListAdapter.PROGRESS,  getString(R.string.alert_dialog_text_descriptor_writing) + " (" + (descriptorWriteIndex + 1) + " " + getString(R.string.alert_dialog_text_descriptor_writing_conjuction) + " " + characteristicsForDescriptorWrite.size() + ")");
-                        conditionsListAdapter.notifyDataSetChanged();
-                    }
-                }, 2000);
-                conditionsListAdapter.setCondition(DESCRIPTOR_WRITTEN_STATUS, ConditionsListAdapter.PROGRESS, getString(R.string.alert_dialog_text_descriptor_write_prepare) + " (" + characteristicsForDescriptorWrite.size() + ")");
-                conditionsListAdapter.notifyDataSetChanged();
-
             } else if (BluetoothLeService.ACTION_GATT_DESCRIPTOR_WRITTEN.equals(action)) {
                 descriptorWriteIndex++;
-                if (descriptorWriteIndex < characteristicsForDescriptorWrite.size()) {
-                    bluetoothLeService.setCharacteristicNotification(characteristicsForDescriptorWrite.get(descriptorWriteIndex), true);
-                    conditionsListAdapter.setCondition(DESCRIPTOR_WRITTEN_STATUS, ConditionsListAdapter.PROGRESS,  getString(R.string.alert_dialog_text_descriptor_writing) + " (" + (descriptorWriteIndex + 1) + " " + getString(R.string.alert_dialog_text_descriptor_writing_conjuction) + " " + characteristicsForDescriptorWrite.size() + ")");
-                    conditionsListAdapter.notifyDataSetChanged();
-                } else {
-                    conditionsListAdapter.setCondition(2, ConditionsListAdapter.PASS, getString(R.string.alert_dialog_text_descriptor_write_done));
-                    conditionsListAdapter.notifyDataSetChanged();
-                    connectingDialog.hide();
-                    connectingDialog.cancel();
-                    unregisterReceiver(connectingBroadcastReceiver);
-                    Intent intentActivity = new Intent(DiscoverDevicesActivity.this, DatabaseActivity.class);
-                    intentActivity.putExtra(DatabaseActivity.TESTBED_DEVICE, selectedTestbedDevice);
-                    startActivity(intentActivity);
-                    destroyBackgroundService = false;
-                    finish();
+                conditionsListAdapter.setCondition(DESCRIPTOR_WRITTEN_STATUS, ConditionsListAdapter.PROGRESS,  getString(R.string.dialog_condition_re_connecting_progress_descriptor_writing) + " (" + descriptorWriteIndex + " " + getString(R.string.dialog_condition_re_connecting_progress_descriptor_writing_conjunction) + " " + totalDescriptorForWrite + ")");
+                conditionsListAdapter.notifyDataSetChanged();
+                if (descriptorWriteIndex == totalDescriptorForWrite) {
+                   conditionsListAdapter.setCondition(2, ConditionsListAdapter.PASS, getString(R.string.dialog_condition_re_connecting_progress_descriptor_written));
+                   conditionsListAdapter.notifyDataSetChanged();
+                   unregisterReceiver(connectingBroadcastReceiver);
+                   destroyBackgroundService = false;
+
+                   new Handler().postDelayed(new Runnable() {
+                       @Override
+                       public void run() {
+                           connectingDialog.hide();
+                           connectingDialog.cancel();
+                           Intent intentActivity = new Intent(DiscoverDevicesActivity.this, DatabaseActivity.class);
+                           intentActivity.putExtra(DatabaseActivity.TESTBED_DEVICE, selectedTestbedDevice);
+                           startActivity(intentActivity);
+                           finish();
+                       }
+                   }, SPLASH_TIME);
                 }
             }
         }
     };
-
-
 
     @Override
     protected void onStop() {

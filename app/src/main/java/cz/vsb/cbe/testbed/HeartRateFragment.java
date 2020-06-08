@@ -1,4 +1,4 @@
-package cz.vsb.cbe.tesdbed;
+package cz.vsb.cbe.testbed;
 
 import android.graphics.RectF;
 import android.graphics.Typeface;
@@ -28,7 +28,7 @@ import com.github.mikephil.charting.utils.MPPointF;
 import java.util.ArrayList;
 
 
-public class TestFragment extends Fragment implements OnChartValueSelectedListener{
+public class HeartRateFragment extends Fragment implements OnChartValueSelectedListener{
 
 
     private MyBarChart chart;
@@ -48,7 +48,7 @@ public class TestFragment extends Fragment implements OnChartValueSelectedListen
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_test, container, false);
+        View view = inflater.inflate(R.layout.fragment_heart_rate, container, false);
 
         //tfLight = Typeface.createFromAsset(getContext().getAssets(), "digital7.ttf");
 

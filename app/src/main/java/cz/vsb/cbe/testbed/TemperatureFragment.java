@@ -1,4 +1,4 @@
-package cz.vsb.cbe.tesdbed;
+package cz.vsb.cbe.testbed;
 
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
@@ -24,8 +24,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-import cz.vsb.cbe.tesdbed.sql.TestbedDatabase;
-import cz.vsb.cbe.tesdbed.sql.TestbedDatabase.Record;
+import cz.vsb.cbe.testbed.sql.TestbedDatabase;
+import cz.vsb.cbe.testbed.sql.TestbedDatabase.Record;
 
 
 public class TemperatureFragment extends Fragment {

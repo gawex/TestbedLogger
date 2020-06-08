@@ -1,4 +1,4 @@
-package cz.vsb.cbe.tesdbed;
+package cz.vsb.cbe.testbed;
 
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
@@ -10,8 +10,6 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
-
-import cz.vsb.cbe.tesdbed.sql.TestbedDatabaseHelper;
 
 
 public class PedometerFragment extends Fragment {

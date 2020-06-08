@@ -1,4 +1,4 @@
-package cz.vsb.cbe.tesdbed.sql;
+package cz.vsb.cbe.testbed.sql;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -12,8 +12,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import cz.vsb.cbe.tesdbed.BluetoothLeService;
-import cz.vsb.cbe.tesdbed.TestbedDevice;
+import cz.vsb.cbe.testbed.BluetoothLeService;
+import cz.vsb.cbe.testbed.TestbedDevice;
 
 public class TestbedDatabase {
 
@@ -412,7 +412,7 @@ public class TestbedDatabase {
         }
     }
 
-    public void close(){
+    private void close(){
         WritableDatabase.close();
         ReadableDatabase.close();
         TestbedDatabaseHelper.getInstance(Context).close();

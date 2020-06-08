@@ -1,17 +1,14 @@
-package cz.vsb.cbe.tesdbed;
+package cz.vsb.cbe.testbed;
 
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
-import android.widget.ImageView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,7 +21,6 @@ public class DatabaseListAdapter extends BaseAdapter {
 
     private LayoutInflater LayoutInflater;
     private List<Map<Integer, Object>> Records;
-    private SimpleDateFormat Formater;
     private String FloatFormat;
     private Context Context;
 

@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package cz.vsb.cbe.tesdbed;
+package cz.vsb.cbe.testbed;
 
+import android.app.PendingIntent;
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothClass;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
@@ -29,10 +29,11 @@ import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.content.Intent;
-import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Typeface;
 import android.os.Binder;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.TextUtils;
@@ -43,10 +44,13 @@ import android.util.Log;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
-import java.util.Arrays;
+import java.math.BigInteger;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
-import cz.vsb.cbe.tesdbed.sql.TestbedDatabase;
+import cz.vsb.cbe.testbed.sql.TestbedDatabase;
 
 /**
  * Service for managing connection and data communication with a GATT server hosted on a
@@ -57,10 +61,6 @@ public class BluetoothLeService extends Service {
     private final static String TAG = BluetoothLeService.class.getSimpleName();
 
     private static final int NOTIFICATION_ID = 0;
-
-    private static final int STATE_DISCONNECTED = 0;
-    private static final int STATE_CONNECTING = 1;
-    private static final int STATE_CONNECTED = 2;
 
     public final static String ACTION_GATT_CONNECTED                = "cz.vsb.cbe.testbed.ACTION_GATT_CONNECTED";
     public final static String ACTION_GATT_SERVICES_DISCOVERED      = "cz.vsb.cbe.testbed.ACTION_GATT_SERVICES_DISCOVERED";
@@ -92,6 +92,12 @@ public class BluetoothLeService extends Service {
     private int LastHeartRateValue = -100;
     private float LastTemperatureValue = -100;
 
+    private Date LastStepTimeStamp, LastHeartRateTimeStamp, LastTemperatureTimeStamp;
+
+    private boolean AutoReconnectAndNotificationEnabled = false;
+
+    List<BluetoothGattCharacteristic> characteristicsForDescriptorWrite = new ArrayList<>();
+    private int descriptorWriteIndex = 0;
 
     public class LocalBinder extends Binder {
         BluetoothLeService getService() {
@@ -124,6 +130,14 @@ public class BluetoothLeService extends Service {
         this.TestbedDevice = testbedDevice;
     }
 
+    public void removeTestbedDevice(){
+        this.TestbedDevice = null;
+    }
+
+    public void setAutoReconnectAndNotificationEnabled(boolean autoReconnectAndNotificationEnabled){
+        this.AutoReconnectAndNotificationEnabled = autoReconnectAndNotificationEnabled;
+    }
+
     // Implements callback methods for GATT events that the app cares about.  For example,
     // connection change and services discovered.
     private final BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
@@ -146,12 +160,39 @@ public class BluetoothLeService extends Service {
                 if (NotificationManager != null) {
                     NotificationManager.cancel(NOTIFICATION_ID);
                 }
+                if (AutoReconnectAndNotificationEnabled){
+                    connect(TestbedDevice.getBluetoothDevice().getAddress());
+                }
             }
         }
 
         @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
+                if(AutoReconnectAndNotificationEnabled) {
+                    characteristicsForDescriptorWrite = new ArrayList<>();
+                    descriptorWriteIndex = 0;
+
+                    for (BluetoothGattService bluetoothGattService : getSupportedGattServices()) {
+                        if (bluetoothGattService.getUuid().equals(SampleGattAttributes.TESTBED_SERVICE_UUID)) {
+                            for (BluetoothGattCharacteristic bluetoothGattCharacteristic : bluetoothGattService.getCharacteristics()) {
+                                if (bluetoothGattCharacteristic.getUuid().equals(SampleGattAttributes.STEPS_CHARACTERISTIC_UUID) && BigInteger.valueOf(TestbedDevice.getAvailableSensors()).testBit(2)) {
+                                    characteristicsForDescriptorWrite.add(bluetoothGattCharacteristic);
+                                } else if (bluetoothGattCharacteristic.getUuid().equals(SampleGattAttributes.HEART_RATE_CHARACTERISTIC_UUID) && BigInteger.valueOf(TestbedDevice.getAvailableSensors()).testBit(1)) {
+                                    characteristicsForDescriptorWrite.add(bluetoothGattCharacteristic);
+                                } else if (bluetoothGattCharacteristic.getUuid().equals(SampleGattAttributes.TEMPERATURE_CHARACTERISTIC_UUID) && BigInteger.valueOf(TestbedDevice.getAvailableSensors()).testBit(0)) {
+                                    characteristicsForDescriptorWrite.add(bluetoothGattCharacteristic);
+                                }
+                            }
+                        }
+                    }
+                    new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            setCharacteristicNotification(characteristicsForDescriptorWrite.get(descriptorWriteIndex), true);
+                        }
+                    }, 2000);
+                }
                 broadcastUpdate(ACTION_GATT_SERVICES_DISCOVERED);
                 Log.i(TAG, "onServicesDiscovered received: " + status);
             } else {
@@ -162,7 +203,18 @@ public class BluetoothLeService extends Service {
         @Override
         public void onDescriptorWrite (BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status){
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                broadcastUpdate(ACTION_GATT_DESCRIPTOR_WRITTEN);
+                if (AutoReconnectAndNotificationEnabled){
+                    descriptorWriteIndex++;
+                    if (descriptorWriteIndex < characteristicsForDescriptorWrite.size()) {
+                        setCharacteristicNotification(characteristicsForDescriptorWrite.get(descriptorWriteIndex), true);
+                    }
+                    else{
+                       /* for (BluetoothGattCharacteristic bluetoothGattCharacteristic : characteristicsForDescriptorWrite){
+                            readCharacteristic(bluetoothGattCharacteristic);
+                        }*/
+                    }
+                    broadcastUpdate(ACTION_GATT_DESCRIPTOR_WRITTEN);
+                }
                 Log.w(TAG, "onDescriptorWrite received: " + status);
             } else {
                 Log.w(TAG, "onDescriptorWrite received: " + status);
@@ -218,63 +270,76 @@ public class BluetoothLeService extends Service {
         sendBroadcast(new Intent(action));
     }
 
+    /*private void broadcastUpdate(final String action, int cislo) {
+        Intent intent = new Intent(action);
+        intent.putExtra("TEST", cislo);
+        sendBroadcast(intent);
+    }*/
+
     private NotificationCompat.Builder buildNotification(int colorHeadlight) {
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(getApplicationContext(), getString(R.string.notification_channel_id));
         NotificationCompat.InboxStyle inboxStyle = new NotificationCompat.InboxStyle();
         String title;
         int [] notificationStatus = new int [] {0, 0, 0};
         int notificationNumber = 0;
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm:ss");
         if(TestbedDevice != null){
-            title = getString(R.string.notification_title) + ": " +
+            title = getString(R.string.notification_logging_title) + ": " +
                     getString(R.string.ble_devices_name) + " (#" +
                     Integer.toHexString(TestbedDevice.getDeviceId()) + ")";
         } else {
-            title = getString(R.string.notification_title) + ": " +
+            title = getString(R.string.notification_logging_title) + ": " +
                     getString(R.string.ble_devices_name) + " (#1FFFF)";
         }
 
         inboxStyle.setBigContentTitle(title);
-        inboxStyle.setSummaryText(getString(R.string.notification_text) + "muj je text");
+        inboxStyle.setSummaryText(getString(R.string.notification_logging_text) + "muj je text");
 
         if (LastStepValue != -100) {
-            Spannable stepHeader = new SpannableString(getString(R.string.notification_last_step_value_header));
+            Spannable stepHeader = new SpannableString(getString(R.string.notification_logging_last_step_value_header));
             stepHeader.setSpan(new StyleSpan(Typeface.BOLD), 0, stepHeader.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
             Spannable stepValue = new SpannableString(String.valueOf(LastStepValue));
             stepValue.setSpan(new StyleSpan(Typeface.BOLD), 0, stepValue.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
             stepValue.setSpan(new ForegroundColorSpan(colorHeadlight), 0, stepValue.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
-            Spannable stepUnit =  new SpannableString(getString(R.string.notification_last_step_value_unit));
+            Spannable stepUnit =  new SpannableString(getString(R.string.notification_logging_last_step_value_unit));
 
-            inboxStyle.addLine(TextUtils.concat(stepHeader, " ", stepValue, " ", stepUnit));
+            Spannable time = new SpannableString(simpleDateFormat.format(LastStepTimeStamp));
+
+            inboxStyle.addLine(TextUtils.concat(stepHeader, " ", stepValue, " ", stepUnit, " (", time, ")"));
             notificationStatus[0] = 1;
         }
 
         if (LastHeartRateValue != -100) {
-            Spannable heartRateHeader = new SpannableString(getString(R.string.notification_last_heart_rate_value_header));
+            Spannable heartRateHeader = new SpannableString(getString(R.string.notification_logging_last_heart_rate_value_header));
             heartRateHeader.setSpan(new StyleSpan(Typeface.BOLD), 0, heartRateHeader.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
             Spannable heartRateValue = new SpannableString(String.valueOf(LastHeartRateValue));
             heartRateValue.setSpan(new StyleSpan(Typeface.BOLD), 0, heartRateValue.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
             heartRateValue.setSpan(new ForegroundColorSpan(colorHeadlight), 0, heartRateValue.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
-            Spannable heartRateUnit =  new SpannableString(getString(R.string.notification_last_heart_rate_value_unit));
+            Spannable heartRateUnit =  new SpannableString(getString(R.string.notification_logging_last_heart_rate_value_unit));
 
-            inboxStyle.addLine(TextUtils.concat(heartRateHeader, " ", heartRateValue, " ", heartRateUnit));
+            Spannable time = new SpannableString(simpleDateFormat.format(LastHeartRateTimeStamp));
+
+            inboxStyle.addLine(TextUtils.concat(heartRateHeader, " ", heartRateValue, " ", heartRateUnit, " (", time, ")"));
             notificationStatus[1] = 1;
         }
 
         if (LastTemperatureValue != -100) {
-            Spannable temperatureHeader = new SpannableString(getString(R.string.notification_last_temperature_value_header));
+            Spannable temperatureHeader = new SpannableString(getString(R.string.notification_logging_last_temperature_value_header));
             temperatureHeader.setSpan(new StyleSpan(Typeface.BOLD), 0, temperatureHeader.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
             Spannable temperatureValue = new SpannableString(String.format("%3.2f", LastTemperatureValue));
             temperatureValue.setSpan(new StyleSpan(Typeface.BOLD), 0, temperatureValue.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
             temperatureValue.setSpan(new ForegroundColorSpan(colorHeadlight), 0, temperatureValue.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
-            Spannable temperatureUnit =  new SpannableString(getString(R.string.notification_last_temperature_value_unit));
+            Spannable temperatureUnit =  new SpannableString(getString(R.string.notification_logging_last_temperature_value_unit));
 
-            inboxStyle.addLine(TextUtils.concat(temperatureHeader, " ", temperatureValue, " ", temperatureUnit));
+            Spannable time = new SpannableString(simpleDateFormat.format(LastTemperatureTimeStamp));
+
+            inboxStyle.addLine(TextUtils.concat(temperatureHeader, " ", temperatureValue, " ", temperatureUnit, " (", time, ")"));
             notificationStatus[2] = 1;
         }
 
@@ -282,11 +347,20 @@ public class BluetoothLeService extends Service {
             notificationNumber += i;
         }
 
+        Intent notifyIntent = new Intent(this,DatabaseActivity.class);
+        // Set the Activity to start in a new, empty task
+        notifyIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        // Create the PendingIntent
+        PendingIntent notifyPendingIntent = PendingIntent.getActivity(this, 0, notifyIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
          return notificationBuilder.setContentTitle(title)
-                .setContentText(getString(R.string.notification_text))
+                .setContentText(getString(R.string.notification_logging_text))
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .setStyle(inboxStyle)
-                .setNumber(notificationNumber > 0 ? notificationNumber : 0);
+                .setNumber(notificationNumber > 0 ? notificationNumber : 0)
+                .setContentIntent(notifyPendingIntent)
+                .setOngoing(true)
+                .setColor(getColor(R.color.vsb));
     }
 
 
@@ -300,18 +374,21 @@ public class BluetoothLeService extends Service {
              int steps = Integer.parseInt(characteristic.getStringValue(0));
              TestbedDatabase.getInstance(getApplicationContext()).insertSteps(TestbedDevice.getDeviceId(), steps);
              LastStepValue = steps;
+             LastStepTimeStamp = new Date(System.currentTimeMillis());
              NotificationManager.notify(NOTIFICATION_ID, buildNotification(getColor(R.color.colorPrimary)).setSmallIcon((R.drawable.ic_pedometer_available)).build());
              Log.w(TAG, STEPS_DATA + " = " + Float.parseFloat(characteristic.getStringValue(0)) + " steps.");
          } else if (SampleGattAttributes.HEART_RATE_CHARACTERISTIC_UUID.equals(characteristic.getUuid())) {
              int heartRate = Integer.parseInt(characteristic.getStringValue(0));
              TestbedDatabase.getInstance(getApplicationContext()).insertHeartRate(TestbedDevice.getDeviceId(), heartRate);
              LastHeartRateValue = heartRate;
+             LastHeartRateTimeStamp = new Date(System.currentTimeMillis());
              NotificationManager.notify(NOTIFICATION_ID, buildNotification(getColor(R.color.colorPrimary)).setSmallIcon((R.drawable.ic_heart_rate_meter_available)).build());
              Log.w(TAG, HEART_RATE_DATA + " = " + Float.parseFloat(characteristic.getStringValue(0)) + " beats per one minute.");
          } else if (SampleGattAttributes.TEMPERATURE_CHARACTERISTIC_UUID.equals(characteristic.getUuid())) {
              float temperature = Float.parseFloat(characteristic.getStringValue(0));
              TestbedDatabase.getInstance(getApplicationContext()).insertTemperature(TestbedDevice.getDeviceId(), temperature);
              LastTemperatureValue = temperature;
+             LastTemperatureTimeStamp = new Date(System.currentTimeMillis());
              NotificationManager.notify(NOTIFICATION_ID, buildNotification(getColor(R.color.colorPrimary)).setSmallIcon((R.drawable.ic_thermometer_available)).build());
              Log.w(TAG, TEMPERATURE_DATA + " = " + Float.parseFloat(characteristic.getStringValue(0)) + " °C.");
          }  else {
@@ -329,10 +406,14 @@ public class BluetoothLeService extends Service {
 
     @Override
     public void onDestroy() {
+        super.onDestroy();
         Log.w(TAG, "SERVICE DESTROYED");
         close();
-        TestbedDatabase.getInstance(this).close();
-        super.onDestroy();
+        if (NotificationManager != null) {
+            NotificationManager.cancel(NOTIFICATION_ID);
+        }
+        AutoReconnectAndNotificationEnabled = false;
+
     }
 
     /**

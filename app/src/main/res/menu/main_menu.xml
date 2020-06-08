@@ -4,17 +4,17 @@
 
     <item
         android:id="@+id/scaning_state"
-        android:title="@string/activity_discover_devices_scanning_started"
+        android:title="@string/activity_discover_devices_options_menu_title_scanning_started"
         app:showAsAction="always|withText" />
 
     <item
         android:id="@+id/settings"
-        android:title="@string/main_menu_settings"
+        android:title="@string/options_menu_title_settings"
         app:showAsAction="collapseActionView|withText" />
 
     <item
         android:id="@+id/about_application"
-        android:title="@string/main_menu_about_application"
+        android:title="@string/options_menu_title_about_application"
         app:showAsAction="collapseActionView|withText" />
 
 </menu>

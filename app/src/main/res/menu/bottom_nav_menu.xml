@@ -2,23 +2,18 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
-        android:id="@+id/navigation_home"
+        android:id="@+id/navigation_pedometer"
         android:icon="@drawable/ic_pedometer_no_available"
-        android:title="@string/title_home" />
+        android:title="@string/activity_database_fragment_title_pedometer" />
 
     <item
-        android:id="@+id/navigation_dashboard"
+        android:id="@+id/navigation_heart_rate"
         android:icon="@drawable/ic_heart_rate_meter_no_available"
-        android:title="@string/title_dashboard" />
+        android:title="@string/activity_database_fragment_title_heart_rate_meter" />
 
     <item
-        android:id="@+id/navigation_notifications"
+        android:id="@+id/navigation_temperature"
         android:icon="@drawable/ic_thermometer_no_available"
-        android:title="@string/title_notifications" />
-
-    <item
-        android:id="@+id/navigation_temperature_graph"
-        android:icon="@drawable/ic_thermometer_no_available"
-        android:title="Teplota - GRAF" />
+        android:title="@string/activity_database_fragment_title_thermometer" />
 
 </menu>

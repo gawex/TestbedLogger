@@ -1,14 +1,9 @@
-package cz.vsb.cbe.tesdbed;
+package cz.vsb.cbe.testbed;
 
 import android.app.Activity;
 import android.app.Dialog;
 import android.os.Bundle;
-import android.view.View;
 import android.view.Window;
-import android.widget.Button;
-import android.widget.ListView;
-
-import androidx.appcompat.app.AlertDialog;
 
 public class CustomDialogClass extends Dialog {
 

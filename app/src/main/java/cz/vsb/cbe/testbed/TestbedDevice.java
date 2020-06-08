@@ -1,17 +1,12 @@
-package cz.vsb.cbe.tesdbed;
+package cz.vsb.cbe.testbed;
 
 import android.bluetooth.BluetoothDevice;
-import android.content.ContentValues;
 import android.content.Context;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Parcel;
 import android.os.Parcelable;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import cz.vsb.cbe.tesdbed.sql.TestbedDatabaseHelper;
 
 public class TestbedDevice implements Parcelable {
 

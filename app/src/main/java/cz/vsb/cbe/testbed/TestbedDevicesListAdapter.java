@@ -1,4 +1,4 @@
-package cz.vsb.cbe.tesdbed;
+package cz.vsb.cbe.testbed;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -10,8 +10,6 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import cz.vsb.cbe.tesdbed.sql.TestbedDatabase;
 
 public class TestbedDevicesListAdapter extends BaseAdapter {
 

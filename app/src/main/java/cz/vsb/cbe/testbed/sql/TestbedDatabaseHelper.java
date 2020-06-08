@@ -1,4 +1,4 @@
-package cz.vsb.cbe.tesdbed.sql;
+package cz.vsb.cbe.testbed.sql;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
