@@ -412,7 +412,7 @@ public class TestbedDatabase {
         }
     }
 
-    private void close(){
+    public void close(){
         WritableDatabase.close();
         ReadableDatabase.close();
         TestbedDatabaseHelper.getInstance(Context).close();

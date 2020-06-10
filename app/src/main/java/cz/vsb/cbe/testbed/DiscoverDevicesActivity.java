@@ -45,7 +45,7 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
 
     private static final String TAG = DiscoverDevicesActivity.class.getSimpleName();
 
-    private static final long SCAN_PERIOD_IN_SECOND = 5;
+    private static final long SCAN_PERIOD_IN_SECOND = 5000;
     private static final int SPLASH_TIME = 500; //This is 0.5 seconds
 
     private static final int NO_FOUNDED_DEVICES_STATE = 0;
@@ -69,7 +69,6 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
     private BluetoothLeScanner bluetoothLeScanner;
     private List<ScanFilter> scanFilters;
     private ScanSettings scanSettings;
-    private Handler stopScanningAfterScanPeriodHandler;
     private long MillisUntilFinishedScanning;
 
     private BluetoothLeService bluetoothLeService;
@@ -108,24 +107,17 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
         return intentFilter;
     }
 
-    private final Runnable stopScanningAfterScanPeriodRunnable = new Runnable() {
-        @Override
-        public void run() {
-            scanLeDevices(STOP_SCAN);
-        }
-    };
-
-    private final CountDownTimer scanningCountDownTimer = new CountDownTimer(SCAN_PERIOD_IN_SECOND*1000, 1000) {
+    private final CountDownTimer scanningCountDownTimer = new CountDownTimer(SCAN_PERIOD_IN_SECOND, 1000) {
 
         @Override
-        public void onTick(long millisUntilFinishedScanning) {
-            MillisUntilFinishedScanning = millisUntilFinishedScanning;
+        public void onTick(long millis) {
+            MillisUntilFinishedScanning = millis;
             invalidateOptionsMenu();
         }
 
         @Override
         public void onFinish() {
-
+            scanLeDevices(STOP_SCAN);
         }
     };
 
@@ -139,6 +131,7 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
     public boolean onPrepareOptionsMenu(Menu menu) {
         MenuItem menuItem = menu.findItem(R.id.scaning_state);
         switch (activityState){
+            case NO_FOUNDED_DEVICES_STATE:
             case DISCOVERED_STATE:
                 menuItem.setTitle(getResources().getString(R.string.activity_discover_devices_options_menu_title_discovering_stopped));
                 break;
@@ -174,9 +167,7 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
                         break;
 
                     case DISCOVERING_STATE:
-                        //activityState = DISCOVERING_CANCELED;
                         cancelDiscovering();
-                        //invalidateOptionsMenu();
                         break;
                 }
                 return true;
@@ -241,8 +232,6 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
         scanFilters.add(scanNameFilter);
 
         scanSettings = new ScanSettings.Builder().build();
-
-        stopScanningAfterScanPeriodHandler = new Handler();
 
         ListView devicesListView = findViewById(R.id.activity_discover_lsv_devices);
         testbedDevicesListAdapter = new TestbedDevicesListAdapter(this.getLayoutInflater(), getApplicationContext());
@@ -324,12 +313,11 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
             testbedDevicesListAdapter.notifyDataSetChanged();
             bluetoothLeScanner.startScan(scanFilters,scanSettings, scanLeDevicesCallback);
             activityState = SCANNING_STATE;
-            stopScanningAfterScanPeriodHandler.postDelayed(stopScanningAfterScanPeriodRunnable, SCAN_PERIOD_IN_SECOND*1000);
             scanningCountDownTimer.start();
 
         } else if (state == STOP_SCAN) {
             bluetoothLeScanner.stopScan(scanLeDevicesCallback);
-            stopScanningAfterScanPeriodHandler.removeCallbacks(stopScanningAfterScanPeriodRunnable);
+            //stopScanningAfterScanPeriodHandler.removeCallbacks(stopScanningAfterScanPeriodRunnable);
             scanningCountDownTimer.cancel();
 
             if(testbedDevicesListAdapter.getCount() >= 1 && bluetoothLeService != null) {
@@ -350,7 +338,6 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
             testbedDevicesListAdapter.clear();
             testbedDevicesListAdapter.notifyDataSetChanged();
             activityState = NO_FOUNDED_DEVICES_STATE;
-            stopScanningAfterScanPeriodHandler.removeCallbacks(stopScanningAfterScanPeriodRunnable);
             scanningCountDownTimer.cancel();
             invalidateOptionsMenu();
         }
@@ -509,6 +496,7 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         Log.w(TAG, "Activity destroyed");
+
         if(destroyBackgroundService){
             stopService(new Intent(this, BluetoothLeService.class));
         }

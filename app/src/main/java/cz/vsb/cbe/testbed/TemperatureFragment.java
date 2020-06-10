@@ -102,7 +102,7 @@ public class TemperatureFragment extends Fragment {
                         startTime.setText(dateFormat.format(startDateAndTime.getTime()));
                         funkce();
                     }
-                }, startDateAndTime.get(Calendar.HOUR), startDateAndTime.get(Calendar.MINUTE), true).show();
+                }, startDateAndTime.get(Calendar.HOUR_OF_DAY), startDateAndTime.get(Calendar.MINUTE), true).show();
             }
         });
 
@@ -120,7 +120,7 @@ public class TemperatureFragment extends Fragment {
                         endTime.setText(dateFormat.format(endDateAndTime.getTime()));
                         funkce();
                     }
-                }, endDateAndTime.get(Calendar.HOUR), endDateAndTime.get(Calendar.MINUTE), true).show();
+                }, endDateAndTime.get(Calendar.HOUR_OF_DAY), endDateAndTime.get(Calendar.MINUTE), true).show();
             }
         });
 

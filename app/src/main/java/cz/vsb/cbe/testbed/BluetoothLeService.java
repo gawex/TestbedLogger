@@ -413,6 +413,7 @@ public class BluetoothLeService extends Service {
             NotificationManager.cancel(NOTIFICATION_ID);
         }
         AutoReconnectAndNotificationEnabled = false;
+        TestbedDatabase.getInstance(this).close();
 
     }
 

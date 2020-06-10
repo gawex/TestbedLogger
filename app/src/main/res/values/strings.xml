@@ -1,6 +1,6 @@
 <resources>
     <!-- Testbed Application STRINGS -->
-        <string name="appliaction_name">Testbed Logger</string>
+        <string name="application_name">Testbed Logger</string>
 
     <!-- StartUpActivity STRINGS -->
         <string name="activity_start_up_condition_bluetooth_low_energy">Podpora Bluetooth LE</string>

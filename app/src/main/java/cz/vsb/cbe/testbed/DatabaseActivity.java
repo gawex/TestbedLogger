@@ -64,21 +64,29 @@ public class DatabaseActivity extends AppCompatActivity {
 
     private SimpleDateFormat systemTimeFormat = new SimpleDateFormat("HH:mm:ss");
 
-    private Handler systemTimeHandler;
-
-    Runnable currentTime = new Runnable() {
-        @Override
-        public void run() {
-            invalidateOptionsMenu();
-            systemTimeHandler.postDelayed(currentTime, 1000);
-        }
-    };
+    private Thread thread;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main_menu, menu);
-        systemTimeHandler = new Handler();
-        systemTimeHandler.postDelayed(currentTime, 1000);
+        thread = new Thread() {
+            @Override
+            public void run() {
+                try {
+                    while (!thread.isInterrupted()) {
+                        Thread.sleep(1000);
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                invalidateOptionsMenu();
+                            }
+                        });
+                    }
+                } catch (InterruptedException e) {
+                }
+            }
+        };
+        thread.start();
         return true;
     }
 
@@ -362,6 +370,8 @@ public class DatabaseActivity extends AppCompatActivity {
         super.onDestroy();
         stopService(new Intent(this, BluetoothLeService.class));
         bluetoothLeService=null;
+        thread.interrupt();
+        thread = null;
         Log.w(TAG, "Zniceno");
     }
 

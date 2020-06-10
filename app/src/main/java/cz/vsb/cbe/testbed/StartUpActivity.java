@@ -5,16 +5,19 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothManager;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
+import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.location.LocationManagerCompat;
 
 import android.os.Bundle;
 import android.provider.Settings;
@@ -42,7 +45,7 @@ public class StartUpActivity extends AppCompatActivity {
 
     private Handler finishAppHandler;
 
-    private String [] permissions = {Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.BLUETOOTH, Manifest.permission.BLUETOOTH_ADMIN} ;
+    private String [] permissions = {Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.BLUETOOTH, Manifest.permission.BLUETOOTH_ADMIN} ;
 
     private ConditionsListAdapter startUpConditionsListAdapter;
 
@@ -194,8 +197,17 @@ public class StartUpActivity extends AppCompatActivity {
     }
 
     private void permissionAndExplanationProcedure(){
-        if (checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_COARSE_LOCATION)) {
+
+        LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        if (!LocationManagerCompat.isLocationEnabled(lm)) {
+            // Start Location Settings Activity, you should explain to the user why he need to enable location before.
+            startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+        }
+
+
+
+        if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)) {
                 AlertDialog.Builder locationPermissionRequestDialogBuilder = new AlertDialog.Builder(this);
                 locationPermissionRequestDialogBuilder.setIcon(getDrawable(R.drawable.ic_testbed_id)); //TODO: Jiná ikona
                 locationPermissionRequestDialogBuilder.setTitle(R.string.dialog_title_location_permission_request);
@@ -246,6 +258,7 @@ public class StartUpActivity extends AppCompatActivity {
             enableBluetoothAdapter();
         }
     }
+
 
     private void enableBluetoothAdapter(){
         if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled()) {
