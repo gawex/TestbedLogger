@@ -21,7 +21,6 @@ import androidx.core.location.LocationManagerCompat;
 
 import android.os.Bundle;
 import android.provider.Settings;
-import android.util.Log;
 import android.view.View;
 import android.view.WindowManager.LayoutParams;
 import android.widget.ListView;
@@ -30,11 +29,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 
-import cz.vsb.cbe.testbed.sql.TestbedDatabaseHelper;
-
 public class StartUpActivity extends AppCompatActivity {
-
-    private static final String TAG = StartUpActivity.class.getSimpleName();
 
     private static final int SPLASH_TIME = 1000; //This is 3 seconds
     private static final int CANCEL_TIME = 15000; //This is 10 seconds
@@ -50,11 +45,11 @@ public class StartUpActivity extends AppCompatActivity {
 
     private Handler finishAppHandler;
 
-    private String [] permissions = {Manifest.permission.ACCESS_FINE_LOCATION} ;
+    private final String [] permissions = {Manifest.permission.ACCESS_FINE_LOCATION} ;
 
     private ConditionsListAdapter startUpConditionsListAdapter;
 
-    private Runnable finishAppRunnable = new Runnable() {
+    private final Runnable finishAppRunnable = new Runnable() {
         @Override
         public void run() {
             finish();
@@ -163,7 +158,6 @@ public class StartUpActivity extends AppCompatActivity {
         createNotificationChannel(getString(R.string.notification_channel_id));
 
         finishAppHandler = new Handler();
-        StartUpConditionsOrder sts = new StartUpConditionsOrder();
         ListView startUpConditionsListView = findViewById(R.id.activity_discover_lsv_devices);
         startUpConditionsListAdapter = new ConditionsListAdapter(this.getLayoutInflater(), this, new StartUpConditionsOrder().getNumberOdConditions());
         startUpConditionsListView.setAdapter(startUpConditionsListAdapter);
@@ -256,7 +250,7 @@ public class StartUpActivity extends AppCompatActivity {
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q){
             startUpConditionsListAdapter.setCondition(new StartUpConditionsOrder().LOCATION, ConditionsListAdapter.PROGRESS, getResources().getString(R.string.activity_start_up_condition_location));
             startUpConditionsListAdapter.notifyDataSetChanged();
-            if (LocationManagerCompat.isLocationEnabled((LocationManager) getSystemService(Context.LOCATION_SERVICE))) {
+            if (LocationManagerCompat.isLocationEnabled((LocationManager) Objects.requireNonNull(getSystemService(Context.LOCATION_SERVICE)))) {
                 startUpConditionsListAdapter.setCondition(new StartUpConditionsOrder().LOCATION, ConditionsListAdapter.PASS, getResources().getString(R.string.activity_start_up_condition_location));
                 startUpConditionsListAdapter.notifyDataSetChanged();
                 enableBluetoothAdapter();
@@ -361,7 +355,7 @@ public class StartUpActivity extends AppCompatActivity {
             // Register the channel with the system; you can't change the importance
             // or other notification behaviors after this
             NotificationManager notificationManager = getSystemService(NotificationManager.class);
-            notificationManager.createNotificationChannel(channel);
+            Objects.requireNonNull(notificationManager).createNotificationChannel(channel);
         }
     }
 
@@ -375,13 +369,13 @@ public class StartUpActivity extends AppCompatActivity {
         }
     }
 
-    public final class StartUpConditionsOrder {
+    public static final class StartUpConditionsOrder {
 
         public final int BLUETOOTH_LOW_ENERGY = 0;
         public final int PERMISSION = 1;
         public int LOCATION;
-        public int BLUETOOTH;
-        public int START_UP;
+        public final int BLUETOOTH;
+        public final int START_UP;
 
         public StartUpConditionsOrder(){
             if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q){
