@@ -21,6 +21,7 @@ import androidx.core.location.LocationManagerCompat;
 
 import android.os.Bundle;
 import android.provider.Settings;
+import android.util.Log;
 import android.view.View;
 import android.view.WindowManager.LayoutParams;
 import android.widget.ListView;
@@ -29,23 +30,27 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 
+import cz.vsb.cbe.testbed.sql.TestbedDatabaseHelper;
+
 public class StartUpActivity extends AppCompatActivity {
 
-    private static final int BLUETOOTH_LOW_ENERGY = 0;
-    private static final int PERMISSION = 1;
-    private static final int BLUETOOTH = 2;
-    private static final int START_UP = 3;
+    private static final String TAG = StartUpActivity.class.getSimpleName();
 
     private static final int SPLASH_TIME = 1000; //This is 3 seconds
-    private static final int CANCEL_TIME = 10000; //This is 10 seconds
+    private static final int CANCEL_TIME = 15000; //This is 10 seconds
     private static final int REQUEST_ENABLE_BT = 1;
     private static final int MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 0;
+
+    private static final int PERMISSION_CHECK_STATE = 0;
+    private static final int LOCATION_CHECK_STATE = 1;
+
+    private int activityState = -1;
 
     private BluetoothAdapter bluetoothAdapter;
 
     private Handler finishAppHandler;
 
-    private String [] permissions = {Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.BLUETOOTH, Manifest.permission.BLUETOOTH_ADMIN} ;
+    private String [] permissions = {Manifest.permission.ACCESS_FINE_LOCATION} ;
 
     private ConditionsListAdapter startUpConditionsListAdapter;
 
@@ -56,16 +61,15 @@ public class StartUpActivity extends AppCompatActivity {
         }
     };
 
-
     @Override
     public void onRequestPermissionsResult(int requestCode, @NotNull String[] permissions, @NotNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                startUpConditionsListAdapter.setCondition(PERMISSION, ConditionsListAdapter.PASS, getResources().getString(R.string.activity_start_up_condition_permissions));
+                startUpConditionsListAdapter.setCondition(new StartUpConditionsOrder().PERMISSION, ConditionsListAdapter.PASS, getResources().getString(R.string.activity_start_up_condition_permissions));
                 startUpConditionsListAdapter.notifyDataSetChanged();
-                enableBluetoothAdapter();
-            } else if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_COARSE_LOCATION)) {
+                enableLocation();
+            } else if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)) {
                 permissionAndExplanationProcedure();
             } else {
                 AlertDialog.Builder locationPermissionDeniedForeverDialogBuilder = new AlertDialog.Builder(StartUpActivity.this);
@@ -83,10 +87,9 @@ public class StartUpActivity extends AppCompatActivity {
                     public void onClick(DialogInterface dialog, int which) {
                         Intent intent = new Intent();
                         intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-                        Uri uri = Uri.fromParts("PACKAGE", StartUpActivity.this.getPackageName(), null);
-                        intent.setData(uri);
+                        intent.setData(Uri.parse("package:" + StartUpActivity.this.getPackageName()));
+                        activityState = PERMISSION_CHECK_STATE;
                         startActivity(intent);
-                        finish();
                     }
                 });
                 AlertDialog locationPermissionDeniedForeverDialog = locationPermissionDeniedForeverDialogBuilder.create();
@@ -94,7 +97,7 @@ public class StartUpActivity extends AppCompatActivity {
                 locationPermissionDeniedForeverDialog.setCanceledOnTouchOutside(false);
                 locationPermissionDeniedForeverDialog.show();
 
-                startUpConditionsListAdapter.setCondition(PERMISSION, ConditionsListAdapter.FAIL, getResources().getString(R.string.activity_start_up_condition_permissions));
+                startUpConditionsListAdapter.setCondition(new StartUpConditionsOrder().PERMISSION, ConditionsListAdapter.FAIL, getResources().getString(R.string.activity_start_up_condition_permissions));
                 startUpConditionsListAdapter.notifyDataSetChanged();
             }
         }
@@ -105,7 +108,7 @@ public class StartUpActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, intent);
         if (requestCode == REQUEST_ENABLE_BT) {
             if (resultCode == RESULT_OK) {
-                this.startUpConditionsListAdapter.setCondition(BLUETOOTH, ConditionsListAdapter.PASS, getResources().getString(R.string.activity_start_up_condition_bluetooth_adapter));
+                this.startUpConditionsListAdapter.setCondition(new StartUpConditionsOrder().BLUETOOTH, ConditionsListAdapter.PASS, getResources().getString(R.string.activity_start_up_condition_bluetooth_adapter));
                 this.startUpConditionsListAdapter.notifyDataSetChanged();
                 continueApplication();
             } else {
@@ -123,7 +126,7 @@ public class StartUpActivity extends AppCompatActivity {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         enableBluetoothAdapter();
-                        startUpConditionsListAdapter.setCondition(BLUETOOTH, ConditionsListAdapter.PROGRESS, getResources().getString(R.string.activity_start_up_condition_bluetooth_adapter));
+                        startUpConditionsListAdapter.setCondition(new StartUpConditionsOrder().BLUETOOTH, ConditionsListAdapter.PROGRESS, getResources().getString(R.string.activity_start_up_condition_bluetooth_adapter));
                         startUpConditionsListAdapter.notifyDataSetChanged();
                         finishAppHandler.removeCallbacks(finishAppRunnable);
                     }
@@ -134,7 +137,7 @@ public class StartUpActivity extends AppCompatActivity {
                 bluetoothDeniedDialog.show();
                 finishAppHandler.postDelayed(finishAppRunnable, CANCEL_TIME);
 
-                this.startUpConditionsListAdapter.setCondition(BLUETOOTH, ConditionsListAdapter.FAIL, getResources().getString(R.string.activity_start_up_condition_bluetooth_adapter));
+                this.startUpConditionsListAdapter.setCondition(new StartUpConditionsOrder().BLUETOOTH, ConditionsListAdapter.FAIL, getResources().getString(R.string.activity_start_up_condition_bluetooth_adapter));
                 this.startUpConditionsListAdapter.notifyDataSetChanged();
             }
         }
@@ -154,23 +157,22 @@ public class StartUpActivity extends AppCompatActivity {
             layoutParams.layoutInDisplayCutoutMode = LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
         }
 
-
         setContentView(R.layout.activity_start_up);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_NOSENSOR);
 
         createNotificationChannel(getString(R.string.notification_channel_id));
 
         finishAppHandler = new Handler();
-
+        StartUpConditionsOrder sts = new StartUpConditionsOrder();
         ListView startUpConditionsListView = findViewById(R.id.activity_discover_lsv_devices);
-        startUpConditionsListAdapter = new ConditionsListAdapter(this.getLayoutInflater(), this, 4);
+        startUpConditionsListAdapter = new ConditionsListAdapter(this.getLayoutInflater(), this, new StartUpConditionsOrder().getNumberOdConditions());
         startUpConditionsListView.setAdapter(startUpConditionsListAdapter);
 
-        startUpConditionsListAdapter.setCondition(BLUETOOTH_LOW_ENERGY, ConditionsListAdapter.PROGRESS, getResources().getString(R.string.activity_start_up_condition_bluetooth_low_energy));
+        startUpConditionsListAdapter.setCondition(new StartUpConditionsOrder().BLUETOOTH_LOW_ENERGY, ConditionsListAdapter.PROGRESS, getResources().getString(R.string.activity_start_up_condition_bluetooth_low_energy));
         startUpConditionsListAdapter.notifyDataSetChanged();
 
         if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
-            startUpConditionsListAdapter.setCondition(BLUETOOTH_LOW_ENERGY, ConditionsListAdapter.FAIL, getResources().getString(R.string.activity_start_up_condition_bluetooth_low_energy));
+            startUpConditionsListAdapter.setCondition(new StartUpConditionsOrder().BLUETOOTH_LOW_ENERGY, ConditionsListAdapter.FAIL, getResources().getString(R.string.activity_start_up_condition_bluetooth_low_energy));
             startUpConditionsListAdapter.notifyDataSetChanged();
             AlertDialog.Builder bleNotSupportedDialogBuilder = new AlertDialog.Builder(this);
             bleNotSupportedDialogBuilder.setIcon(getDrawable(R.drawable.ic_testbed_id)); //TODO: Jiná ikona
@@ -189,23 +191,14 @@ public class StartUpActivity extends AppCompatActivity {
         } else {
             final BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
             bluetoothAdapter = Objects.requireNonNull(bluetoothManager).getAdapter();
-            startUpConditionsListAdapter.setCondition(BLUETOOTH_LOW_ENERGY, ConditionsListAdapter.PASS, getResources().getString(R.string.activity_start_up_condition_bluetooth_low_energy));
-            startUpConditionsListAdapter.setCondition(PERMISSION, ConditionsListAdapter.PROGRESS, getResources().getString(R.string.activity_start_up_condition_permissions));
+            startUpConditionsListAdapter.setCondition(new StartUpConditionsOrder().BLUETOOTH_LOW_ENERGY, ConditionsListAdapter.PASS, getResources().getString(R.string.activity_start_up_condition_bluetooth_low_energy));
+            startUpConditionsListAdapter.setCondition(new StartUpConditionsOrder().PERMISSION, ConditionsListAdapter.PROGRESS, getResources().getString(R.string.activity_start_up_condition_permissions));
             startUpConditionsListAdapter.notifyDataSetChanged();
             permissionAndExplanationProcedure();
         }
     }
 
     private void permissionAndExplanationProcedure(){
-
-        LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        if (!LocationManagerCompat.isLocationEnabled(lm)) {
-            // Start Location Settings Activity, you should explain to the user why he need to enable location before.
-            startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
-        }
-
-
-
         if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)) {
                 AlertDialog.Builder locationPermissionRequestDialogBuilder = new AlertDialog.Builder(this);
@@ -253,32 +246,96 @@ public class StartUpActivity extends AppCompatActivity {
                 requestPermissions(permissions, MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
             }
         } else {
-            startUpConditionsListAdapter.setCondition(PERMISSION, ConditionsListAdapter.PASS, getResources().getString(R.string.activity_start_up_condition_permissions));
+            startUpConditionsListAdapter.setCondition(new StartUpConditionsOrder().PERMISSION, ConditionsListAdapter.PASS, getResources().getString(R.string.activity_start_up_condition_permissions));
             startUpConditionsListAdapter.notifyDataSetChanged();
-            enableBluetoothAdapter();
+            enableLocation();
         }
     }
 
+    private void enableLocation(){
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q){
+            startUpConditionsListAdapter.setCondition(new StartUpConditionsOrder().LOCATION, ConditionsListAdapter.PROGRESS, getResources().getString(R.string.activity_start_up_condition_location));
+            startUpConditionsListAdapter.notifyDataSetChanged();
+            if (LocationManagerCompat.isLocationEnabled((LocationManager) getSystemService(Context.LOCATION_SERVICE))) {
+                startUpConditionsListAdapter.setCondition(new StartUpConditionsOrder().LOCATION, ConditionsListAdapter.PASS, getResources().getString(R.string.activity_start_up_condition_location));
+                startUpConditionsListAdapter.notifyDataSetChanged();
+                enableBluetoothAdapter();
+            } else {
+                startUpConditionsListAdapter.setCondition(new StartUpConditionsOrder().LOCATION, ConditionsListAdapter.FAIL, getResources().getString(R.string.activity_start_up_condition_location));
+                startUpConditionsListAdapter.notifyDataSetChanged();
+                AlertDialog.Builder locationRequestDialogBuilder = new AlertDialog.Builder(this);
+                locationRequestDialogBuilder.setIcon(getDrawable(R.drawable.ic_testbed_id)); //TODO: Jiná ikona
+                locationRequestDialogBuilder.setTitle(R.string.dialog_title_location_request);
+                locationRequestDialogBuilder.setMessage(R.string.dialog_message_location_request);
+                locationRequestDialogBuilder.setPositiveButton(R.string.dialog_button_positive_turn_on_location, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        finishAppHandler.removeCallbacks(finishAppRunnable);
+                        activityState = LOCATION_CHECK_STATE;
+                        startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+                    }
+                });
+                locationRequestDialogBuilder.setNegativeButton(R.string.dialog_button_negative_do_not_accept, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        finishAppHandler.removeCallbacks(finishAppRunnable);
+                        AlertDialog.Builder locationRequestDeniedDialogBuilder = new AlertDialog.Builder(StartUpActivity.this);
+                        locationRequestDeniedDialogBuilder.setIcon(getDrawable(R.drawable.ic_testbed_id)); //TODO: Jiná ikona
+                        locationRequestDeniedDialogBuilder.setTitle(R.string.dialog_title_location_denied);
+                        locationRequestDeniedDialogBuilder.setMessage(R.string.dialog_message_location_denied);
+                        locationRequestDeniedDialogBuilder.setPositiveButton(R.string.dialog_button_positive_turn_on_location, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                finishAppHandler.removeCallbacks(finishAppRunnable);
+                                activityState = LOCATION_CHECK_STATE;
+                                startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+                            }
+                        });
+                        locationRequestDeniedDialogBuilder.setNegativeButton(R.string.dialog_button_neutral_do_not_trust, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                finishAppHandler.removeCallbacks(finishAppRunnable);
+                                finish();
+                            }
+                        });
+                        AlertDialog locationRequestDeniedDialog = locationRequestDeniedDialogBuilder.create();
+                        locationRequestDeniedDialog.setCancelable(false);
+                        locationRequestDeniedDialog.setCanceledOnTouchOutside(false);
+                        locationRequestDeniedDialog.show();
+                        finishAppHandler.postDelayed(finishAppRunnable, CANCEL_TIME);
+
+                    }
+                });
+                AlertDialog locationRequestDialog = locationRequestDialogBuilder.create();
+                locationRequestDialog.setCancelable(false);
+                locationRequestDialog.setCanceledOnTouchOutside(false);
+                locationRequestDialog.show();
+                finishAppHandler.postDelayed(finishAppRunnable, CANCEL_TIME);
+            }
+        } else{
+            enableBluetoothAdapter();
+        }
+    }
 
     private void enableBluetoothAdapter(){
         if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled()) {
             Intent enableBluetoothIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBluetoothIntent, REQUEST_ENABLE_BT);
-            startUpConditionsListAdapter.setCondition(BLUETOOTH, ConditionsListAdapter.PROGRESS, getResources().getString(R.string.activity_start_up_condition_bluetooth_adapter));
+            startUpConditionsListAdapter.setCondition(new StartUpConditionsOrder().BLUETOOTH, ConditionsListAdapter.PROGRESS, getResources().getString(R.string.activity_start_up_condition_bluetooth_adapter));
         } else {
-            startUpConditionsListAdapter.setCondition(BLUETOOTH, ConditionsListAdapter.PASS, getResources().getString(R.string.activity_start_up_condition_bluetooth_adapter));
+            startUpConditionsListAdapter.setCondition(new StartUpConditionsOrder().BLUETOOTH, ConditionsListAdapter.PASS, getResources().getString(R.string.activity_start_up_condition_bluetooth_adapter));
             startUpConditionsListAdapter.notifyDataSetChanged();
             continueApplication();
         }
     }
 
     private void continueApplication(){
-        startUpConditionsListAdapter.setCondition(START_UP, ConditionsListAdapter.PROGRESS, getResources().getString(R.string.activity_start_up_condition_start_application));
+        startUpConditionsListAdapter.setCondition(new StartUpConditionsOrder().START_UP, ConditionsListAdapter.PROGRESS, getResources().getString(R.string.activity_start_up_condition_start_application));
         startService(new Intent(StartUpActivity.this, BluetoothLeService.class));
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
-                startUpConditionsListAdapter.setCondition(START_UP, ConditionsListAdapter.PASS, getResources().getString(R.string.activity_start_up_condition_start_application));
+                startUpConditionsListAdapter.setCondition(new StartUpConditionsOrder().START_UP, ConditionsListAdapter.PASS, getResources().getString(R.string.activity_start_up_condition_start_application));
                 startUpConditionsListAdapter.notifyDataSetChanged();
             }
         }, SPLASH_TIME - 300);
@@ -305,6 +362,40 @@ public class StartUpActivity extends AppCompatActivity {
             // or other notification behaviors after this
             NotificationManager notificationManager = getSystemService(NotificationManager.class);
             notificationManager.createNotificationChannel(channel);
+        }
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if(activityState == PERMISSION_CHECK_STATE){
+            permissionAndExplanationProcedure();
+        } else if (activityState == LOCATION_CHECK_STATE ){
+            enableLocation();
+        }
+    }
+
+    public final class StartUpConditionsOrder {
+
+        public final int BLUETOOTH_LOW_ENERGY = 0;
+        public final int PERMISSION = 1;
+        public int LOCATION;
+        public int BLUETOOTH;
+        public int START_UP;
+
+        public StartUpConditionsOrder(){
+            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q){
+                LOCATION = 2;
+                BLUETOOTH = 3;
+                START_UP = 4;
+            } else {
+                BLUETOOTH = 2;
+                START_UP = 3;
+            }
+        }
+
+        public int getNumberOdConditions(){
+            return START_UP + 1;
         }
     }
 

@@ -5,6 +5,7 @@
     <!-- StartUpActivity STRINGS -->
         <string name="activity_start_up_condition_bluetooth_low_energy">Podpora Bluetooth LE</string>
         <string name="activity_start_up_condition_permissions">Oprávnění aplikace</string>
+        <string name="activity_start_up_condition_location">Poloha</string>
         <string name="activity_start_up_condition_bluetooth_adapter">Bluetooth</string>
         <string name="activity_start_up_condition_start_application">Spouštění aplikace</string>
 
@@ -68,6 +69,23 @@
                 <b>Systémové nastavení</b>.
             </string>
 
+        <!-- Location request STRINGS-->
+            <string name="dialog_title_location_request">Potřebujeme zapnout polohu</string>
+            <string name="dialog_message_location_request">
+                Používáš <b>Android 10 a vyšší</b>, který pro vyhledání <b>Bluetooth Low Energy</b>
+                zařízení a tedy i Testbed zařázení potřebuje zapnout i samotnou polohu zařízení.\n\n
+                Neboj, žádné údaje o tvojí poloze <b>neshomaždujeme</b> a <b>neukládáme</b>,
+                jen jí potřebujeme pro správnou funkci aplikace. <b>Prosím zapni polohu.</b>
+            </string>
+
+        <!-- Location denied STRINGS-->
+            <string name="dialog_title_location_denied">Bez zapnuté polohy to nepůjde</string>
+            <string name="dialog_message_location_denied">
+                Tak takhle to opravdu nepůjde. Bez zapnuté polohy se na <b>Androidu 10 a vyšším</b>
+                opravdu neobejdeme, proto bude aplikace ukončena.\n\n
+                Pokud sis to rozmyslel, prosím zapni polohu.
+            </string>
+
         <!-- Bluetooth adapter denied STRINGS-->
             <string name="dialog_title_bluetooth_denied">Potřebujeme zapnout Bluetooth</string>
             <string name="dialog_message_bluetooth_denied">
@@ -104,6 +122,7 @@
             <string name="dialog_button_positive_yes_understand">Ano, rozumím</string>
             <string name="dialog_button_positive_changed_my_mind">Rozmyslel jsem si to</string>
             <string name="dialog_button_positive_go_to_settings">Systémové nastavení</string>
+            <string name="dialog_button_positive_turn_on_location">Zapnout Polohu</string>
             <string name="dialog_button_positive_turn_on_bluetooth">Zapnout Bluetooth</string>
             <string name="dialog_button_neutral_do_not_trust">Někdy příště</string>
             <string name="dialog_button_neutral_close">Tohle jsem chtěl vedět</string>

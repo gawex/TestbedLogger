@@ -45,7 +45,7 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
 
     private static final String TAG = DiscoverDevicesActivity.class.getSimpleName();
 
-    private static final long SCAN_PERIOD_IN_SECOND = 5000;
+    private static final long SCAN_PERIOD = 10000;
     private static final int SPLASH_TIME = 500; //This is 0.5 seconds
 
     private static final int NO_FOUNDED_DEVICES_STATE = 0;
@@ -107,7 +107,7 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
         return intentFilter;
     }
 
-    private final CountDownTimer scanningCountDownTimer = new CountDownTimer(SCAN_PERIOD_IN_SECOND, 1000) {
+    private final CountDownTimer scanningCountDownTimer = new CountDownTimer(SCAN_PERIOD, 1000) {
 
         @Override
         public void onTick(long millis) {
