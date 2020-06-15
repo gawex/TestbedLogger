@@ -1,28 +1,23 @@
-package cz.vsb.cbe.testbed;
+package cz.vsb.cbe.testbed.chart;
 
 import android.content.Context;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
 
+import androidx.annotation.InspectableProperty;
+
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.components.YAxis.AxisDependency;
+import com.github.mikephil.charting.data.Entry;
+import com.github.mikephil.charting.highlight.BarHighlighter;
+import com.github.mikephil.charting.highlight.Highlight;
 import com.github.mikephil.charting.listener.ChartTouchListener;
 import com.github.mikephil.charting.listener.OnChartGestureListener;
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 import com.github.mikephil.charting.utils.MPPointD;
 
 public class MyBarChart extends BarChart implements OnChartGestureListener  {
-
-
-    public void setOnChartValueSelectedListenerMuj(OnChartValueSelectedListener l) {
-        super.setOnChartValueSelectedListener(l);
-    }
-
-    @Override
-    public void setOnChartValueSelectedListener(OnChartValueSelectedListener l) {
-        super.setOnChartValueSelectedListener(l);
-    }
 
     public MyBarChart(Context context) {
         super(context);
@@ -36,20 +31,25 @@ public class MyBarChart extends BarChart implements OnChartGestureListener  {
         super(context, attrs, defStyle);
     }
 
-    public interface mujInterface{
-        void onMyLongClick(double x, double y);
-    };
-
-    mujInterface MujInterface;
-    private BarChart BarChart;
-
-
-    public void setOnMujInteface( mujInterface l) {
-        this.MujInterface = l;
-        this.setOnChartGestureListener(this);
+    @Override
+    public void setOnChartValueSelectedListener(OnChartValueSelectedListener onChartValueSelectedListener) {
+        throw new UnsupportedOperationException();
     }
 
+    public void setOnChartValueShortClickListener(OnChartValueSelectedListener onChartValueSelectedListener) {
+        super.setOnChartValueSelectedListener(onChartValueSelectedListener);
+    }
 
+    public void setOnChartValueLongClickListener(OnChartValueClickListener onChartValueClickListener) {
+        this.OnChartValueClickListener = onChartValueClickListener;
+        setOnChartGestureListener(this);
+    }
+
+    public interface OnChartValueClickListener {
+        void onChartValueLongClickListener(Entry e);
+    };
+
+    OnChartValueClickListener OnChartValueClickListener;
 
     @Override
     public void onChartGestureStart(MotionEvent me, ChartTouchListener.ChartGesture lastPerformedGesture) {
@@ -63,11 +63,10 @@ public class MyBarChart extends BarChart implements OnChartGestureListener  {
 
     @Override
     public void onChartLongPressed(MotionEvent me) {
-        float tappedX = me.getX();
-        float tappedY = me.getY();
-        MPPointD point = this.getTransformer(AxisDependency.LEFT).getValuesByTouchPoint(tappedX, tappedY);
-        MujInterface.onMyLongClick(point.x, point.y);
-        Log.i("ZIJU", "JO");
+        Entry entry = getEntryByTouchPoint(me.getX(), me.getY());
+        Highlight highlight = new Highlight(entry.getX(), 0 ,0);
+        highlightValue(highlight, false);
+        OnChartValueClickListener.onChartValueLongClickListener(entry);
     }
 
     @Override

@@ -1,7 +1,9 @@
-package cz.vsb.cbe.testbed;
+package cz.vsb.cbe.testbed.chart;
 
 import com.github.mikephil.charting.charts.BarLineChartBase;
 import com.github.mikephil.charting.formatter.ValueFormatter;
+
+import java.util.Locale;
 
 /**
  * Created by philipp on 02/06/16.
@@ -9,14 +11,13 @@ import com.github.mikephil.charting.formatter.ValueFormatter;
 public class DayAxisValueFormatter extends ValueFormatter
 {
 
-    private final String[] mMonths = new String[]{
-            "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-    };
+    private final String[] mMonths;
 
     private final BarLineChartBase<?> chart;
 
-    public DayAxisValueFormatter(BarLineChartBase<?> chart) {
+    public DayAxisValueFormatter(BarLineChartBase<?> chart, String [] months) {
         this.chart = chart;
+        this.mMonths = months;
     }
 
     @Override
@@ -36,34 +37,7 @@ public class DayAxisValueFormatter extends ValueFormatter
         } else {
 
             int dayOfMonth = determineDayOfMonth(days, month + 12 * (year - 2016));
-
-            String appendix = "th";
-
-            switch (dayOfMonth) {
-                case 1:
-                    appendix = "st";
-                    break;
-                case 2:
-                    appendix = "nd";
-                    break;
-                case 3:
-                    appendix = "rd";
-                    break;
-                case 21:
-                    appendix = "st";
-                    break;
-                case 22:
-                    appendix = "nd";
-                    break;
-                case 23:
-                    appendix = "rd";
-                    break;
-                case 31:
-                    appendix = "st";
-                    break;
-            }
-
-            return dayOfMonth == 0 ? "" : dayOfMonth + appendix + " " + monthName;
+            return dayOfMonth == 0 ? "" : dayOfMonth + " " + monthName;
         }
     }
 

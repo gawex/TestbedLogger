@@ -360,7 +360,7 @@ public class BluetoothLeService extends Service {
                 .setNumber(notificationNumber > 0 ? notificationNumber : 0)
                 .setContentIntent(notifyPendingIntent)
                 .setOngoing(true)
-                .setColor(getColor(R.color.vsb));
+                .setColor(getColor(R.color.VSB));
     }
 
 

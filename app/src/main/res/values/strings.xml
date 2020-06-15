@@ -1,63 +1,63 @@
 <resources>
     <!-- Testbed Application STRINGS -->
-        <string name="application_name">Testbed Logger</string>
+    <string name="application_name">Testbed Logger</string>
 
     <!-- StartUpActivity STRINGS -->
-        <string name="activity_start_up_condition_bluetooth_low_energy">Podpora Bluetooth LE</string>
-        <string name="activity_start_up_condition_permissions">Oprávnění aplikace</string>
-        <string name="activity_start_up_condition_location">Poloha</string>
-        <string name="activity_start_up_condition_bluetooth_adapter">Bluetooth</string>
-        <string name="activity_start_up_condition_start_application">Spouštění aplikace</string>
+    <string name="activity_start_up_condition_bluetooth_low_energy">Podpora Bluetooth LE</string>
+    <string name="activity_start_up_condition_permissions">Oprávnění aplikace</string>
+    <string name="activity_start_up_condition_location">Poloha</string>
+    <string name="activity_start_up_condition_bluetooth_adapter">Bluetooth</string>
+    <string name="activity_start_up_condition_start_application">Spouštění aplikace</string>
 
     <!-- DiscoverDevicesActivity STRINGS -->
-        <string name="activity_discover_devices_title">Dostupná zařízení</string>
-        <string name="activity_discover_devices_options_menu_title_scanning_started">Zrušit hledání</string>
-        <string name="activity_discover_devices_options_menu_title_discovering_started">Zrušit načítání</string>
-        <string name="activity_discover_devices_options_menu_title_discovering_canceling">Probíhá rušení načítání</string>
-        <string name="activity_discover_devices_options_menu_title_discovering_stopped">Znovu vyhledat</string>
-        <string name="activity_discover_devices_options_menu_title_discovering_conjunction">z</string>
-        <string name="activity_discover_devices_toast_message_scanning_failed">
+    <string name="activity_discover_devices_title">Dostupná zařízení</string>
+    <string name="activity_discover_devices_options_menu_title_scanning_started">Zrušit hledání</string>
+    <string name="activity_discover_devices_options_menu_title_discovering_started">Zrušit načítání</string>
+    <string name="activity_discover_devices_options_menu_title_discovering_canceling">Probíhá rušení načítání</string>
+    <string name="activity_discover_devices_options_menu_title_discovering_stopped">Znovu vyhledat</string>
+    <string name="activity_discover_devices_options_menu_title_discovering_conjunction">z</string>
+    <string name="activity_discover_devices_toast_message_scanning_failed">
             Skenování dostupných zařízení selhalo. Informujte prosím vývojáře o následující chybě:
         </string>
 
     <!-- DatabaseActivity STRINGS -->
-        <string name="activity_database_fragment_title_pedometer">Krokoměr</string>
-        <string name="activity_database_fragment_title_heart_rate_meter">Srdeční tep</string>
-        <string name="activity_database_fragment_title_thermometer">Teploměr</string>
-        <string name="activity_database_options_menu_title_system_time">Systémový čas</string>
-        <string name="activity_database_toast_message_pedometer_no_available">V tomto </string>
+    <string name="activity_database_fragment_title_pedometer">Krokoměr</string>
+    <string name="activity_database_fragment_title_heart_rate_meter">Srdeční tep</string>
+    <string name="activity_database_fragment_title_thermometer">Teploměr</string>
+    <string name="activity_database_options_menu_title_system_time">Systémový čas</string>
+    <string name="activity_database_toast_message_pedometer_no_available">V tomto </string>
 
     <!-- SettingsActivity STRINGS -->
-        <string name="activity_settings_title">Nastavení</string>
+    <string name="activity_settings_title">Nastavení</string>
 
     <!-- Dialogs Application STRINGS -->
-        <!-- BLE is not supported STRINGS-->
-            <string name="dialog_title_ble_not_supported">Nemáš Bluetooth LE</string>
-            <string name="dialog_message_ble_not_supported">
+    <!-- BLE is not supported STRINGS-->
+    <string name="dialog_title_ble_not_supported">Nemáš Bluetooth LE</string>
+    <string name="dialog_message_ble_not_supported">
                 Bluetooth Low Energy, které využívá náš Testbed, není na tvém zařízení podporováno.
                 Provoz aplikace na tvém zařízení není možný a nedává žádný symsl,
                 proto bude aplikace ukončena.
             </string>
-        <!-- Permission request STRINGS-->
-            <string name="dialog_title_location_permission_request">Potřebujeme nějaké opravnění</string>
-            <string name="dialog_message_location_permission_request">
+    <!-- Permission request STRINGS-->
+    <string name="dialog_title_location_permission_request">Potřebujeme nějaké opravnění</string>
+    <string name="dialog_message_location_permission_request">
                 Aplikace pro Testbed využívá technologii <b>Bluetooth Low Energy</b>,která
                 pro vyhledání a připojení k zařízením potřebuje opravnění k přístupu k poloze.\n\n
                 Neboj, žádné údaje o tvojí poloze <b>neshomaždujeme</b> a <b>neukládáme</b>,
                 jen jí potřebujeme pro správnou funkci aplikace. <b>Prosím uděl nám oprávnění.</b>
             </string>
 
-        <!-- Permission denied STRINGS-->
-            <string name="dialog_title_location_permission_denied">Bez polohy to nepůjde</string>
-            <string name="dialog_message_location_permission_denied">
+    <!-- Permission denied STRINGS-->
+    <string name="dialog_title_location_permission_denied">Bez polohy to nepůjde</string>
+    <string name="dialog_message_location_permission_denied">
                 Tak takhle to opravdu nepůjde. Bez povolení přistupu k poloze se opravdu neobejdeme,
                 proto bude aplikace ukončena.\n\n
                 Pokud sis to rozmyslel, povol oprávnění k přístupu k poloze.
             </string>
 
-        <!-- Permission denied forever STRINGS-->
-            <string name="dialog_title_location_permission_denied_forever">Nechtěl jsi být znova obtěžován</string>
-            <string name="dialog_message_location_permission_denied_forever">
+    <!-- Permission denied forever STRINGS-->
+    <string name="dialog_title_location_permission_denied_forever">Nechtěl jsi být znova obtěžován</string>
+    <string name="dialog_message_location_permission_denied_forever">
                 Tak takhle to opravdu nepůjde.
                 Bez povolení přístupu k poloze se opravdu neobejdeme.\n\n
                 Navíc jsi zvolil možnost nebýt znova dotazem na povolení obtěžován.
@@ -69,34 +69,49 @@
                 <b>Systémové nastavení</b>.
             </string>
 
-        <!-- Location request STRINGS-->
-            <string name="dialog_title_location_request">Potřebujeme zapnout polohu</string>
-            <string name="dialog_message_location_request">
+    <!-- Location adapter request STRINGS-->
+    <string name="dialog_title_location_request">Potřebujeme zapnout polohu</string>
+    <string name="dialog_message_location_request">
                 Používáš <b>Android 10 a vyšší</b>, který pro vyhledání <b>Bluetooth Low Energy</b>
                 zařízení a tedy i Testbed zařázení potřebuje zapnout i samotnou polohu zařízení.\n\n
                 Neboj, žádné údaje o tvojí poloze <b>neshomaždujeme</b> a <b>neukládáme</b>,
                 jen jí potřebujeme pro správnou funkci aplikace. <b>Prosím zapni polohu.</b>
             </string>
 
-        <!-- Location denied STRINGS-->
-            <string name="dialog_title_location_denied">Bez zapnuté polohy to nepůjde</string>
-            <string name="dialog_message_location_denied">
+    <!-- Location adapter denied STRINGS-->
+    <string name="dialog_title_location_denied">Bez zapnuté polohy to nepůjde</string>
+    <string name="dialog_message_location_denied">
                 Tak takhle to opravdu nepůjde. Bez zapnuté polohy se na <b>Androidu 10 a vyšším</b>
                 opravdu neobejdeme, proto bude aplikace ukončena.\n\n
                 Pokud sis to rozmyslel, prosím zapni polohu.
             </string>
 
-        <!-- Bluetooth adapter denied STRINGS-->
-            <string name="dialog_title_bluetooth_denied">Potřebujeme zapnout Bluetooth</string>
-            <string name="dialog_message_bluetooth_denied">
+    <!-- Bluetooth adapter denied STRINGS-->
+    <string name="dialog_title_bluetooth_denied">Potřebujeme zapnout Bluetooth</string>
+    <string name="dialog_message_bluetooth_denied">
                 Tak takhle to opravdu nepůjde. Bez Bluetooth adaptéru se opravdu neobejdeme.\n\n
                 Pokud sis to rozmyslel, zapni prosím <b>Bluetooth adaptér</b>,
                 jinak bude aplikace ukončena.
             </string>
 
-        <!-- About Application STRINGS-->
-            <string name="dialog_title_about_application">Něco o téhle aplikaci</string>
-            <string name="dialog_message_about_application">
+    <!-- Bluetooth adapter disabled STRINGS -->
+    <string name="dialog_title_bluetooth_disabled">Nevypínej mi Bluetooth</string>
+    <string name="dialog_message_bluetooth_disabled">
+                Tak takhle to opravdu nepůjde. Bez Bluetooth adaptéru se opravdu neobejdeme.\n\n
+                Pokud sis to rozmyslel, zapni prosím <b>Bluetooth adaptér</b> ať můžeme pokračovat.
+            </string>
+
+    <!-- Location adapter disabled STRINGS -->
+    <string name="dialog_title_location_disabled">Nevypínej mi Polohu</string>
+    <string name="dialog_message_location_disabled">
+                Tak takhle to opravdu nepůjde. Bez zapnuté polohy se na <b>Androidu 10 a vyšším</b>
+                opravdu neobejdeme.\n\n
+                Pokud sis to rozmyslel, zapni prosím <b>Polohu</b> ať můžeme pokračovat ve skenování.
+            </string>
+
+    <!-- About Application STRINGS-->
+    <string name="dialog_title_about_application">Něco o téhle aplikaci</string>
+    <string name="dialog_message_about_application">
                 Tato aplikace slouží ke komunikaci s produktem TESTBED 1.2, který je součástí nové
                 výrobní linky SmartFactory.\n\n
                 Aplikace vznikla jako součást diplomová práce <b>Uživatelské aplikace proAndorid OS
@@ -105,47 +120,65 @@
                 Vytvořil: Tatarin Lukáš, Bc.
             </string>
 
-        <!-- Connecting progress STRINGS-->
-            <string name="dialog_title_connecting_progress">Jdeme na to!</string>
-            <string name="dialog_title_reconnecting_progress">Vypadlo to, zkusím to znova</string>
-            <string name="dialog_condition_connecting_progress_connecting">Připojuji se k vybrané desce…</string>
-            <string name="dialog_condition_reconnecting_progress_connecting">Zkouším se znova připojit k desce</string>
-            <string name="dialog_condition_re_connecting_progress_connected">Připojeno k</string>
-            <string name="dialog_condition_re_connecting_progress_services_discovering">Objevuji dostupné services…</string>
-            <string name="dialog_condition_re_connecting_progress_services_discovered">Services objeveny</string>
-            <string name="dialog_condition_re_connecting_progress_descriptor_write_prepare">Probíhá příprava na přijímání notifikací…</string>
-            <string name="dialog_condition_re_connecting_progress_descriptor_writing">Nastavení přijímání notifikací</string>
-            <string name="dialog_condition_re_connecting_progress_descriptor_writing_conjunction">z</string>
-            <string name="dialog_condition_re_connecting_progress_descriptor_written">Přijímání notifikací nastaveno</string>
+    <!-- Connecting progress STRINGS-->
+    <string name="dialog_title_connecting_progress">Jdeme na to!</string>
+    <string name="dialog_title_reconnecting_progress">Vypadlo to, zkusím to znova</string>
+    <string name="dialog_condition_connecting_progress_connecting">Připojuji se k vybrané desce…</string>
+    <string name="dialog_condition_reconnecting_progress_connecting">Zkouším se znova připojit k desce</string>
+    <string name="dialog_condition_re_connecting_progress_connected">Připojeno k</string>
+    <string name="dialog_condition_re_connecting_progress_services_discovering">Objevuji dostupné services…</string>
+    <string name="dialog_condition_re_connecting_progress_services_discovered">Services objeveny</string>
+    <string name="dialog_condition_re_connecting_progress_descriptor_write_prepare">Probíhá příprava na přijímání notifikací…</string>
+    <string name="dialog_condition_re_connecting_progress_descriptor_writing">Nastavení přijímání notifikací</string>
+    <string name="dialog_condition_re_connecting_progress_descriptor_writing_conjunction">z</string>
+    <string name="dialog_condition_re_connecting_progress_descriptor_written">Přijímání notifikací nastaveno</string>
 
-        <!-- Dialog Buttons STRINGS-->
-            <string name="dialog_button_positive_yes_understand">Ano, rozumím</string>
-            <string name="dialog_button_positive_changed_my_mind">Rozmyslel jsem si to</string>
-            <string name="dialog_button_positive_go_to_settings">Systémové nastavení</string>
-            <string name="dialog_button_positive_turn_on_location">Zapnout Polohu</string>
-            <string name="dialog_button_positive_turn_on_bluetooth">Zapnout Bluetooth</string>
-            <string name="dialog_button_neutral_do_not_trust">Někdy příště</string>
-            <string name="dialog_button_neutral_close">Tohle jsem chtěl vedět</string>
-            <string name="dialog_button_negative_do_not_accept">Tomu nevěřím</string>
-            <string name="dialog_button_negative_cancel">Už nechci</string>
+    <!-- Dialog Buttons STRINGS-->
+    <string name="dialog_button_positive_yes_understand">Ano, rozumím</string>
+    <string name="dialog_button_positive_changed_my_mind">Rozmyslel jsem si to</string>
+    <string name="dialog_button_positive_go_to_settings">Systémové nastavení</string>
+    <string name="dialog_button_positive_turn_on_location">Zapnout Polohu</string>
+    <string name="dialog_button_positive_turn_on_bluetooth">Zapnout Bluetooth</string>
+    <string name="dialog_button_neutral_do_not_trust">Někdy příště</string>
+    <string name="dialog_button_neutral_close">Tohle jsem chtěl vedět</string>
+    <string name="dialog_button_negative_do_not_accept">Tomu nevěřím</string>
+    <string name="dialog_button_negative_cancel">Už nechci</string>
+    <string name="dialog_button_negative_do_not_turn_on">Nezapnu</string>
 
     <!-- Menus Application STRINGS -->
-        <string name="options_menu_title_settings">Nastavení</string>
-        <string name="options_menu_title_about_application">O aplikaci</string>
+    <string name="options_menu_title_settings">Nastavení</string>
+    <string name="options_menu_title_about_application">O aplikaci</string>
 
     <!-- Notification Application STRINGS -->
 
-        <string name="notification_chanel_logging_name">Loggování</string>
-        <string name="notification_chanel_logging_description">Informuje o aktuálně připojeném zařzení a logování dat.</string>
+    <string name="notification_chanel_logging_name">Loggování</string>
+    <string name="notification_chanel_logging_description">Informuje o aktuálně připojeném zařzení a logování dat.</string>
 
-        <string name="notification_logging_title">Připojeno k desce</string>
-        <string name="notification_logging_text"><strong>Zařízení logguje a ukládá data.</strong></string>
-        <string name="notification_logging_last_step_value_header"><strong>Počet kroků:</strong></string>
-        <string name="notification_logging_last_step_value_unit"><strong>kroků.</strong></string>
-        <string name="notification_logging_last_heart_rate_value_header"><strong>Srdeční tep:</strong></string>
-        <string name="notification_logging_last_heart_rate_value_unit"><strong>tepů za minutu.</strong></string>
-        <string name="notification_logging_last_temperature_value_header"><strong>Teplota:</strong></string>
-        <string name="notification_logging_last_temperature_value_unit"><strong>°C.</strong></string>
+    <string name="notification_logging_title">Připojeno k desce</string>
+    <string name="notification_logging_text"><strong>Zařízení logguje a ukládá data.</strong></string>
+    <string name="notification_logging_last_step_value_header"><strong>Počet kroků:</strong></string>
+    <string name="notification_logging_last_step_value_unit"><strong>kroků.</strong></string>
+    <string name="notification_logging_last_heart_rate_value_header"><strong>Srdeční tep:</strong></string>
+    <string name="notification_logging_last_heart_rate_value_unit"><strong>tepů za minutu.</strong></string>
+    <string name="notification_logging_last_temperature_value_header"><strong>Teplota:</strong></string>
+    <string name="notification_logging_last_temperature_value_unit"><strong>°C.</strong></string>
+
+    <!-- Months STRINGS -->
+    <array name="months">
+        <item>Led</item>
+        <item>Úno</item>
+        <item>Bře</item>
+        <item>Dub</item>
+        <item>Kvě</item>
+        <item>Čer</item>
+        <item>Čvn</item>
+        <item>Srp</item>
+        <item>Zář</item>
+        <item>Říj</item>
+        <item>Lis</item>
+        <item>Pro</item>
+    </array>
+
 
     <!-- Preference Titles -->
     <string name="messages_header">Messages</string>
@@ -161,5 +194,8 @@
     <string name="attachment_summary_on">Automatically download attachments for incoming emails
     </string>
     <string name="attachment_summary_off">Only download attachments when manually requested</string>
+    <string name="title_activity_main">MainActivity</string>
+    <string name="tab_text_1">Tab 1</string>
+    <string name="tab_text_2">Tab 2</string>
 
 </resources>

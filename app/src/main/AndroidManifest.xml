@@ -2,12 +2,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="cz.vsb.cbe.testbed">
 
-    <uses-permission android:name="android.permission.BLUETOOTH"/>
-    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
-    <uses-permission-sdk-23 android:name="android.permission.ACCESS_COARSE_LOCATION"/>
-    <uses-permission-sdk-23 android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
+    <uses-permission-sdk-23 android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission-sdk-23 android:name="android.permission.ACCESS_FINE_LOCATION" />
 
     <uses-feature
         android:name="android.hardware.bluetooth_le"
@@ -15,33 +16,38 @@
 
     <application
         android:allowBackup="true"
+        android:fullBackupContent="@xml/backup_descriptor"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/application_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme"
-        android:fullBackupContent="@xml/backup_descriptor">
-
+        android:theme="@style/AppTheme">
         <activity
-            android:name="cz.vsb.cbe.testbed.StartUpActivity"
+            android:name=".StartUpActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         <activity
-            android:name="cz.vsb.cbe.testbed.DiscoverDevicesActivity"
-            android:label="@string/activity_discover_devices_title"/>
+            android:name=".DiscoverDevicesActivity"
+            android:configChanges="orientation|keyboardHidden"
+            android:label="@string/activity_discover_devices_title"
+            android:screenOrientation="portrait" />
         <activity
-            android:name="cz.vsb.cbe.testbed.DatabaseActivity" />
+            android:name=".DatabaseActivity"
+            android:configChanges="orientation|keyboardHidden"
+            android:screenOrientation="portrait" />
         <activity
-            android:name="cz.vsb.cbe.testbed.SettingsActivity"
+            android:name=".SettingsActivity"
             android:label="@string/activity_settings_title" />
 
         <service
-            android:name="cz.vsb.cbe.testbed.BluetoothLeService"
+            android:name=".BluetoothLeService"
             android:enabled="true"
             android:foregroundServiceType="location" />
     </application>

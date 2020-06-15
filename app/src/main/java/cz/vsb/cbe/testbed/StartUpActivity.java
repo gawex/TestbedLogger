@@ -313,8 +313,7 @@ public class StartUpActivity extends AppCompatActivity {
 
     private void enableBluetoothAdapter(){
         if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled()) {
-            Intent enableBluetoothIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(enableBluetoothIntent, REQUEST_ENABLE_BT);
+            startActivityForResult(new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE), REQUEST_ENABLE_BT);
             startUpConditionsListAdapter.setCondition(new StartUpConditionsOrder().BLUETOOTH, ConditionsListAdapter.PROGRESS, getResources().getString(R.string.activity_start_up_condition_bluetooth_adapter));
         } else {
             startUpConditionsListAdapter.setCondition(new StartUpConditionsOrder().BLUETOOTH, ConditionsListAdapter.PASS, getResources().getString(R.string.activity_start_up_condition_bluetooth_adapter));

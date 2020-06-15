@@ -7,8 +7,11 @@ import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
 import android.util.Log;
 
+import com.github.mikephil.charting.data.BarEntry;
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -16,6 +19,8 @@ import cz.vsb.cbe.testbed.BluetoothLeService;
 import cz.vsb.cbe.testbed.TestbedDevice;
 
 public class TestbedDatabase {
+
+    private static String TAG;
 
     private static TestbedDatabase TestbedDatabase;
     private static Context Context;
@@ -26,6 +31,7 @@ public class TestbedDatabase {
     OnUpdateIntoDatabase OnUpdateIntoDatabase;
     OnIsTestbedDeviceStored OnIsTestbedDeviceStored;
     OnGetLastConnectedTestbedDevice OnGetLastConnectedTestbedDevice;
+    OnSelectTemperatureDataOld onSelectTemperatureDataOld;
     OnSelectTemperatureData OnSelectTemperatureData;
 
     public interface OnInsertIntoDatabase {
@@ -46,8 +52,13 @@ public class TestbedDatabase {
         void onLastConnectResultFail();
     }
 
-    public interface OnSelectTemperatureData {
+    public interface OnSelectTemperatureDataOld {
         void onSelectSuccess(List<Record> records);
+        void onSelectFailed();
+    }
+
+    public interface OnSelectTemperatureData {
+        void onSelectSuccess(List<BarEntry> entries);
         void onSelectFailed();
     }
 
@@ -55,6 +66,7 @@ public class TestbedDatabase {
         if (TestbedDatabase == null) {
             TestbedDatabase = new TestbedDatabase(context);
         }
+        TAG = context.getPackageName();
         return TestbedDatabase;
     }
 
@@ -251,8 +263,8 @@ public class TestbedDatabase {
 
     }
 
-    public void selectTemperatureData(TestbedDevice testbedDevice, Date startDate, Date endDate, OnSelectTemperatureData onSelectTemperatureData) {
-        this.OnSelectTemperatureData = onSelectTemperatureData;
+    public void selectTemperatureDataOld(TestbedDevice testbedDevice, Date startDate, Date endDate, OnSelectTemperatureDataOld onSelectTemperatureData) {
+        this.onSelectTemperatureDataOld = onSelectTemperatureData;
         String tableName = TestbedDatabaseHelper.Data.TABLE_NAME;
         String[] columns = new String[]{TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_ID,
                 TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_VALUE,
@@ -265,8 +277,26 @@ public class TestbedDatabase {
                 Long.toString(startDate.getTime()),
                 Long.toString(endDate.getTime())};
         SelectQuery selectQuery = new SelectQuery(tableName, columns, selection, selectionArgs, null , null, null);
-        SelectTemperature selectTemperature = new SelectTemperature();
+        SelectTemperatureOld selectTemperature = new SelectTemperatureOld();
         selectTemperature.execute(selectQuery);
+    }
+
+    public void selectTemperatureData(TestbedDevice testbedDevice, Date startDate, Date endDate, OnSelectTemperatureData onSelectTemperatureData){
+        this.OnSelectTemperatureData = onSelectTemperatureData;
+        String tableName = TestbedDatabaseHelper.Data.TABLE_NAME;
+        String[] columns = new String[]{TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_VALUE,
+                TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP};
+        String selection = TestbedDatabaseHelper.Data.COLUMN_NAME_DEVICE_ID + " = ? AND " +
+                TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_KEY + " = ? AND " +
+                TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP + " BETWEEN ? AND ?";
+        String[] selectionArgs = new String[]{Integer.toString(testbedDevice.getDeviceId()),
+                BluetoothLeService.TEMPERATURE_DATA,
+                Long.toString(startDate.getTime()),
+                Long.toString(endDate.getTime())};
+        SelectQuery selectQuery = new SelectQuery(tableName, columns, selection, selectionArgs, null , null, null);
+        SelectTemperatureData selectTemperatureData = new SelectTemperatureData(SORTING.YEARS);
+        selectTemperatureData.execute(selectQuery);
+
     }
 
     private class InsertIntoDatabase extends AsyncTask<InsertQuery, Void, Void>{
@@ -390,14 +420,14 @@ public class TestbedDatabase {
         }
     }
 
-    public class SelectTemperature extends SelectFromDatabase {
+    public class SelectTemperatureOld extends SelectFromDatabase {
 
         @Override
         protected void onPostExecute(List<Cursor> cursors) {
             super.onPostExecute(cursors);
             for (Cursor cursor : cursors) {
                 if (cursor.getCount() == 0) {
-                    OnSelectTemperatureData.onSelectFailed();
+                    onSelectTemperatureDataOld.onSelectFailed();
                 } else {
                     List<Record> records = new ArrayList<>();
                     while (cursor.moveToNext()) {
@@ -406,10 +436,92 @@ public class TestbedDatabase {
                                                cursor.getLong(cursor.getColumnIndexOrThrow(TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP))));
                     }
                     cursor.close();
-                    OnSelectTemperatureData.onSelectSuccess(records);
+                    onSelectTemperatureDataOld.onSelectSuccess(records);
                 }
             }
         }
+    }
+
+    public class SelectTemperatureData extends SelectFromDatabase {
+
+        SORTING Sorting;
+
+        public SelectTemperatureData(SORTING sorting) {
+            Sorting = sorting;
+        }
+
+        @Override
+        protected void onPostExecute(List<Cursor> cursors) {
+            super.onPostExecute(cursors);
+            ArrayList<BarEntry> barEntries = new ArrayList<>();
+            Log.w(TAG, "jsem v postexecute");
+            for (Cursor cursor : cursors) {
+                if (cursor.getCount() == 0) {
+                    OnSelectTemperatureData.onSelectFailed();
+                    Log.w(TAG, "jsem v selhal jsem");
+                } else {
+                    cursor.moveToFirst();
+                    Calendar firstRecordTimeStamp = Calendar.getInstance();
+                    firstRecordTimeStamp.setTime(new Date(cursor.getLong(cursor.getColumnIndexOrThrow(TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP))));
+
+                    cursor.moveToLast();
+                    Calendar lastRecordTimeStamp = Calendar.getInstance();
+                    lastRecordTimeStamp.setTime(new Date(cursor.getLong(cursor.getColumnIndexOrThrow(TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP))));
+
+                    cursor.moveToFirst();
+                    Calendar currentRecordTimeStamp = Calendar.getInstance();
+
+                    switch (Sorting) {
+                        case YEARS:
+                            int numberOfEntries = lastRecordTimeStamp.get(Calendar.YEAR) - firstRecordTimeStamp.get(Calendar.YEAR);
+                            List<ArrayList<Float>> values = new ArrayList<>(numberOfEntries+1);
+                            for (ArrayList<Float> value : values){
+                                values.add(new ArrayList<Float>());
+                            }
+                            ArrayList<Float> entryValues;
+                            while (cursor.moveToNext()) {
+                                currentRecordTimeStamp.setTime(new Date(cursor.getLong(cursor.getColumnIndexOrThrow(TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP))));
+                                int barEntryIndex = currentRecordTimeStamp.get(Calendar.YEAR) - firstRecordTimeStamp.get(Calendar.YEAR);
+                                entryValues = values.get(barEntryIndex);
+                                entryValues.add(cursor.getFloat(cursor.getColumnIndexOrThrow(TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_VALUE)));
+                                values.set(barEntryIndex, entryValues);
+                            }
+                            cursor.close();
+                            for (int i = 0; i < values.size(); i++) {
+                                float[] entryValue = new float[values.get(i).size()];
+                                int j = 0;
+                                for (Float f : values.get(i)) {
+                                    entryValue[j++] = (f != null ? f : Float.NaN); // Or whatever default you want.
+                                }
+                                barEntries.add(new BarEntry(i, entryValue));
+                            }
+                            OnSelectTemperatureData.onSelectSuccess(barEntries);
+                            Log.w(TAG, "uspel jsem");
+                            break;
+                        case MONTHS:
+                            break;
+                        case DAYS_OF_MONTH:
+                            break;
+                        case HOURS_OF_DAY:
+                            break;
+                        case MINUTES:
+                            break;
+                        default:
+                            throw new IllegalStateException("Unexpected value: " + Sorting);
+                    }
+                }
+            }
+
+        }
+    }
+
+
+    public enum SORTING {
+        YEARS,
+        MONTHS,
+        DAYS_OF_MONTH,
+        HOURS_OF_DAY,
+        MINUTES
     }
 
     public void close(){

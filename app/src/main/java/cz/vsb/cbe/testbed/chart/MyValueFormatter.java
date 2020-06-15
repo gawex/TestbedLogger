@@ -1,4 +1,4 @@
-package cz.vsb.cbe.testbed;
+package cz.vsb.cbe.testbed.chart;
 
 import com.github.mikephil.charting.components.AxisBase;
 import com.github.mikephil.charting.components.XAxis;

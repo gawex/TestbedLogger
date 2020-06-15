@@ -1,6 +1,5 @@
 package cz.vsb.cbe.testbed;
 
-import android.app.PendingIntent;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -31,6 +30,10 @@ import java.math.BigInteger;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
+
+import cz.vsb.cbe.testbed.fragments.HeartRateFragment;
+import cz.vsb.cbe.testbed.fragments.PedometerFragment;
+import cz.vsb.cbe.testbed.fragments.TemperatureFragment;
 
 public class DatabaseActivity extends AppCompatActivity {
 
@@ -86,7 +89,7 @@ public class DatabaseActivity extends AppCompatActivity {
                 }
             }
         };
-        thread.start();
+        //thread.start();
         return true;
     }
 
@@ -207,7 +210,7 @@ public class DatabaseActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_database);
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_NOSENSOR);
+        //setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_NOSENSOR);
 
         TestbedDevice = getIntent().getExtras().getParcelable(TESTBED_DEVICE);
 

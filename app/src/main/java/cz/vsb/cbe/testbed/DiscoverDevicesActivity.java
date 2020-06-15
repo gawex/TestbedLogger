@@ -17,6 +17,8 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.ActivityInfo;
+import android.location.LocationManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
@@ -45,6 +47,8 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
 
     private static final String TAG = DiscoverDevicesActivity.class.getSimpleName();
 
+    private static final int REQUEST_ENABLE_BT = 1;
+
     private static final long SCAN_PERIOD = 10000;
     private static final int SPLASH_TIME = 500; //This is 0.5 seconds
 
@@ -64,6 +68,8 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
 
     private int activityState = NO_FOUNDED_DEVICES_STATE;
 
+    private BluetoothAdapter bluetoothAdapter;
+
     private TestbedDevicesListAdapter testbedDevicesListAdapter;
 
     private BluetoothLeScanner bluetoothLeScanner;
@@ -78,9 +84,9 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
 
     private TextView noDevicesFound;
 
-    private AlertDialog connectingDialog;
+    private AlertDialog connectingDialog, bluetoothDisableDialog, locationDisableDialog;
 
-    private TestbedDevice selectedTestbedDevice;
+    private TestbedDevice SelectedTestbedDevice;
 
     ConditionsListAdapter conditionsListAdapter;
 
@@ -94,7 +100,7 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
         FOR_CONNECTING
     }
 
-    private static IntentFilter makeGattUpdateIntentFilter(INTENT_FILTER_TYPES type) {
+    private static IntentFilter GATT_ACTION_UPDATE_INTENT_FILTER(INTENT_FILTER_TYPES type) {
         final IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(BluetoothLeService.ACTION_GATT_CONNECTED);
         intentFilter.addAction(BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED);
@@ -104,6 +110,13 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
             intentFilter.addAction(BluetoothLeService.ACTION_GATT_DESCRIPTOR_WRITTEN);
         }
         intentFilter.addAction(BluetoothLeService.ACTION_GATT_DISCONNECTED);
+        return intentFilter;
+    }
+
+    private static IntentFilter SYSTEM_SERVICES_INTENT_FILTER(){
+        final IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(LocationManager.MODE_CHANGED_ACTION);
+        intentFilter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
         return intentFilter;
     }
 
@@ -216,13 +229,56 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
     };
 
     @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
+        super.onActivityResult(requestCode, resultCode, intent);
+        if (requestCode == REQUEST_ENABLE_BT) {
+            if (resultCode == RESULT_OK) {
+                bluetoothDisableDialog.hide();
+                bluetoothDisableDialog.cancel();
+                if(activityState == DISCOVERED_STATE){
+                    bluetoothLeService.initialize();
+                    connectToSelectedTestbedDevice(SelectedTestbedDevice);
+                } else {
+                    bluetoothAdapter = Objects.requireNonNull((BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE)).getAdapter();
+                    bluetoothLeScanner = bluetoothAdapter.getBluetoothLeScanner();
+                    scanLeDevices(START_SCAN);
+                }
+            } else {
+                bluetoothDisableDialog.show();
+            }
+        }
+    }
+
+    public void connectToSelectedTestbedDevice(final TestbedDevice testbedDevice){
+        TestbedDatabase.getInstance(getApplicationContext()).selectStoredTestbedDevice(testbedDevice, new TestbedDatabase.OnIsTestbedDeviceStored() {
+            @Override
+            public void onStoredResult(int result) {
+                if (result == TestbedDevice.NOT_STORED) {
+                    TestbedDatabase.getInstance(getApplicationContext()).insertTestbedDevice(testbedDevice);
+                }
+                bluetoothLeService.setTestbedDevice(testbedDevice);
+                bluetoothLeService.setAutoReconnectAndNotificationEnabled(true);
+                totalDescriptorForWrite = Integer.bitCount(testbedDevice.getAvailableSensors());
+                bluetoothLeService.connect(testbedDevice.getBluetoothDevice().getAddress());
+                registerReceiver(connectingBroadcastReceiver, GATT_ACTION_UPDATE_INTENT_FILTER(INTENT_FILTER_TYPES.FOR_CONNECTING));
+                connectingDialog.show();
+                conditionsListAdapter.setCondition(CONNECTION_STATUS, ConditionsListAdapter.PROGRESS, getString(R.string.dialog_condition_connecting_progress_connecting));
+                conditionsListAdapter.notifyDataSetChanged();
+            }
+        });
+
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_discover_devices);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_NOSENSOR);
 
-        final BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
-        final BluetoothAdapter bluetoothAdapter = Objects.requireNonNull(bluetoothManager).getAdapter();
+
+
+        registerReceiver(systemServicesStateChangedReceiver, SYSTEM_SERVICES_INTENT_FILTER());
+        bluetoothAdapter = Objects.requireNonNull((BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE)).getAdapter();
         bluetoothLeScanner = bluetoothAdapter.getBluetoothLeScanner();
 
         scanFilters = new ArrayList<>();
@@ -241,23 +297,12 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 if (activityState == DISCOVERED_STATE) {
-                    selectedTestbedDevice = testbedDevicesListAdapter.getDevice(position);
-                    TestbedDatabase.getInstance(getApplicationContext()).selectStoredTestbedDevice(selectedTestbedDevice, new TestbedDatabase.OnIsTestbedDeviceStored() {
-                        @Override
-                        public void onStoredResult(int result) {
-                            if (result == TestbedDevice.NOT_STORED) {
-                                TestbedDatabase.getInstance(getApplicationContext()).insertTestbedDevice(selectedTestbedDevice);
-                            }
-                            bluetoothLeService.setTestbedDevice(selectedTestbedDevice);
-                            bluetoothLeService.setAutoReconnectAndNotificationEnabled(true);
-                            totalDescriptorForWrite = Integer.bitCount(selectedTestbedDevice.getAvailableSensors());
-                            bluetoothLeService.connect(selectedTestbedDevice.getBluetoothDevice().getAddress());
-                            registerReceiver(connectingBroadcastReceiver, makeGattUpdateIntentFilter(INTENT_FILTER_TYPES.FOR_CONNECTING));
-                            connectingDialog.show();
-                            conditionsListAdapter.setCondition(CONNECTION_STATUS, ConditionsListAdapter.PROGRESS, getString(R.string.dialog_condition_connecting_progress_connecting));
-                            conditionsListAdapter.notifyDataSetChanged();
-                        }
-                    });
+                    SelectedTestbedDevice = testbedDevicesListAdapter.getDevice(position);
+                    if (bluetoothAdapter.isEnabled()) {
+                        connectToSelectedTestbedDevice(SelectedTestbedDevice);
+                    } else {
+                        bluetoothDisableDialog.show();
+                    }
                 }
             }
         });
@@ -294,6 +339,47 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
                 .create();
         connectingDialog.setCancelable(false);
         connectingDialog.setCanceledOnTouchOutside(false);
+
+        bluetoothDisableDialog = new AlertDialog.Builder(this)
+                .setTitle(R.string.dialog_title_bluetooth_disabled)
+                .setMessage(R.string.dialog_message_bluetooth_disabled)
+                .setIcon(R.drawable.ic_testbed_id)
+                .setPositiveButton(R.string.dialog_button_positive_turn_on_bluetooth, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        startActivityForResult(new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE), REQUEST_ENABLE_BT);
+                    }
+                })
+                .setNegativeButton(R.string.dialog_button_negative_do_not_turn_on, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        finish();
+                    }
+                })
+                .create();
+        bluetoothDisableDialog.setCancelable(false);
+        bluetoothDisableDialog.setCanceledOnTouchOutside(false);
+
+        locationDisableDialog = new AlertDialog.Builder(this)
+                .setTitle(R.string.dialog_title_location_disabled)
+                .setMessage(R.string.dialog_message_location_disabled)
+                .setIcon(R.drawable.ic_testbed_id)
+                .setPositiveButton(R.string.dialog_button_positive_turn_on_location, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+                    }
+                })
+                .setNegativeButton(R.string.dialog_button_negative_do_not_turn_on, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        finish();
+                    }
+                })
+                .create();
+        locationDisableDialog.setCancelable(false);
+        locationDisableDialog.setCanceledOnTouchOutside(false);
+
     }
 
     @Override
@@ -305,23 +391,45 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
 
 
     private void scanLeDevices(final int state) {
-        if (state == START_SCAN) {
-            invalidateOptionsMenu();
-            scanningAndDiscoveringProgressBar.setVisibility(ProgressBar.VISIBLE);
-            noDevicesFound.setVisibility(View.INVISIBLE);
-            testbedDevicesListAdapter.clear();
-            testbedDevicesListAdapter.notifyDataSetChanged();
-            bluetoothLeScanner.startScan(scanFilters,scanSettings, scanLeDevicesCallback);
-            activityState = SCANNING_STATE;
-            scanningCountDownTimer.start();
 
+        if (state == START_SCAN) {
+            activityState = SCANNING_STATE;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                LocationManager locationManager = (LocationManager) Objects.requireNonNull(getSystemService(Context.LOCATION_SERVICE));
+                if (locationManager.isLocationEnabled() && bluetoothAdapter.isEnabled()){
+                    invalidateOptionsMenu();
+                    scanningAndDiscoveringProgressBar.setVisibility(ProgressBar.VISIBLE);
+                    noDevicesFound.setVisibility(View.INVISIBLE);
+                    testbedDevicesListAdapter.clear();
+                    testbedDevicesListAdapter.notifyDataSetChanged();
+                    bluetoothLeScanner.startScan(scanFilters, scanSettings, scanLeDevicesCallback);
+                    scanningCountDownTimer.start();
+                } else if (!locationManager.isLocationEnabled()) {
+                    locationDisableDialog.show();
+                } else if (!bluetoothAdapter.isEnabled()){
+                    bluetoothDisableDialog.show();
+                }
+            }
+            else{
+                if(bluetoothAdapter.isEnabled()) {
+                    invalidateOptionsMenu();
+                    scanningAndDiscoveringProgressBar.setVisibility(ProgressBar.VISIBLE);
+                    noDevicesFound.setVisibility(View.INVISIBLE);
+                    testbedDevicesListAdapter.clear();
+                    testbedDevicesListAdapter.notifyDataSetChanged();
+                    bluetoothLeScanner.startScan(scanFilters, scanSettings, scanLeDevicesCallback);
+                    scanningCountDownTimer.start();
+                } else {
+                    bluetoothDisableDialog.show();
+                }
+            }
         } else if (state == STOP_SCAN) {
             bluetoothLeScanner.stopScan(scanLeDevicesCallback);
             //stopScanningAfterScanPeriodHandler.removeCallbacks(stopScanningAfterScanPeriodRunnable);
             scanningCountDownTimer.cancel();
 
             if(testbedDevicesListAdapter.getCount() >= 1 && bluetoothLeService != null) {
-                registerReceiver(discoveringBroadcastReceiver, makeGattUpdateIntentFilter(INTENT_FILTER_TYPES.FOR_DISCOVERING));
+                registerReceiver(discoveringBroadcastReceiver, GATT_ACTION_UPDATE_INTENT_FILTER(INTENT_FILTER_TYPES.FOR_DISCOVERING));
                 discoveringDeviceIndex = 0;
                 bluetoothLeService.connect(testbedDevicesListAdapter.getDevice(discoveringDeviceIndex).getBluetoothDevice().getAddress());
                 activityState = DISCOVERING_STATE;
@@ -334,11 +442,15 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
             invalidateOptionsMenu();
 
         } else {
-            bluetoothLeScanner.stopScan(scanLeDevicesCallback);
+            if(bluetoothAdapter.isEnabled()) {
+                bluetoothLeScanner.stopScan(scanLeDevicesCallback);
+            }
             testbedDevicesListAdapter.clear();
             testbedDevicesListAdapter.notifyDataSetChanged();
             activityState = NO_FOUNDED_DEVICES_STATE;
             scanningCountDownTimer.cancel();
+            scanningAndDiscoveringProgressBar.setVisibility(View.INVISIBLE);
+            noDevicesFound.setVisibility(View.INVISIBLE);
             invalidateOptionsMenu();
         }
 
@@ -379,6 +491,8 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
             invalidateOptionsMenu();
             if(testbedDevicesListAdapter.getCount() == 0){
                 noDevicesFound.setVisibility(View.VISIBLE);
+                activityState = NO_FOUNDED_DEVICES_STATE;
+                invalidateOptionsMenu();
             }
             scanningAndDiscoveringProgressBar.setVisibility(ProgressBar.INVISIBLE);
 
@@ -443,10 +557,10 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
             if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(action)) {
-                TestbedDatabase.getInstance(getApplicationContext()).updateLastConnectedTestbedDevice(selectedTestbedDevice);
+                TestbedDatabase.getInstance(getApplicationContext()).updateLastConnectedTestbedDevice(SelectedTestbedDevice);
                 conditionsListAdapter.setCondition(CONNECTION_STATUS, ConditionsListAdapter.PASS, getString(R.string.notification_logging_title) + ": " +
                         getString(R.string.ble_devices_name) + " (#" +
-                        Integer.toHexString(selectedTestbedDevice.getDeviceId()) + ")");
+                        Integer.toHexString(SelectedTestbedDevice.getDeviceId()) + ")");
                 conditionsListAdapter.setCondition(SERVICE_DISCOVERING_STATUS, ConditionsListAdapter.PROGRESS, getString(R.string.dialog_condition_re_connecting_progress_services_discovering));
                 conditionsListAdapter.notifyDataSetChanged();
             } else if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(action)) {
@@ -471,11 +585,46 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
                            connectingDialog.hide();
                            connectingDialog.cancel();
                            Intent intentActivity = new Intent(DiscoverDevicesActivity.this, DatabaseActivity.class);
-                           intentActivity.putExtra(DatabaseActivity.TESTBED_DEVICE, selectedTestbedDevice);
+                           intentActivity.putExtra(DatabaseActivity.TESTBED_DEVICE, SelectedTestbedDevice);
                            startActivity(intentActivity);
                            finish();
                        }
                    }, SPLASH_TIME);
+                }
+            }
+        }
+    };
+
+    private final BroadcastReceiver systemServicesStateChangedReceiver = new BroadcastReceiver() {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+            if (intent.getAction().equals(BluetoothAdapter.ACTION_STATE_CHANGED) && intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR) == BluetoothAdapter.STATE_OFF) {
+                Log.w(TAG, "Bluetooth adaptér vypnut!");
+                switch (activityState) {
+                    case SCANNING_STATE:
+                        scanLeDevices(CANCEL_SCAN);
+                        bluetoothDisableDialog.show();
+                        break;
+                    case DISCOVERING_STATE:
+                        cancelDiscovering();
+                        bluetoothDisableDialog.show();
+                        break;
+                    case DISCOVERING_CANCELED:
+                        bluetoothDisableDialog.show();
+                        break;
+                    }
+
+            }else if (intent.getAction().equals(LocationManager.MODE_CHANGED_ACTION) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                LocationManager locationManager = (LocationManager) Objects.requireNonNull(getSystemService(Context.LOCATION_SERVICE));
+                if (!locationManager.isLocationEnabled()) {
+                    switch (activityState) {
+                        case SCANNING_STATE:
+                            scanLeDevices(CANCEL_SCAN);
+                            locationDisableDialog.show();
+                            break;
+                    }
                 }
             }
         }
@@ -495,8 +644,7 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        Log.w(TAG, "Activity destroyed");
-
+        unregisterReceiver(systemServicesStateChangedReceiver);
         if(destroyBackgroundService){
             stopService(new Intent(this, BluetoothLeService.class));
         }

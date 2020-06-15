@@ -1,4 +1,4 @@
-package cz.vsb.cbe.testbed;
+package cz.vsb.cbe.testbed.chart;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -11,6 +11,8 @@ import com.github.mikephil.charting.highlight.Highlight;
 import com.github.mikephil.charting.utils.MPPointF;
 
 import java.text.DecimalFormat;
+
+import cz.vsb.cbe.testbed.R;
 
 /**
  * Custom implementation of the MarkerView.

@@ -1,4 +1,4 @@
-package cz.vsb.cbe.testbed;
+package cz.vsb.cbe.testbed.fragments;
 
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
@@ -24,6 +24,10 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
+import cz.vsb.cbe.testbed.DatabaseActivity;
+import cz.vsb.cbe.testbed.DatabaseListAdapter;
+import cz.vsb.cbe.testbed.R;
+import cz.vsb.cbe.testbed.TestbedDevice;
 import cz.vsb.cbe.testbed.sql.TestbedDatabase;
 import cz.vsb.cbe.testbed.sql.TestbedDatabase.Record;
 
@@ -163,7 +167,7 @@ public class TemperatureFragment extends Fragment {
 
     public void funkce(){
 
-        TestbedDatabase.OnSelectTemperatureData onSelectTemperatureData = new TestbedDatabase.OnSelectTemperatureData() {
+        TestbedDatabase.OnSelectTemperatureDataOld onSelectTemperatureData = new TestbedDatabase.OnSelectTemperatureDataOld() {
             @Override
             public void onSelectSuccess(List<Record> records) {
                 float values [] = new float [records.size()];
@@ -210,7 +214,7 @@ public class TemperatureFragment extends Fragment {
         if(dateSwitch.isChecked()) {
             if (isNotEmpty(startDate) && isNotEmpty(startTime)) {
                 if (startDateAndTime.getTimeInMillis() <= System.currentTimeMillis()){
-                    TestbedDatabase.getInstance(getContext()).selectTemperatureData(testbedDevice, startDateAndTime.getTime(), new Date(System.currentTimeMillis()), onSelectTemperatureData);
+                    TestbedDatabase.getInstance(getContext()).selectTemperatureDataOld(testbedDevice, startDateAndTime.getTime(), new Date(System.currentTimeMillis()), onSelectTemperatureData);
                 }
                 else
                     Toast.makeText(getContext(), "Datum nemá smysl tady že", Toast.LENGTH_SHORT).show();
@@ -219,7 +223,7 @@ public class TemperatureFragment extends Fragment {
         else {
             if (isNotEmpty(startDate) && isNotEmpty(startTime) && isNotEmpty(endDate) && isNotEmpty(endTime)) {
                 if (startDateAndTime.getTimeInMillis() <= endDateAndTime.getTimeInMillis() && endDateAndTime.getTimeInMillis() <= System.currentTimeMillis()) {
-                    TestbedDatabase.getInstance(getContext()).selectTemperatureData(testbedDevice, startDateAndTime.getTime(), endDateAndTime.getTime(), onSelectTemperatureData);
+                    TestbedDatabase.getInstance(getContext()).selectTemperatureDataOld(testbedDevice, startDateAndTime.getTime(), endDateAndTime.getTime(), onSelectTemperatureData);
                 }
                 else
                     Toast.makeText(getContext(), "Datum nemá smysl", Toast.LENGTH_SHORT).show();
