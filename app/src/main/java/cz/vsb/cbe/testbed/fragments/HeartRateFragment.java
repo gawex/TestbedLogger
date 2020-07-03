@@ -1,27 +1,21 @@
 package cz.vsb.cbe.testbed.fragments;
 
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Color;
-import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.NumberPicker;
 import android.widget.Spinner;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
-import androidx.core.content.ContextCompat;
-import androidx.fragment.app.Fragment;
-import androidx.viewpager.widget.ViewPager;
 
 import com.github.mikephil.charting.components.Legend;
 import com.github.mikephil.charting.components.XAxis;
@@ -30,18 +24,17 @@ import com.github.mikephil.charting.components.YAxis.YAxisLabelPosition;
 import com.github.mikephil.charting.data.BarData;
 import com.github.mikephil.charting.data.BarDataSet;
 import com.github.mikephil.charting.data.BarEntry;
+import com.github.mikephil.charting.data.CombinedData;
 import com.github.mikephil.charting.data.Entry;
+import com.github.mikephil.charting.data.LineData;
+import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.formatter.ValueFormatter;
 import com.github.mikephil.charting.highlight.Highlight;
 import com.github.mikephil.charting.interfaces.datasets.IBarDataSet;
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
-import com.github.mikephil.charting.utils.MPPointF;
-import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
 
 import cz.vsb.cbe.testbed.DatabaseActivity;
 import cz.vsb.cbe.testbed.TestbedDevice;
@@ -50,10 +43,9 @@ import cz.vsb.cbe.testbed.R;
 import cz.vsb.cbe.testbed.chart.MyBarChart;
 import cz.vsb.cbe.testbed.chart.MyValueFormatter;
 import cz.vsb.cbe.testbed.chart.XYMarkerView;
-import cz.vsb.cbe.testbed.sql.TestbedDatabase;
 
 
-public class HeartRateFragment extends BaseFragment{
+public class HeartRateFragment extends BaseFragment {
 
 
     private static final String TAG = HeartRateFragment.class.getSimpleName();
@@ -76,6 +68,13 @@ public class HeartRateFragment extends BaseFragment{
         super.onCreate(savedInstanceState);
 
     }
+
+    int count = 6;
+    float groupSpace = 0.06f;
+
+    float barWidth = 0.9f; // x2 dataset
+    float barSpace = 1- barWidth; // x2 dataset
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -100,7 +99,8 @@ public class HeartRateFragment extends BaseFragment{
         });
 
 
-        pickerVals = new String[] {"dog", "cat", "lizard", "turtle", "axolotl"};
+
+        pickerVals = new String[]{"dog", "cat", "lizard", "turtle", "axolotl"};
 
 
         final AlertDialog.Builder d = new AlertDialog.Builder(getContext());
@@ -134,7 +134,6 @@ public class HeartRateFragment extends BaseFragment{
         alertDialog = d.create();
 
 
-
         final AlertDialog.Builder t = new AlertDialog.Builder(getContext());
         inflater = this.getLayoutInflater();
         View dialogViewt = inflater.inflate(R.layout.text_picker_dialog, null);
@@ -142,7 +141,7 @@ public class HeartRateFragment extends BaseFragment{
         d.setMessage("Messaget");
         d.setView(dialogViewt);
 
-        final Spinner spinner =  dialogViewt.findViewById(R.id.dialog_text_picker);
+        final Spinner spinner = dialogViewt.findViewById(R.id.dialog_text_picker);
         ArrayAdapter<String> spinnerArrayAdapter = new ArrayAdapter<>
                 (getContext(), android.R.layout.simple_spinner_dropdown_item, getResources().getStringArray(R.array.months)); //selected item will look like a spinner set from XML
         //spinnerArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -162,24 +161,11 @@ public class HeartRateFragment extends BaseFragment{
         alertDialogt = d.create();
 
 
-
-
-
-
-
         testbedDevice = getArguments().getParcelable(DatabaseActivity.TESTBED_DEVICE);
-
-
-
-
-
 
 
         tfLight = Typeface.DEFAULT;
         chart = view.findViewById(R.id.chart1);
-
-
-
 
 
         chart.setDrawBarShadow(false);
@@ -204,6 +190,8 @@ public class HeartRateFragment extends BaseFragment{
         xAxis.setDrawGridLines(false);
         xAxis.setGranularity(1f); // only intervals of 1 day
         xAxis.setLabelCount(7);
+        xAxis.setAxisMinimum(1 - (barWidth / 2) - barSpace);
+        xAxis.setAxisMaximum((float) count + (barWidth / 2) + barSpace);
         xAxis.setValueFormatter(xAxisFormatter);
 
         ValueFormatter custom = new MyValueFormatter("$");
@@ -265,12 +253,12 @@ public class HeartRateFragment extends BaseFragment{
 
         chart.animateY(500);
 
-        setData(60, 10);
+        setData(count, 10);
 
         return view;
     }
 
-    private void setTemperatureData(Calendar period){
+    private void setTemperatureData(Calendar period) {
         Calendar startPeriod = Calendar.getInstance();
         Toast.makeText(getContext(), startPeriod.get(Calendar.YEAR) + "" + startPeriod.get(Calendar.DAY_OF_MONTH), Toast.LENGTH_SHORT).show();
     }
@@ -278,113 +266,81 @@ public class HeartRateFragment extends BaseFragment{
 
     private void setData(int count, float range) {
 
-        /*float start = 1f;
+        float start = 1f;
+        LineData d = new LineData();
 
-        ArrayList<BarEntry> values = new ArrayList<>();
+        ArrayList<Entry> entries = new ArrayList<>();
 
-        for (int i = (int) start; i < start + count; i++) {
-            float val = (float) (Math.random() * (range + 1));
+        for (int i = (int) start; i < start + count; i++)
+            entries.add(new Entry(i, (float) (Math.random() * (range + 1))));
 
-            if (Math.random() * 100 < 25) {
-                values.add(new BarEntry(i, val));
-            } else {
-                values.add(new BarEntry(i, val));
-            }
-        }*/
-
-        Date[] period = setPeriod(2020);
-        Log.w(TAG, "Začátek = " + period[0].getTime() + " konec = " + period[1].getTime());
-        TestbedDatabase testbedDatabase = TestbedDatabase.getInstance(getContext());
-        testbedDatabase.selectTemperatureData(testbedDevice, period[0], period[1], new TestbedDatabase.OnSelectTemperatureData() {
-            @Override
-            public void onSelectSuccess(List<BarEntry> entries) {
-
-                Toast.makeText(getContext(), "JSEM ZDE A N2CO ASI MAM", Toast.LENGTH_SHORT);
-
-                BarDataSet set1;
-
-                if (chart.getData() != null &&
-                        chart.getData().getDataSetCount() > 0) {
-                    set1 = (BarDataSet) chart.getData().getDataSetByIndex(0);
-                    set1.setValues(entries);
-                    chart.getData().notifyDataChanged();
-                    chart.notifyDataSetChanged();
-
-                } else {
-                    set1 = new BarDataSet(entries, "The year 2017");
-
-                    set1.setDrawIcons(false);
-
-                    int startColor1 = ContextCompat.getColor(getContext(), android.R.color.holo_orange_light);
-                    int startColor2 = ContextCompat.getColor(getContext(), android.R.color.holo_blue_light);
-                    int startColor3 = ContextCompat.getColor(getContext(), android.R.color.holo_orange_light);
-                    int startColor4 = ContextCompat.getColor(getContext(), android.R.color.holo_green_light);
-                    int startColor5 = ContextCompat.getColor(getContext(), android.R.color.holo_red_light);
-                    int endColor1 = ContextCompat.getColor(getContext(), android.R.color.holo_blue_dark);
-                    int endColor2 = ContextCompat.getColor(getContext(), android.R.color.holo_purple);
-                    int endColor3 = ContextCompat.getColor(getContext(), android.R.color.holo_green_dark);
-                    int endColor4 = ContextCompat.getColor(getContext(), android.R.color.holo_red_dark);
-                    int endColor5 = ContextCompat.getColor(getContext(), android.R.color.holo_orange_dark);
+        LineDataSet set = new LineDataSet(entries, "Line DataSet");
+        set.setColor(getContext().getColor(R.color.VSB));
+        set.setLineWidth(4f);
+        set.setCircleColor(getContext().getColor(R.color.VSB));
+        set.setCircleRadius(5f);
+        set.setFillColor(getContext().getColor(R.color.VSB));
+        set.setMode(LineDataSet.Mode.CUBIC_BEZIER);
+        set.setDrawValues(true);
+        set.setValueTextSize(10f);
+        //set.setValueTextColor(Color.rgb(240, 238, 70));
 
 
-                    ArrayList<IBarDataSet> dataSets = new ArrayList<>();
-                    dataSets.add(set1);
 
-                    BarData data = new BarData(dataSets);
-                    data.setValueTextSize(10f);
-                    data.setValueTypeface(tfLight);
-                    data.setBarWidth(0.9f);
-                    data.setHighlightEnabled(true);
+        set.setAxisDependency(YAxis.AxisDependency.LEFT);
+        d.addDataSet(set);
 
 
-                    chart.setData(data);
+        ArrayList<BarEntry> entries1 = new ArrayList<>();
 
+        for (int index = (int) start; index < start + count; index++) {
+            entries1.add(new BarEntry(index, (float) (Math.random() * (range + 1))));
+        }
 
-                }
-            }
+        Log.w(TAG, "BARVA Z COLOR = " + Integer.toHexString(getContext().getColor(R.color.FEI)));
 
-            @Override
-            public void onSelectFailed() {
-
-            }
-        });
+        BarDataSet set1 = new BarDataSet(entries1, "Bar 1");
+        set1.setColor(getContext().getColor(R.color.FEI));
+        //set1.setValueTextColor(Color.rgb(60, 220, 78));
+        set1.setValueTextSize(10f);
+        set1.setAxisDependency(YAxis.AxisDependency.LEFT);
 
 
 
 
+        // (0.45 + 0.02) * 2 + 0.06 = 1.00 -> interval per "group"
+
+        BarData e = new BarData(set1);
+        e.setBarWidth(barWidth);
+        //e.getEntryForHighlight(new Highlight(0,0,0));
+
+
+
+        // make this BarData object grouped
+        //e.groupBars(0, groupSpace, barSpace); // start at x = 0
+
+
+            CombinedData data = new CombinedData();
+            data.setData(d);
+            data.setData(e);
+            data.setValueTextSize(10f);
+            data.setValueTypeface(tfLight);
+            //data.setBarWidth(0.9f);
+            data.setHighlightEnabled(true);
+
+
+
+
+
+
+            chart.setData(data, data.getBarData().getIndexOfDataSet(set1));
+            //chart.highlightValue(1, 0);
+            //chart.highlightValue(3, 1);
 
 
         }
     }
-/*
-    private final RectF onValueSelectedRectF = new RectF();
 
-    @Override
-    public void onValueSelected(Entry e, Highlight h) {
-        if (e == null)
-            return;
-
-        RectF bounds = onValueSelectedRectF;
-        chart.getBarBounds((BarEntry) e, bounds);
-        MPPointF position = chart.getPosition(e, YAxis.AxisDependency.LEFT);
-
-        Log.i("bounds", bounds.toString());
-        Log.i("position", position.x + "|" + position.y);
-
-        Log.i("x-index",
-                "low: " + chart.getLowestVisibleX() + ", high: "
-                        + chart.getHighestVisibleX());
-
-        Log.i("x ", String.valueOf(e.getX()));
-
-        MPPointF.recycleInstance(position);
-
-    }
-
-    @Override
-    public void onNothingSelected() {
-
-    }*/
 
 
 

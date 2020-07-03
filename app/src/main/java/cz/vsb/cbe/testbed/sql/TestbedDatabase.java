@@ -13,6 +13,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 
 import cz.vsb.cbe.testbed.BluetoothLeService;
@@ -461,22 +462,22 @@ public class TestbedDatabase {
                     Log.w(TAG, "jsem v selhal jsem");
                 } else {
                     cursor.moveToFirst();
-                    Calendar firstRecordTimeStamp = Calendar.getInstance();
+                    Calendar firstRecordTimeStamp = new GregorianCalendar();
                     firstRecordTimeStamp.setTime(new Date(cursor.getLong(cursor.getColumnIndexOrThrow(TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP))));
 
                     cursor.moveToLast();
-                    Calendar lastRecordTimeStamp = Calendar.getInstance();
+                    Calendar lastRecordTimeStamp = new GregorianCalendar();
                     lastRecordTimeStamp.setTime(new Date(cursor.getLong(cursor.getColumnIndexOrThrow(TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP))));
 
                     cursor.moveToFirst();
-                    Calendar currentRecordTimeStamp = Calendar.getInstance();
+                    Calendar currentRecordTimeStamp = new GregorianCalendar();
 
                     switch (Sorting) {
                         case YEARS:
                             int numberOfEntries = lastRecordTimeStamp.get(Calendar.YEAR) - firstRecordTimeStamp.get(Calendar.YEAR);
-                            List<ArrayList<Float>> values = new ArrayList<>(numberOfEntries+1);
-                            for (ArrayList<Float> value : values){
-                                values.add(new ArrayList<Float>());
+                            List<ArrayList<Float>> values = new ArrayList<>();
+                            for (int i = 0; i <= numberOfEntries; i++){
+                                values.add(i, new ArrayList<Float>());
                             }
                             ArrayList<Float> entryValues;
                             while (cursor.moveToNext()) {
@@ -496,7 +497,7 @@ public class TestbedDatabase {
                                 barEntries.add(new BarEntry(i, entryValue));
                             }
                             OnSelectTemperatureData.onSelectSuccess(barEntries);
-                            Log.w(TAG, "uspel jsem");
+                            //Log.w(TAG, "uspel jsem");
                             break;
                         case MONTHS:
                             break;

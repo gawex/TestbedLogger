@@ -5,19 +5,16 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
 
-import androidx.annotation.InspectableProperty;
-
-import com.github.mikephil.charting.charts.BarChart;
-import com.github.mikephil.charting.components.YAxis.AxisDependency;
+import com.github.mikephil.charting.charts.CombinedChart;
+import com.github.mikephil.charting.data.BarEntry;
+import com.github.mikephil.charting.data.CombinedData;
 import com.github.mikephil.charting.data.Entry;
-import com.github.mikephil.charting.highlight.BarHighlighter;
 import com.github.mikephil.charting.highlight.Highlight;
 import com.github.mikephil.charting.listener.ChartTouchListener;
 import com.github.mikephil.charting.listener.OnChartGestureListener;
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
-import com.github.mikephil.charting.utils.MPPointD;
 
-public class MyBarChart extends BarChart implements OnChartGestureListener  {
+public class MyBarChart extends CombinedChart implements OnChartGestureListener  {
 
     public MyBarChart(Context context) {
         super(context);
@@ -29,6 +26,14 @@ public class MyBarChart extends BarChart implements OnChartGestureListener  {
 
     public MyBarChart(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
+    }
+
+    int Index;
+
+    //@Override
+    public void setData(CombinedData data, int index) {
+        super.setData(data);
+        Index = index;
     }
 
     @Override
@@ -64,8 +69,17 @@ public class MyBarChart extends BarChart implements OnChartGestureListener  {
     @Override
     public void onChartLongPressed(MotionEvent me) {
         Entry entry = getEntryByTouchPoint(me.getX(), me.getY());
-        Highlight highlight = new Highlight(entry.getX(), 0 ,0);
-        highlightValue(highlight, false);
+        //Log.w("onMyLongClick", "(" + me.getX() + " | " + me.getY() + ")");
+        Highlight highlight = new Highlight(entry.getX(), Index ,0);
+
+        if(entry instanceof BarEntry) {
+            Log.w("onMyLongClick", "je = " + Index);
+            highlightValue(highlight, false);
+        }
+        else
+            Log.w("onMyLongClick", "není");
+
+
         OnChartValueClickListener.onChartValueLongClickListener(entry);
     }
 
