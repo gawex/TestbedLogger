@@ -337,6 +337,7 @@ public class StartUpActivity extends AppCompatActivity {
             @Override
             public void run() {
                 startActivity(new Intent(StartUpActivity.this, DiscoverDevicesActivity.class));
+                //startActivity(new Intent(StartUpActivity.this, TestActivity.class));
                 finish();
             }
         }, SPLASH_TIME);

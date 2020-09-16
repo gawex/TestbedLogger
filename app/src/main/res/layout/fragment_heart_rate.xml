@@ -2,29 +2,157 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/fragment_heart_rate_csl_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".fragments.HeartRateFragment" >
+    tools:context=".fragments.HeartRateFragment">
 
-    <include
-        android:id="@+id/include"
-        layout="@layout/graph_navigation"
+    <TextView
+        android:id="@+id/fragment_heart_rate_txv_last_value_label"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        app:layout_constraintBottom_toTopOf="@+id/chart1"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="4dp"
+        android:text="Aktuální hodnota:"
+        android:textAllCaps="true"
+        android:textColor="@color/FEI"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@+id/fragment_heart_rate_txv_last_value"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <cz.vsb.cbe.testbed.chart.MyBarChart
-        android:id="@+id/chart1"
+    <TextView
+        android:id="@+id/fragment_heart_rate_txv_last_value"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="4dp"
+        android:fontFamily="@font/digital7"
+        android:text=" --- bpm"
+        android:textAlignment="center"
+        android:textAllCaps="true"
+        android:textColor="@color/VSB"
+        android:textSize="60sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@+id/fragment_heart_rate_txv_last_value_timestamp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/fragment_heart_rate_txv_last_value_label" />
+
+    <TextView
+        android:id="@+id/fragment_heart_rate_txv_last_value_timestamp"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="4dp"
+        android:text="---"
+        android:textAlignment="textEnd"
+        android:textAllCaps="true"
+        android:textColor="@color/FEI"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@+id/fragment_heart_rate_txv_interval"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/fragment_heart_rate_txv_last_value" />
+
+    <TextView
+        android:id="@+id/fragment_heart_rate_txv_interval"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="4dp"
+        android:layout_weight="95"
+        android:background="@color/FEI"
+        android:gravity="center"
+        android:text="TextView"
+        android:textAlignment="center"
+        android:textAllCaps="true"
+        android:textColor="@android:color/white"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@+id/fragment_heart_rate_rel_0"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/fragment_heart_rate_txv_last_value_timestamp" />
+
+    <RelativeLayout
+        android:id="@+id/fragment_heart_rate_rel_0"
         android:layout_width="0dp"
         android:layout_height="0dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="4dp"
+        app:layout_constraintBottom_toTopOf="@+id/fragment_heart_rate_lnl_0"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/fragment_heart_rate_txv_interval">
+
+        <cz.vsb.cbe.testbed.chart.MyBarChart
+            android:id="@+id/fragment_heart_rate_chr"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginBottom="4dp">
+
+        </cz.vsb.cbe.testbed.chart.MyBarChart>
+
+        <TextView
+            android:id="@+id/fragment_heart_rate_txv_no_data_available"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="Žádná data k zobrazení"
+            android:textAlignment="center"
+            android:textAllCaps="true"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:visibility="invisible" />
+
+    </RelativeLayout>
+
+    <LinearLayout
+        android:id="@+id/fragment_heart_rate_lnl_0"
+        android:layout_width="0dp"
+        android:layout_height="25dp"
+        android:layout_marginStart="4dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="4dp"
+        android:layout_marginBottom="8dp"
+        android:orientation="horizontal"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/include">
+        app:layout_constraintTop_toBottomOf="@+id/fragment_heart_rate_rel_0">
 
-    </cz.vsb.cbe.testbed.chart.MyBarChart>
+        <Switch
+            android:id="@+id/fragment_heart_rate_swc_min_max_and_quartile_values"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Rozpětí tepů"
+            android:theme="@style/AppTheme.SwitchActivatedColorFei" />
+
+        <Switch
+            android:id="@+id/fragment_heart_rate_swc_mean_values"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Průměr tepů"
+            android:theme="@style/AppTheme.SwitchActivatedColorVsb" />
+
+        <Button
+            android:id="@+id/fragment_heart_rate_btn_more_stats_info"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/VSB"
+            android:text="INFORMACE"
+            android:textColor="@android:color/white"
+            android:textStyle="bold" />
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

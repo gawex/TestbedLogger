@@ -70,11 +70,11 @@ public class MyBarChart extends CombinedChart implements OnChartGestureListener 
     public void onChartLongPressed(MotionEvent me) {
         Entry entry = getEntryByTouchPoint(me.getX(), me.getY());
         //Log.w("onMyLongClick", "(" + me.getX() + " | " + me.getY() + ")");
-        Highlight highlight = new Highlight(entry.getX(), Index ,0);
+        //Highlight highlight = new Highlight(entry.getX(), Index ,0);
 
         if(entry instanceof BarEntry) {
             Log.w("onMyLongClick", "je = " + Index);
-            highlightValue(highlight, false);
+            //highlightValue(highlight, false);
         }
         else
             Log.w("onMyLongClick", "není");

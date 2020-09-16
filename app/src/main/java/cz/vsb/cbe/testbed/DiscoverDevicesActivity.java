@@ -560,7 +560,7 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
                 TestbedDatabase.getInstance(getApplicationContext()).updateLastConnectedTestbedDevice(SelectedTestbedDevice);
                 conditionsListAdapter.setCondition(CONNECTION_STATUS, ConditionsListAdapter.PASS, getString(R.string.notification_logging_title) + ": " +
                         getString(R.string.ble_devices_name) + " (#" +
-                        Integer.toHexString(SelectedTestbedDevice.getDeviceId()) + ")");
+                        String.format("%04X", SelectedTestbedDevice.getDeviceId()) + ")");
                 conditionsListAdapter.setCondition(SERVICE_DISCOVERING_STATUS, ConditionsListAdapter.PROGRESS, getString(R.string.dialog_condition_re_connecting_progress_services_discovering));
                 conditionsListAdapter.notifyDataSetChanged();
             } else if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(action)) {

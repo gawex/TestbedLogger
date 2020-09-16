@@ -88,11 +88,11 @@ public class BluetoothLeService extends Service {
 
     private NotificationManagerCompat NotificationManager;
 
-    private int LastStepValue = -100;
-    private int LastHeartRateValue = -100;
-    private float LastTemperatureValue = -100;
+    public int LastStepValue = -100;
+    public int LastHeartRateValue = -100;
+    public float LastTemperatureValue = -100;
 
-    private Date LastStepTimeStamp, LastHeartRateTimeStamp, LastTemperatureTimeStamp;
+    public Date LastStepTimeStamp, LastHeartRateTimeStamp, LastTemperatureTimeStamp;
 
     private boolean AutoReconnectAndNotificationEnabled = false;
 
@@ -150,6 +150,7 @@ public class BluetoothLeService extends Service {
                 // Attempts to discover services after successful connection.
                 Log.i(TAG, "Attempting to start service discovery: " +
                         BluetoothGatt.discoverServices());
+                Log.w(TAG, "test");
                 if (TestbedDevice != null) {
                     NotificationManager = NotificationManagerCompat.from(getApplicationContext());
                     NotificationManager.notify(NOTIFICATION_ID, buildNotification(getColor(R.color.colorPrimary)).setSmallIcon((R.drawable.ic_mac_address)).build());
@@ -169,6 +170,8 @@ public class BluetoothLeService extends Service {
         @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
+
+
                 if(AutoReconnectAndNotificationEnabled) {
                     characteristicsForDescriptorWrite = new ArrayList<>();
                     descriptorWriteIndex = 0;
@@ -193,8 +196,9 @@ public class BluetoothLeService extends Service {
                         }
                     }, 2000);
                 }
+
                 broadcastUpdate(ACTION_GATT_SERVICES_DISCOVERED);
-                Log.i(TAG, "onServicesDiscovered received: " + status);
+                Log.w(TAG, "onServicesDiscovered received: " + status);
             } else {
                 Log.w(TAG, "onServicesDiscovered received: " + status);
             }
@@ -373,6 +377,7 @@ public class BluetoothLeService extends Service {
          } else if (SampleGattAttributes.STEPS_CHARACTERISTIC_UUID.equals(characteristic.getUuid())) {
              int steps = Integer.parseInt(characteristic.getStringValue(0));
              TestbedDatabase.getInstance(getApplicationContext()).insertSteps(TestbedDevice.getDeviceId(), steps);
+             intent.putExtra(STEPS_DATA, steps);
              LastStepValue = steps;
              LastStepTimeStamp = new Date(System.currentTimeMillis());
              NotificationManager.notify(NOTIFICATION_ID, buildNotification(getColor(R.color.colorPrimary)).setSmallIcon((R.drawable.ic_pedometer_available)).build());
@@ -380,6 +385,7 @@ public class BluetoothLeService extends Service {
          } else if (SampleGattAttributes.HEART_RATE_CHARACTERISTIC_UUID.equals(characteristic.getUuid())) {
              int heartRate = Integer.parseInt(characteristic.getStringValue(0));
              TestbedDatabase.getInstance(getApplicationContext()).insertHeartRate(TestbedDevice.getDeviceId(), heartRate);
+             intent.putExtra(HEART_RATE_DATA, heartRate);
              LastHeartRateValue = heartRate;
              LastHeartRateTimeStamp = new Date(System.currentTimeMillis());
              NotificationManager.notify(NOTIFICATION_ID, buildNotification(getColor(R.color.colorPrimary)).setSmallIcon((R.drawable.ic_heart_rate_meter_available)).build());
@@ -387,6 +393,7 @@ public class BluetoothLeService extends Service {
          } else if (SampleGattAttributes.TEMPERATURE_CHARACTERISTIC_UUID.equals(characteristic.getUuid())) {
              float temperature = Float.parseFloat(characteristic.getStringValue(0));
              TestbedDatabase.getInstance(getApplicationContext()).insertTemperature(TestbedDevice.getDeviceId(), temperature);
+             intent.putExtra(TEMPERATURE_DATA, temperature);
              LastTemperatureValue = temperature;
              LastTemperatureTimeStamp = new Date(System.currentTimeMillis());
              NotificationManager.notify(NOTIFICATION_ID, buildNotification(getColor(R.color.colorPrimary)).setSmallIcon((R.drawable.ic_thermometer_available)).build());

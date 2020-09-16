@@ -5,6 +5,8 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.provider.BaseColumns;
 
+import com.github.mikephil.charting.charts.ScatterChart;
+
 public class TestbedDatabaseHelper extends SQLiteOpenHelper {
 
     protected static TestbedDatabaseHelper TestbedDatabaseHelper;
@@ -36,7 +38,6 @@ public class TestbedDatabaseHelper extends SQLiteOpenHelper {
             "DROP TABLE IF EXISTS " + Data.TABLE_NAME;
 
     public static TestbedDatabaseHelper getInstance(Context context) {
-
         if (TestbedDatabaseHelper == null) {
             TestbedDatabaseHelper = new TestbedDatabaseHelper(context);
         }

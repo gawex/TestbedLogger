@@ -8,7 +8,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
-import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -17,6 +16,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
@@ -29,6 +29,8 @@ import androidx.fragment.app.FragmentTransaction;
 import java.math.BigInteger;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 import cz.vsb.cbe.testbed.fragments.HeartRateFragment;
@@ -53,6 +55,9 @@ public class DatabaseActivity extends AppCompatActivity {
 
     public static final String TESTBED_DEVICE = "cz.vsb.cbe.testbed.TESTBED_DEVICE";
 
+    public static final String LAST_DATA_VALUE = "cz.vsb.cbe.testbed.LAST_STEPS_VALUE";
+    public static final String LAST_DATA_TIME_STAMP = "cz.vsb.cbe.testbed.LAST_STEPS_TIME_STAMP";
+
     private final static String TAG = DatabaseActivity.class.getSimpleName();
 
     private int totalDescriptorForWrite = 0;
@@ -72,24 +77,6 @@ public class DatabaseActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main_menu, menu);
-        thread = new Thread() {
-            @Override
-            public void run() {
-                try {
-                    while (!thread.isInterrupted()) {
-                        Thread.sleep(1000);
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                invalidateOptionsMenu();
-                            }
-                        });
-                    }
-                } catch (InterruptedException e) {
-                }
-            }
-        };
-        //thread.start();
         return true;
     }
 
@@ -104,7 +91,8 @@ public class DatabaseActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.settings:
-                startActivity(new Intent(this, SettingsActivity.class));
+                Toast.makeText(getApplicationContext(), "Not implement yet :-(", Toast.LENGTH_SHORT).show();
+                //startActivity(new Intent(this, SettingsActivity.class));
                 return true;
 
             case R.id.about_application:
@@ -186,18 +174,39 @@ public class DatabaseActivity extends AppCompatActivity {
                     ft = getSupportFragmentManager().beginTransaction();
                     ft.replace(R.id.activity_test_host_fragment, currentFragment);
                     ft.commit();
+                    if(bluetoothLeService != null){
+                        if(bluetoothLeService.LastStepTimeStamp != null) {
+                            bundle.putInt(LAST_DATA_VALUE, bluetoothLeService.LastStepValue);
+                            bundle.putSerializable(LAST_DATA_TIME_STAMP, bluetoothLeService.LastStepTimeStamp);
+                            pedometerFragment.lastDataReady = true;
+                        }
+                    }
                     return true;
                 case R.id.navigation_heart_rate:
                     currentFragment = heartRateFragment;
                     ft = getSupportFragmentManager().beginTransaction();
                     ft.replace(R.id.activity_test_host_fragment, currentFragment);
                     ft.commit();
+                    if(bluetoothLeService != null){
+                        if(bluetoothLeService.LastHeartRateTimeStamp != null) {
+                            bundle.putInt(LAST_DATA_VALUE, bluetoothLeService.LastHeartRateValue);
+                            bundle.putSerializable(LAST_DATA_TIME_STAMP, bluetoothLeService.LastHeartRateTimeStamp);
+                            heartRateFragment.lastDataReady = true;
+                        }
+                    }
                     return true;
                 case R.id.navigation_temperature:
                     currentFragment = temperatureFragment;
                     ft = getSupportFragmentManager().beginTransaction();
                     ft.replace(R.id.activity_test_host_fragment, currentFragment);
                     ft.commit();
+                    if(bluetoothLeService != null){
+                        if(bluetoothLeService.LastTemperatureTimeStamp != null) {
+                            bundle.putFloat(LAST_DATA_VALUE, bluetoothLeService.LastTemperatureValue);
+                            bundle.putSerializable(LAST_DATA_TIME_STAMP, bluetoothLeService.LastTemperatureTimeStamp);
+                            temperatureFragment.lastDataReady = true;
+                        }
+                    }
                     return true;
                 default:
                     return false;
@@ -205,7 +214,7 @@ public class DatabaseActivity extends AppCompatActivity {
         }
     };
 
-
+    Bundle bundle;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -214,12 +223,12 @@ public class DatabaseActivity extends AppCompatActivity {
 
         TestbedDevice = getIntent().getExtras().getParcelable(TESTBED_DEVICE);
 
-        setTitle(getString(R.string.ble_devices_name) + " (#" + Integer.toHexString(TestbedDevice.getDeviceId()) + ")");
+        setTitle(getString(R.string.ble_devices_name) + " (#" + String.format("%04X", TestbedDevice.getDeviceId()) + ")");
 
         BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.nav_view);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
 
-        Bundle bundle = new Bundle();
+         bundle = new Bundle();
         bundle.putParcelable(TESTBED_DEVICE, TestbedDevice);
 
         if(BigInteger.valueOf(TestbedDevice.getAvailableSensors()).testBit(0)){
@@ -284,11 +293,6 @@ public class DatabaseActivity extends AppCompatActivity {
         connectingDialog.setCanceledOnTouchOutside(false);
 
         totalDescriptorForWrite = Integer.bitCount(TestbedDevice.getAvailableSensors());
-
-
-
-
-
     }
 
     List<BluetoothGattCharacteristic> charWithNotif = new ArrayList<>();
@@ -300,14 +304,14 @@ public class DatabaseActivity extends AppCompatActivity {
             if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(action)) {
                 conditionsListAdapter.setCondition(CONNECTION_STATUS, ConditionsListAdapter.PASS, getString(R.string.dialog_condition_re_connecting_progress_connected) + ": " +
                         getString(R.string.ble_devices_name) + " (#" +
-                        Integer.toHexString(TestbedDevice.getDeviceId()) + ")");
+                        String.format("%04X", TestbedDevice.getDeviceId()) + ")");
                 conditionsListAdapter.setCondition(SERVICE_DISCOVERING_STATUS, ConditionsListAdapter.PROGRESS, getString(R.string.dialog_condition_re_connecting_progress_services_discovering));
                 conditionsListAdapter.notifyDataSetChanged();
             } else if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(action)) {
                 connectingDialog.show();
                 conditionsListAdapter.setCondition(CONNECTION_STATUS, ConditionsListAdapter.PROGRESS, getString(R.string.dialog_condition_reconnecting_progress_connecting) + ": " +
                         getString(R.string.ble_devices_name) + " (#" +
-                        Integer.toHexString(TestbedDevice.getDeviceId()) + ")");
+                        String.format("%04X", TestbedDevice.getDeviceId()) + ")");
                 conditionsListAdapter.notifyDataSetChanged();
             } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
                 conditionsListAdapter.setCondition(SERVICE_DISCOVERING_STATUS, ConditionsListAdapter.PASS, getString(R.string.dialog_condition_re_connecting_progress_services_discovered));
@@ -330,13 +334,27 @@ public class DatabaseActivity extends AppCompatActivity {
                 }
 
             } else if (BluetoothLeService.ACTION_STEP_DATA_AVAILABLE.equals(action)) {
-
+                if(currentFragment instanceof  PedometerFragment){
+                    pedometerFragment.updateLastStepsValue(intent.getIntExtra(BluetoothLeService.STEPS_DATA, 0), new Date(), true);
+                    if(pedometerFragment.intervals[0].before(Calendar.getInstance().getTime()) && pedometerFragment.intervals[1].after(Calendar.getInstance().getTime())){
+                        pedometerFragment.setChartData(pedometerFragment.actualInterval, pedometerFragment.actualSortingLevel, false);
+                    }
+                }
 
             } else if (BluetoothLeService.ACTION_HEART_RATE_DATA_AVAILABLE.equals(action)) {
+                if(currentFragment instanceof  HeartRateFragment){
+                    heartRateFragment.updateLastHeartRateValue(intent.getIntExtra(BluetoothLeService.HEART_RATE_DATA, 0), new Date(), true);
+                    if(heartRateFragment.intervals[0].before(Calendar.getInstance().getTime()) && heartRateFragment.intervals[1].after(Calendar.getInstance().getTime())){
+                        heartRateFragment.setChartData(heartRateFragment.actualInterval, heartRateFragment.actualSortingLevel, false);
+                    }
+                }
 
             } else if (BluetoothLeService.ACTION_TEMPERATURE_DATA_AVAILABLE.equals(action)) {
-                if(currentFragment.equals(temperatureFragment)){
-                    temperatureFragment.funkce();
+                if(currentFragment instanceof  TemperatureFragment){
+                    temperatureFragment.updateLastTemperatureValue(intent.getFloatExtra(BluetoothLeService.TEMPERATURE_DATA, 0), new Date(), true);
+                    if(temperatureFragment.intervals[0].before(Calendar.getInstance().getTime()) && temperatureFragment.intervals[1].after(Calendar.getInstance().getTime())){
+                        temperatureFragment.setChartData(temperatureFragment.actualInterval, temperatureFragment.actualSortingLevel, false);
+                    }
                 }
 
             } else if (BluetoothLeService.ACTION_TESTBED_ID_DATA_AVAILABLE.equals(action)) {
@@ -364,6 +382,8 @@ public class DatabaseActivity extends AppCompatActivity {
     @Override
     public void onStop() {
         super.onStop();
+//        thread.interrupt();
+        //thread = null;
         Log.w(TAG, "Stopnuto");
 
     }
@@ -373,9 +393,31 @@ public class DatabaseActivity extends AppCompatActivity {
         super.onDestroy();
         stopService(new Intent(this, BluetoothLeService.class));
         bluetoothLeService=null;
-        thread.interrupt();
-        thread = null;
+
         Log.w(TAG, "Zniceno");
+    }
+
+    @Override
+    public void onBackPressed() {
+        if(currentFragment instanceof PedometerFragment) {
+            if (pedometerFragment.decrementSortingNew() >= Calendar.YEAR) {
+                pedometerFragment.setChartData(pedometerFragment.actualInterval, pedometerFragment.actualSortingLevel, true);
+            } else {
+                super.onBackPressed();
+            }
+        } else if(currentFragment instanceof HeartRateFragment){
+            if(heartRateFragment.decrementSorting() >= 0){
+                heartRateFragment.setChartData(heartRateFragment.actualInterval, heartRateFragment.actualSortingLevel, true);
+            } else {
+                super.onBackPressed();
+            }
+        } else if(currentFragment instanceof TemperatureFragment){
+            if(temperatureFragment.decrementSorting() >= 0){
+                temperatureFragment.setChartData(temperatureFragment.actualInterval, temperatureFragment.actualSortingLevel, true);
+            } else {
+                super.onBackPressed();
+            }
+        }
     }
 
 }

@@ -1,243 +1,283 @@
 package cz.vsb.cbe.testbed.fragments;
 
-import android.app.DatePickerDialog;
-import android.app.TimePickerDialog;
+import android.annotation.SuppressLint;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CompoundButton;
-import android.widget.DatePicker;
-import android.widget.EditText;
-import android.widget.ListView;
-import android.widget.Switch;
-import android.widget.TextView;
-import android.widget.TimePicker;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
-import androidx.fragment.app.Fragment;
+import com.github.mikephil.charting.data.CandleData;
+import com.github.mikephil.charting.data.CandleDataSet;
+import com.github.mikephil.charting.data.CandleEntry;
+import com.github.mikephil.charting.data.CombinedData;
+import com.github.mikephil.charting.data.Entry;
+import com.github.mikephil.charting.data.LineData;
+import com.github.mikephil.charting.data.LineDataSet;
+import com.github.mikephil.charting.highlight.Highlight;
+import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 
-import java.text.SimpleDateFormat;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.List;
+import java.util.Map;
 
 import cz.vsb.cbe.testbed.DatabaseActivity;
-import cz.vsb.cbe.testbed.DatabaseListAdapter;
+
 import cz.vsb.cbe.testbed.R;
-import cz.vsb.cbe.testbed.TestbedDevice;
+import cz.vsb.cbe.testbed.chart.MyBarChart;
+import cz.vsb.cbe.testbed.chart.MyMarkerView;
 import cz.vsb.cbe.testbed.sql.TestbedDatabase;
-import cz.vsb.cbe.testbed.sql.TestbedDatabase.Record;
 
 
-public class TemperatureFragment extends Fragment {
+public class TemperatureFragment extends BaseFragment {
 
-    ListView records;
-    DatabaseListAdapter recordsAdapter;
-
-    private EditText startDate, startTime, endDate, endTime;
-    private Switch dateSwitch;
-    private TextView total, median, mean, stdDeviation;
-
-    private Calendar startDateAndTime, endDateAndTime;
-
-    private TestbedDevice testbedDevice;
-
-    public View onCreateView(@NonNull LayoutInflater inflater,
-                             ViewGroup container, Bundle savedInstanceState) {
-
+    @Override
+    public View onCreateView(final LayoutInflater inflater, final ViewGroup container,
+                             Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_temperature, container, false);
 
-        testbedDevice = getArguments().getParcelable(DatabaseActivity.TESTBED_DEVICE);
+        txvLastValue = view.findViewById(R.id.fragment_temperature_txv_last_value);
+        txvLastValueTimestamp = view.findViewById(R.id.fragment_temperature_txv_last_value_timestamp);
 
-        startDateAndTime = Calendar.getInstance();
-        endDateAndTime = Calendar.getInstance();
+        txvInterval = view.findViewById(R.id.fragment_temperature_txv_interval);
 
-        startDate = view.findViewById(R.id.fragment_temperature_etx_start_date);
-        startDate.setOnClickListener(new View.OnClickListener() {
+        combinedChart = view.findViewById(R.id.fragment_temperature_chr);
+        txvNoDataAvailable = view.findViewById(R.id.fragment_temperature_txv_no_data_available);
+
+        swcValuesRange = view.findViewById(R.id.fragment_temperature_swc_min_max_and_quartile_values);
+        swcValuesMean = view.findViewById(R.id.fragment_temperature_swc_mean_values);
+        btnMoreStatsInfo = view.findViewById(R.id.fragment_temperature_btn_more_stats_info);
+
+        txvInterval.setClickable(true);
+        txvInterval.setOnLongClickListener(new View.OnLongClickListener() {
+            @SuppressLint({"WrongConstant", "ShowToast"})
             @Override
-            public void onClick(View v) {
+            public boolean onLongClick(View view) {
+                Toast.makeText(getContext(), "Not implement yet :-(", Toast.LENGTH_SHORT).show();
 
-                new DatePickerDialog(getContext(), new DatePickerDialog.OnDateSetListener() {
-                    @Override
-                    public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
-                        startDateAndTime.set(Calendar.YEAR, year);
-                        startDateAndTime.set(Calendar.MONTH, month);
-                        startDateAndTime.set(Calendar.DAY_OF_MONTH, dayOfMonth);
-                        SimpleDateFormat dateFormat = new SimpleDateFormat("dd. MM. YYYY");
-                        startDate.setText(dateFormat.format(startDateAndTime.getTime()));
-                        funkce();
-                    }
-                }, startDateAndTime.get(Calendar.YEAR), startDateAndTime.get(Calendar.MONTH), startDateAndTime.get(Calendar.DAY_OF_MONTH)).show();
+                return false;
             }
         });
 
-        endDate = view.findViewById(R.id.fragment_temperature_etx_end_date);
-        endDate.setOnClickListener(new View.OnClickListener() {
+        setUpChart();
+        combinedChart.setOnChartValueShortClickListener(new OnChartValueSelectedListener() {
             @Override
-            public void onClick(View v) {
-                new DatePickerDialog(getContext(), new DatePickerDialog.OnDateSetListener() {
-                    @Override
-                    public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
-                        endDateAndTime.set(Calendar.YEAR, year);
-                        endDateAndTime.set(Calendar.MONTH, month);
-                        endDateAndTime.set(Calendar.DAY_OF_MONTH, dayOfMonth);
-                        SimpleDateFormat dateFormat = new SimpleDateFormat("dd. MM. YYYY");
-                        endDate.setText(dateFormat.format(endDateAndTime.getTime()));
-                        funkce();
-                    }
-                }, endDateAndTime.get(Calendar.YEAR), endDateAndTime.get(Calendar.MONTH), endDateAndTime.get(Calendar.DAY_OF_MONTH)).show();
-            }
-        });
-
-        startTime = view.findViewById(R.id.fragment_temperature_etx_start_time);
-        startTime.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                new TimePickerDialog(getContext(), new TimePickerDialog.OnTimeSetListener() {
-                    @Override
-                    public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
-                        startDateAndTime.set(Calendar.HOUR_OF_DAY, hourOfDay);
-                        startDateAndTime.set(Calendar.MINUTE, minute);
-                        startDateAndTime.set(Calendar.SECOND, 0);
-                        SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
-                        startTime.setText(dateFormat.format(startDateAndTime.getTime()));
-                        funkce();
-                    }
-                }, startDateAndTime.get(Calendar.HOUR_OF_DAY), startDateAndTime.get(Calendar.MINUTE), true).show();
-            }
-        });
-
-        endTime = view.findViewById(R.id.fragment_temperature_etx_end_time);
-        endTime.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                new TimePickerDialog(getContext(), new TimePickerDialog.OnTimeSetListener() {
-                    @Override
-                    public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
-                        endDateAndTime.set(Calendar.HOUR_OF_DAY, hourOfDay);
-                        endDateAndTime.set(Calendar.MINUTE, minute);
-                        endDateAndTime.set(Calendar.SECOND, 59);
-                        SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
-                        endTime.setText(dateFormat.format(endDateAndTime.getTime()));
-                        funkce();
-                    }
-                }, endDateAndTime.get(Calendar.HOUR_OF_DAY), endDateAndTime.get(Calendar.MINUTE), true).show();
-            }
-        });
-
-        records = view.findViewById(R.id.fragment_temeprature_lsv);
-        recordsAdapter = new DatabaseListAdapter(getLayoutInflater(), "%3.2f", getContext());
-        records.setAdapter(recordsAdapter);
-
-        dateSwitch = view.findViewById(R.id.fragment_temperature_sw_now);
-        dateSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if(isChecked) {
-                    endDate.setEnabled(false);
-                    endTime.setEnabled(false);
-                    dateSwitch.setText("nyní");
-                } else {
-                    endDate.setEnabled(true);
-                    endTime.setEnabled(true);
-                    dateSwitch.setText("data níže");
+            public void onValueSelected(Entry e, Highlight h) {
+                Log.w("onMyShortClick", "(" + e.getX() + " | " + e.getY() + ")");
+                if(e.getY() > 0){
+                    combinedChart.setMarker(myMarkerView); // Set the marker to the chart
+                }else {
+                    combinedChart.setMarker(null);
                 }
-                funkce();
+            }
+
+            @Override
+            public void onNothingSelected() {
 
             }
         });
+        combinedChart.setOnChartValueLongClickListener(new MyBarChart.OnChartValueClickListener() {
+            @Override
+            public void onChartValueLongClickListener(Entry e) {
+                if (e != null) {
+                    Log.w("onMyLongClick", "(" + e.getX() + " | " + e.getY() + ")");
+                    combinedChart.setMarker(null); // Set the marker to the chart
 
-        total = view.findViewById(R.id.fragment_temperature_txv_total);
-        median = view.findViewById(R.id.fragment_temperature_txv_median);
-        mean = view.findViewById(R.id.fragment_temperature_txv_mean);
-        stdDeviation = view.findViewById(R.id.fragment_temperature_txv_std_deviation);
+                    switch (actualSortingLevel) {
+                        case TestbedDatabase.YEAR:
+                            actualInterval.set(Calendar.YEAR, (int) e.getX());
+                            actualSortingLevel = TestbedDatabase.MONTH;
+                            break;
+                        case TestbedDatabase.MONTH:
+                            actualInterval.set(Calendar.MONTH, (int) e.getX() - 1);
+                            actualSortingLevel = TestbedDatabase.DAY_OF_MONTH;
+                            break;
+                        case TestbedDatabase.DAY_OF_MONTH:
+                            actualInterval.set(Calendar.DAY_OF_MONTH, (int) e.getX());
+                            actualSortingLevel = TestbedDatabase.HOUR_OF_DAY;
+                            break;
+                        case TestbedDatabase.HOUR_OF_DAY:
+                            actualInterval.set(Calendar.HOUR_OF_DAY, (int) e.getX());
+                            actualSortingLevel = TestbedDatabase.MINUTE;
+                            break;
+                        case TestbedDatabase.MINUTE:
+                            actualInterval.set(Calendar.MINUTE, (int) e.getX());
+                            actualSortingLevel = TestbedDatabase.SECONDS;
+                            break;
+                        default:
+                            break;
+                    }
+                    setChartData(actualInterval, actualSortingLevel, true);
+                }
+            }
+        });
+
+        swcValuesRange.setChecked(true);
+        swcValuesRange.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                rangeVisible = b;
+                setChartData(actualInterval, actualSortingLevel, false);
+            }
+        });
+
+        swcValuesMean.setChecked(true);
+        swcValuesMean.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                meanVisible = b;
+                setChartData(actualInterval, actualSortingLevel, false);
+            }
+        });
+
+        btnMoreStatsInfo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(getContext(), "Not implement yet :-(", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        setUpXAxis();
+        setUpYAxisLeft(UNITS.DEGREES_OF_CELSIUS);
+        setUpYAxisRight();
+        setUpLegend();
+
+        setChartData(actualInterval, actualSortingLevel, true);
 
         return view;
     }
 
-    private boolean isNotEmpty(EditText editText) {
-        if (editText.getText().toString().trim().length() > 0)
-            return true;
-        else
-            return false;
-    }
+    public void setChartData(final Calendar period, final int scale, final boolean animation) {
 
-    public void funkce(){
+        intervals = getIntervals(scale, period);
+        myMarkerView = new MyMarkerView(getContext(), scale, "###.00","###.00", "°C");
 
-        TestbedDatabase.OnSelectTemperatureDataOld onSelectTemperatureData = new TestbedDatabase.OnSelectTemperatureDataOld() {
-            @Override
-            public void onSelectSuccess(List<Record> records) {
-                float values [] = new float [records.size()];
-                double stdHelp = 0;
-                float sum = 0;
-                int index = 0;
-                recordsAdapter.clear();
-                recordsAdapter.notifyDataSetChanged();
-                for(Record record : records){
-                    recordsAdapter.addItem(record.getId(), record.getValue(), record.getStringTimeStamp());
-                    values[index] = record.getValue();
-                    sum = sum + record.getValue();
+        if (intervals != null) {
+            testbedDatabase.selectTemperatureData(testbedDevice, intervals[0], intervals[1], scale, new TestbedDatabase.OnSelectFloatData() {
+                @Override
+                public void onSelectSuccess(ArrayList<Map<Integer,Float>> records,  int firstXValue, int lastXValue ) {
+                    minMaxAndQuartileFloatValues = new ArrayList<>();
+                    meanFloatValues = new ArrayList<>();
+                    minimumFloatValue = TestbedDatabase.TEMPERATURE_SENSOR_MAX_VALUE;
+                    maximumFloatValue = TestbedDatabase.TEMPERATURE_SENSOR_MIN_VALUE;
+                    xAxis.setAxisMinimum(firstXValue - (CANDLE_WIDTH + CANDLE_SPACE) / 2);
+                    xAxis.setAxisMaximum(lastXValue + (CANDLE_WIDTH + CANDLE_SPACE) / 2);
+                    switch (scale) {
+                        case TestbedDatabase.YEAR:
+                            txvInterval.setText(firstXValue + " až " + lastXValue);
+                            XAxisIntegerValueFormatter.setSuffix("");
+                            xAxis.setValueFormatter(XAxisIntegerValueFormatter);
+                            break;
+                        case TestbedDatabase.MONTH:
+                            txvInterval.setText("leden až  prosinec " + yearFormatter.format(period.getTime()));
+                            xAxis.setValueFormatter(monthValueFormater);
+                            break;
+                        case TestbedDatabase.DAY_OF_MONTH:
+                            txvInterval.setText(dayOfMonthFormatter.format(intervals[0]) + "- " + dayOfMonthFormatter.format(intervals[1]) + monthFormatter.format(period.getTime()) + " " + yearFormatter.format(period.getTime()));
+                            XAxisIntegerValueFormatter.setSuffix(".");
+                            xAxis.setValueFormatter(XAxisIntegerValueFormatter);
+                            break;
+                        case TestbedDatabase.HOUR_OF_DAY:
+                            txvInterval.setText(dayOfMonthFormatter.format(period.getTime()) + monthFormatter.format(period.getTime()) +
+                                    " " + yearFormatter.format(period.getTime()) + " " + hourOfDayFormatter.format(intervals[0]) + " - " + hourOfDayFormatter.format(intervals[1]));
+                            XAxisIntegerValueFormatter.setSuffix(" h");
+                            xAxis.setValueFormatter(XAxisIntegerValueFormatter);
+                            break;
+                        case TestbedDatabase.MINUTE:
+                            txvInterval.setText(dayOfMonthFormatter.format(period.getTime()) + monthFormatter.format(period.getTime()) +
+                                    " " + yearFormatter.format(period.getTime()) + " " + hourOfDayFormatter.format(period.getTime()) + ":" + minuteFormatter.format(intervals[0]) + " - " + minuteFormatter.format(intervals[1]));
+                            XAxisIntegerValueFormatter.setSuffix(" m");
+                            xAxis.setValueFormatter(XAxisIntegerValueFormatter);
+                            break;
+                        case TestbedDatabase.SECONDS:
+                            txvInterval.setText(dayOfMonthFormatter.format(period.getTime()) + monthFormatter.format(period.getTime()) +
+                                    " " + yearFormatter.format(period.getTime()) + " " + hourOfDayFormatter.format(period.getTime()) + ":" + minuteFormatter.format(period.getTime()) + ":" + secondFormatter.format(intervals[0]) + " - " + secondFormatter.format(intervals[1]));
+                            XAxisIntegerValueFormatter.setSuffix(" s");
+                            xAxis.setValueFormatter(XAxisIntegerValueFormatter);
+                            break;
+                        default:
+                            xAxis.setValueFormatter(null);
+                            break;
+                    }
+                    for (int i = 0; i < records.size(); i++) {
+                        if (records.get(i) != null) {
+                            minMaxAndQuartileFloatValues.add(new CandleEntry(firstXValue + i,
+                                    records.get(i).get(TestbedDatabase.MAX_VALUE),
+                                    records.get(i).get(TestbedDatabase.MIN_VALUE),
+                                    records.get(i).get(TestbedDatabase.HIGH_QUARTILE),
+                                    records.get(i).get(TestbedDatabase.LOW_QUARTILE)));
+                            meanFloatValues.add(new Entry(firstXValue + i, records.get(i).get(TestbedDatabase.MEAN_VALUE)));
 
-                    index ++;
+                            if (records.get(i).get(TestbedDatabase.MIN_VALUE) < minimumFloatValue) {
+                                minimumFloatValue = records.get(i).get(TestbedDatabase.MIN_VALUE);
+                            }
+                            if (records.get(i).get(TestbedDatabase.MAX_VALUE) > maximumFloatValue) {
+                                maximumFloatValue = records.get(i).get(TestbedDatabase.MAX_VALUE);
+                            }
+                        }
+                    }
+
+                    yAxisLeft.setAxisMinimum(minimumFloatValue - 0.5f);
+                    yAxisLeft.setAxisMaximum(maximumFloatValue + 0.5f);
+
+                    if (!meanFloatValues.isEmpty() || !minMaxAndQuartileFloatValues.isEmpty()) {
+
+                        candleDataSet = new CandleDataSet(minMaxAndQuartileFloatValues, "Rozpětí teplot");
+                        setUpCandleDataSet();
+
+                        candleData = new CandleData(candleDataSet);
+
+                        lineDataSet = new LineDataSet(meanFloatValues, "Průměr teplot");
+                        setUpLineDataSet();
+
+                        lineData = new LineData(lineDataSet);
+
+                        combinedData = new CombinedData();
+                        if (rangeVisible) {
+                            combinedData.setData(candleData);
+                        }
+                        if (meanVisible) {
+                            combinedData.setData(lineData);
+                        }
+                        setUpCombinedData();
+
+                        combinedChart.setData(combinedData);
+                        myMarkerView.setChartView(combinedChart); // For bounds control
+                        combinedChart.setMarker(myMarkerView); // Set the marker to the chart
+                        combinedChart.invalidate();
+
+                        if (animation) {
+                            combinedChart.animateY(500);
+                        }
+                        dataAvailable(true);
+                    } else {
+                        dataAvailable(false);
+                    }
                 }
-
-                recordsAdapter.notifyDataSetChanged();
-                total.setText(String.valueOf(values.length));
-                Arrays.sort(values);
-                if (values.length % 2 == 0)
-                    median.setText(String.format("%3.2f",(values[values.length/2] + values[values.length/2 -1])/2));
-                else
-                    median.setText(String.format("%3.2f",values[values.length/2]));
-
-                mean.setText(String.format("%3.2f",sum/records.size()));
-
-
-                for(Record record : records){
-
-                    stdHelp = stdHelp + Math.pow(record.getValue() - sum/records.size(), 2);
+                @Override
+                public void onSelectFailed() {
+                    //TODO: Handle selection ERROR
                 }
+            });
 
-                stdDeviation.setText(String.format("%3.2f",Math.sqrt(stdHelp/records.size())));
-
-            }
-
-            @Override
-            public void onSelectFailed() {
-
-            }
-        };
-
-
-        if(dateSwitch.isChecked()) {
-            if (isNotEmpty(startDate) && isNotEmpty(startTime)) {
-                if (startDateAndTime.getTimeInMillis() <= System.currentTimeMillis()){
-                    TestbedDatabase.getInstance(getContext()).selectTemperatureDataOld(testbedDevice, startDateAndTime.getTime(), new Date(System.currentTimeMillis()), onSelectTemperatureData);
-                }
-                else
-                    Toast.makeText(getContext(), "Datum nemá smysl tady že", Toast.LENGTH_SHORT).show();
-            }
+        } else {
+            //TODO: Handle intervals null ERROR
         }
-        else {
-            if (isNotEmpty(startDate) && isNotEmpty(startTime) && isNotEmpty(endDate) && isNotEmpty(endTime)) {
-                if (startDateAndTime.getTimeInMillis() <= endDateAndTime.getTimeInMillis() && endDateAndTime.getTimeInMillis() <= System.currentTimeMillis()) {
-                    TestbedDatabase.getInstance(getContext()).selectTemperatureDataOld(testbedDevice, startDateAndTime.getTime(), endDateAndTime.getTime(), onSelectTemperatureData);
-                }
-                else
-                    Toast.makeText(getContext(), "Datum nemá smysl", Toast.LENGTH_SHORT).show();
-            }
-        }
-
     }
-
 
     @Override
-    public void onDetach() {
-        super.onDetach();
-        //mujAsync.cancel(true)
+    public void onResume() {
+        super.onResume();
+        if(lastDataReady) {
+            updateLastTemperatureValue(getArguments().getFloat(DatabaseActivity.LAST_DATA_VALUE), (Date) getArguments().getSerializable(DatabaseActivity.LAST_DATA_TIME_STAMP), false);
+        }
     }
 
-
 }
+
+
+
+

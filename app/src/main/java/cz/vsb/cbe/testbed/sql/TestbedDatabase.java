@@ -7,14 +7,14 @@ import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import com.github.mikephil.charting.data.BarEntry;
-
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
-import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import cz.vsb.cbe.testbed.BluetoothLeService;
 import cz.vsb.cbe.testbed.TestbedDevice;
@@ -22,6 +22,21 @@ import cz.vsb.cbe.testbed.TestbedDevice;
 public class TestbedDatabase {
 
     private static String TAG;
+
+    public static float TEMPERATURE_SENSOR_MIN_VALUE = -55;
+    public static float TEMPERATURE_SENSOR_MAX_VALUE = 125;
+
+    public static int HEART_RATE_SENSOR_MIN_VALUE = 0;
+    public static int HEART_RATE_SENSOR_MAX_VALUE = 255;
+
+    public static int DATA_SET_SIZE = 0;
+    public static int MIN_VALUE = 1;
+    public static int MAX_VALUE = 2;
+    public static int LOW_QUARTILE = 3;
+    public static int HIGH_QUARTILE = 4;
+    public static int MEAN_VALUE = 5;
+    public static int MEDIAN_VALUE = 6;
+    public static int STANDARD_DEVIATION_VALUE = 7;
 
     private static TestbedDatabase TestbedDatabase;
     private static Context Context;
@@ -33,7 +48,9 @@ public class TestbedDatabase {
     OnIsTestbedDeviceStored OnIsTestbedDeviceStored;
     OnGetLastConnectedTestbedDevice OnGetLastConnectedTestbedDevice;
     OnSelectTemperatureDataOld onSelectTemperatureDataOld;
-    OnSelectTemperatureData OnSelectTemperatureData;
+    OnSelectFloatData OnSelectStepData;
+    OnSelectFloatData OnSelectHeartRateData;
+    OnSelectFloatData OnSelectTemperatureData;
 
     public interface OnInsertIntoDatabase {
         void onInsertCompleted();
@@ -58,8 +75,13 @@ public class TestbedDatabase {
         void onSelectFailed();
     }
 
-    public interface OnSelectTemperatureData {
-        void onSelectSuccess(List<BarEntry> entries);
+    public interface OnSelectIntegerData {
+        void onSelectSuccess(ArrayList<Map<Integer,Integer>> statisticDataByIntervals,  int firstX, int lastX);
+        void onSelectFailed();
+    }
+
+    public interface OnSelectFloatData {
+        void onSelectSuccess(ArrayList<Map<Integer,Float>> statisticDataByIntervals,  int firstX, int lastX);
         void onSelectFailed();
     }
 
@@ -282,7 +304,54 @@ public class TestbedDatabase {
         selectTemperature.execute(selectQuery);
     }
 
-    public void selectTemperatureData(TestbedDevice testbedDevice, Date startDate, Date endDate, OnSelectTemperatureData onSelectTemperatureData){
+
+    public void selectDataBetweenIntervals(TestbedDevice testbedDevice, Date startDate, Date endDate, int sorting, OnSelectFloatData onSelectStepData){
+        OnSelectStepData = onSelectStepData;
+        String tableName = TestbedDatabaseHelper.Data.TABLE_NAME;
+        String[] columns = new String[]{TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_VALUE,
+                TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP};
+        String selection = TestbedDatabaseHelper.Data.COLUMN_NAME_DEVICE_ID + " = ? AND " +
+                TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_KEY + " = ?";
+        String[] selectionArgs = new String[]{Integer.toString(testbedDevice.getDeviceId()),
+                BluetoothLeService.STEPS_DATA};
+        SelectQuery selectQuery = new SelectQuery(tableName, columns, selection, selectionArgs, null , null,  TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP + " ASC");
+        SelectStepData selectStepData = new SelectStepData(sorting, startDate, endDate);
+        selectStepData.execute(selectQuery);
+    }
+
+
+    public void selectStepData(TestbedDevice testbedDevice, Date startDate, Date endDate, int sorting, OnSelectFloatData onSelectStepData){
+        OnSelectStepData = onSelectStepData;
+        String tableName = TestbedDatabaseHelper.Data.TABLE_NAME;
+        String[] columns = new String[]{TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_VALUE,
+                TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP};
+        String selection = TestbedDatabaseHelper.Data.COLUMN_NAME_DEVICE_ID + " = ? AND " +
+                TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_KEY + " = ?";
+        String[] selectionArgs = new String[]{Integer.toString(testbedDevice.getDeviceId()),
+                BluetoothLeService.STEPS_DATA};
+        SelectQuery selectQuery = new SelectQuery(tableName, columns, selection, selectionArgs, null , null,  TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP + " ASC");
+        SelectStepData selectStepData = new SelectStepData(sorting, startDate, endDate);
+        selectStepData.execute(selectQuery);
+    }
+
+    public void selectHeartRateData(TestbedDevice testbedDevice, Date startDate, Date endDate, int sorting, OnSelectFloatData onSelectHeartRateData){
+        this.OnSelectHeartRateData = onSelectHeartRateData;
+        String tableName = TestbedDatabaseHelper.Data.TABLE_NAME;
+        String[] columns = new String[]{TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_VALUE,
+                TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP};
+        String selection = TestbedDatabaseHelper.Data.COLUMN_NAME_DEVICE_ID + " = ? AND " +
+                TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_KEY + " = ? AND " +
+                TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP + " BETWEEN ? AND ?";
+        String[] selectionArgs = new String[]{Integer.toString(testbedDevice.getDeviceId()),
+                BluetoothLeService.HEART_RATE_DATA,
+                Long.toString(startDate.getTime()),
+                Long.toString(endDate.getTime())};
+        SelectQuery selectQuery = new SelectQuery(tableName, columns, selection, selectionArgs, null , null,  TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP + " ASC");
+        SelectHeartRateData selectHeartRateData = new SelectHeartRateData(sorting);
+        selectHeartRateData.execute(selectQuery);
+    }
+
+    public void selectTemperatureData(TestbedDevice testbedDevice, Date startDate, Date endDate, int sorting, OnSelectFloatData onSelectTemperatureData){
         this.OnSelectTemperatureData = onSelectTemperatureData;
         String tableName = TestbedDatabaseHelper.Data.TABLE_NAME;
         String[] columns = new String[]{TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_VALUE,
@@ -294,8 +363,8 @@ public class TestbedDatabase {
                 BluetoothLeService.TEMPERATURE_DATA,
                 Long.toString(startDate.getTime()),
                 Long.toString(endDate.getTime())};
-        SelectQuery selectQuery = new SelectQuery(tableName, columns, selection, selectionArgs, null , null, null);
-        SelectTemperatureData selectTemperatureData = new SelectTemperatureData(SORTING.YEARS);
+        SelectQuery selectQuery = new SelectQuery(tableName, columns, selection, selectionArgs, null , null,  TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP + " ASC");
+        SelectTemperatureData selectTemperatureData = new SelectTemperatureData(sorting);
         selectTemperatureData.execute(selectQuery);
 
     }
@@ -443,87 +512,529 @@ public class TestbedDatabase {
         }
     }
 
-    public class SelectTemperatureData extends SelectFromDatabase {
+    public class SelectStepData extends SelectFromDatabase {
 
-        SORTING Sorting;
+        private final int Sorting;
+        private final Date StartDate;
+        private final Date EndDate;
+        private float PreviousStepDataValue;
+        private long PreviousStepDataTimeStamp;
 
-        public SelectTemperatureData(SORTING sorting) {
+        private void findStart(Cursor cursor){
+            do{
+                if(StartDate.getTime() >= cursor.getLong(cursor.getColumnIndexOrThrow(TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP))){
+                    break;
+                }
+                PreviousStepDataValue = cursor.getFloat(cursor.getColumnIndexOrThrow(TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_VALUE));
+                PreviousStepDataTimeStamp = cursor.getLong(cursor.getColumnIndexOrThrow(TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP));
+            } while (cursor.moveToNext());
+        }
+
+        public SelectStepData(int sorting, Date startDate, Date endDate) {
             Sorting = sorting;
+            StartDate = startDate;
+            EndDate = endDate;
         }
 
         @Override
         protected void onPostExecute(List<Cursor> cursors) {
             super.onPostExecute(cursors);
-            ArrayList<BarEntry> barEntries = new ArrayList<>();
+            ArrayList<Map<Integer,Float>> statisticDataByIntervals;
+            Map<Integer, Float> statisticData;
+            ArrayList<List<Integer>> rawDataByIntervals;
+            int currentTimeValue;
+            int firstX, lastX;
+            int sum;
+            int minValue;
+            int maxValue;
+            float mean;
+            float median;
+            float standardDeviation;
+            int lowQuartile, highQuartile;
+            Calendar calendar = Calendar.getInstance();
             Log.w(TAG, "jsem v postexecute");
             for (Cursor cursor : cursors) {
                 if (cursor.getCount() == 0) {
-                    OnSelectTemperatureData.onSelectFailed();
+                    OnSelectHeartRateData.onSelectFailed();
                     Log.w(TAG, "jsem v selhal jsem");
                 } else {
-                    cursor.moveToFirst();
-                    Calendar firstRecordTimeStamp = new GregorianCalendar();
+                    findStart(cursor);
+                    Calendar firstRecordTimeStamp = Calendar.getInstance();
                     firstRecordTimeStamp.setTime(new Date(cursor.getLong(cursor.getColumnIndexOrThrow(TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP))));
-
                     cursor.moveToLast();
-                    Calendar lastRecordTimeStamp = new GregorianCalendar();
+                    Calendar lastRecordTimeStamp = Calendar.getInstance();
                     lastRecordTimeStamp.setTime(new Date(cursor.getLong(cursor.getColumnIndexOrThrow(TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP))));
-
                     cursor.moveToFirst();
-                    Calendar currentRecordTimeStamp = new GregorianCalendar();
-
                     switch (Sorting) {
-                        case YEARS:
-                            int numberOfEntries = lastRecordTimeStamp.get(Calendar.YEAR) - firstRecordTimeStamp.get(Calendar.YEAR);
-                            List<ArrayList<Float>> values = new ArrayList<>();
-                            for (int i = 0; i <= numberOfEntries; i++){
-                                values.add(i, new ArrayList<Float>());
-                            }
-                            ArrayList<Float> entryValues;
-                            while (cursor.moveToNext()) {
-                                currentRecordTimeStamp.setTime(new Date(cursor.getLong(cursor.getColumnIndexOrThrow(TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP))));
-                                int barEntryIndex = currentRecordTimeStamp.get(Calendar.YEAR) - firstRecordTimeStamp.get(Calendar.YEAR);
-                                entryValues = values.get(barEntryIndex);
-                                entryValues.add(cursor.getFloat(cursor.getColumnIndexOrThrow(TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_VALUE)));
-                                values.set(barEntryIndex, entryValues);
-                            }
-                            cursor.close();
-                            for (int i = 0; i < values.size(); i++) {
-                                float[] entryValue = new float[values.get(i).size()];
-                                int j = 0;
-                                for (Float f : values.get(i)) {
-                                    entryValue[j++] = (f != null ? f : Float.NaN); // Or whatever default you want.
+                        case YEAR:
+                            firstX = firstRecordTimeStamp.get(Calendar.YEAR);
+                            lastX = lastRecordTimeStamp.get(Calendar.YEAR);
+                            rawDataByIntervals = new ArrayList (Collections.nCopies (lastX - firstX + 1, null));
+                            statisticDataByIntervals = new ArrayList(Collections.nCopies (lastX - firstX + 1, null));
+                            do{
+                                calendar.setTimeInMillis(cursor.getLong(cursor.getColumnIndexOrThrow(TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP)));
+                                currentTimeValue = calendar.get(Calendar.YEAR) - firstX;
+                                if(rawDataByIntervals.get(currentTimeValue) == null) {
+                                    rawDataByIntervals.set(currentTimeValue, new ArrayList<Integer>());
                                 }
-                                barEntries.add(new BarEntry(i, entryValue));
-                            }
-                            OnSelectTemperatureData.onSelectSuccess(barEntries);
-                            //Log.w(TAG, "uspel jsem");
+                                rawDataByIntervals.get(currentTimeValue).add(cursor.getInt(cursor.getColumnIndexOrThrow(TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_VALUE)));
+                            } while (cursor.moveToNext());
                             break;
-                        case MONTHS:
+                        case MONTH:
+                            firstX = firstRecordTimeStamp.getActualMinimum(Calendar.MONTH) + 1;
+                            lastX = lastRecordTimeStamp.getActualMaximum(Calendar.MONTH) + 1;
+                            rawDataByIntervals = new ArrayList (Collections.nCopies (lastX, null));
+                            statisticDataByIntervals = new ArrayList (Collections.nCopies (lastX, null));
+                            do {
+                                calendar.setTimeInMillis(cursor.getLong(cursor.getColumnIndexOrThrow(TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP)));
+                                currentTimeValue = calendar.get(Calendar.MONTH);
+                                if(rawDataByIntervals.get(currentTimeValue) == null) {
+                                    rawDataByIntervals.set(currentTimeValue, new ArrayList<Integer>());
+                                }
+                                rawDataByIntervals.get(currentTimeValue).add(cursor.getInt(cursor.getColumnIndexOrThrow(TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_VALUE)));
+                            } while (cursor.moveToNext());
                             break;
-                        case DAYS_OF_MONTH:
+                        case DAY_OF_MONTH:
+                            firstX = firstRecordTimeStamp.getActualMinimum(Calendar.DAY_OF_MONTH);
+                            lastX = lastRecordTimeStamp.getActualMaximum(Calendar.DAY_OF_MONTH);
+                            rawDataByIntervals = new ArrayList (Collections.nCopies (lastX, null));
+                            statisticDataByIntervals = new ArrayList (Collections.nCopies (lastX, null));
+                            do {
+                                calendar.setTimeInMillis(cursor.getLong(cursor.getColumnIndexOrThrow(TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP)));
+                                currentTimeValue = calendar.get(Calendar.DAY_OF_MONTH) - 1;
+                                if(rawDataByIntervals.get(currentTimeValue) == null) {
+                                    rawDataByIntervals.set(currentTimeValue, new ArrayList<Integer>());
+                                }
+                                rawDataByIntervals.get(currentTimeValue).add(cursor.getInt(cursor.getColumnIndexOrThrow(TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_VALUE)));
+                            } while (cursor.moveToNext());
                             break;
-                        case HOURS_OF_DAY:
+                        case HOUR_OF_DAY:
+                            firstX = firstRecordTimeStamp.getActualMinimum(Calendar.HOUR_OF_DAY);
+                            lastX = lastRecordTimeStamp.getActualMaximum(Calendar.HOUR_OF_DAY);
+                            rawDataByIntervals = new ArrayList (Collections.nCopies (lastX + 1, null));
+                            statisticDataByIntervals = new ArrayList (Collections.nCopies (lastX + 1, null));
+                            do {
+                                calendar.setTimeInMillis(cursor.getLong(cursor.getColumnIndexOrThrow(TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP)));
+                                currentTimeValue = calendar.get(Calendar.HOUR_OF_DAY);
+                                if(rawDataByIntervals.get(currentTimeValue) == null) {
+                                    rawDataByIntervals.set(currentTimeValue, new ArrayList<Integer>());
+                                }
+                                rawDataByIntervals.get(currentTimeValue).add(cursor.getInt(cursor.getColumnIndexOrThrow(TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_VALUE)));
+                            } while (cursor.moveToNext());
                             break;
-                        case MINUTES:
+
+                        case MINUTE:
+                            firstX = firstRecordTimeStamp.getActualMinimum(Calendar.MINUTE);
+                            lastX = lastRecordTimeStamp.getActualMaximum(Calendar.MINUTE);
+                            rawDataByIntervals = new ArrayList (Collections.nCopies (lastX + 1, null));
+                            statisticDataByIntervals = new ArrayList (Collections.nCopies (lastX + 1, null));
+                            do {
+                                calendar.setTimeInMillis(cursor.getLong(cursor.getColumnIndexOrThrow(TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP)));
+                                currentTimeValue = calendar.get(Calendar.MINUTE);
+                                if(rawDataByIntervals.get(currentTimeValue) == null) {
+                                    rawDataByIntervals.set(currentTimeValue, new ArrayList<Integer>());
+                                }
+                                rawDataByIntervals.get(currentTimeValue).add(cursor.getInt(cursor.getColumnIndexOrThrow(TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_VALUE)));
+                            } while (cursor.moveToNext());
+                            break;
+
+                        case SECONDS:
+                            firstX = firstRecordTimeStamp.getActualMinimum(Calendar.SECOND);
+                            lastX = lastRecordTimeStamp.getActualMaximum(Calendar.SECOND);
+                            rawDataByIntervals = new ArrayList (Collections.nCopies (lastX + 1, null));
+                            statisticDataByIntervals = new ArrayList (Collections.nCopies (lastX + 1, null));
+                            do {
+                                calendar.setTimeInMillis(cursor.getLong(cursor.getColumnIndexOrThrow(TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP)));
+                                currentTimeValue = calendar.get(Calendar.SECOND);
+                                if(rawDataByIntervals.get(currentTimeValue) == null) {
+                                    rawDataByIntervals.set(currentTimeValue, new ArrayList<Integer>());
+                                }
+                                rawDataByIntervals.get(currentTimeValue).add(cursor.getInt(cursor.getColumnIndexOrThrow(TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_VALUE)));
+                            } while (cursor.moveToNext());
                             break;
                         default:
                             throw new IllegalStateException("Unexpected value: " + Sorting);
                     }
+                    cursor.close();
+
+                    for (int i = 0 ; i < rawDataByIntervals.size() ; i++ ){
+                        minValue = HEART_RATE_SENSOR_MAX_VALUE;
+                        maxValue = HEART_RATE_SENSOR_MIN_VALUE;
+                        sum = 0;
+                        if (rawDataByIntervals.get(i) != null) {
+                            Collections.sort(rawDataByIntervals.get(i));
+                            lowQuartile = rawDataByIntervals.get(i).get((int) Math.ceil(rawDataByIntervals.get(i).size() * 25/100));
+                            highQuartile = rawDataByIntervals.get(i).get((int) Math.ceil(rawDataByIntervals.get(i).size() * 75/100));
+                            for (int teplota : rawDataByIntervals.get(i)) {
+                                if (minValue > teplota) {
+                                    minValue = teplota;
+                                }
+                                if (maxValue < teplota) {
+                                    maxValue = teplota;
+                                }
+                                sum = sum + teplota;
+                            }
+                            mean = sum / rawDataByIntervals.get(i).size();
+
+                            statisticData = new HashMap<>();
+                            statisticData.put(DATA_SET_SIZE, (float) rawDataByIntervals.get(i).size());
+                            statisticData.put(MIN_VALUE, (float) minValue);
+                            statisticData.put(MAX_VALUE, (float) maxValue);
+                            statisticData.put(LOW_QUARTILE, (float) lowQuartile);
+                            statisticData.put(HIGH_QUARTILE, (float) highQuartile);
+                            statisticData.put(MEAN_VALUE, mean);
+
+                            statisticDataByIntervals.set(i, statisticData);
+                        }
+                    }
+                    OnSelectHeartRateData.onSelectSuccess(statisticDataByIntervals, firstX, lastX);
+                    Log.w(TAG, "jsem pryč z postexecute");
                 }
             }
 
         }
     }
 
+    public class SelectHeartRateData extends SelectFromDatabase {
 
-    public enum SORTING {
-        YEARS,
-        MONTHS,
-        DAYS_OF_MONTH,
-        HOURS_OF_DAY,
-        MINUTES
+        int Sorting;
+
+        public SelectHeartRateData(int sorting) {
+            Sorting = sorting;
+        }
+
+        @Override
+        protected void onPostExecute(List<Cursor> cursors) {
+            super.onPostExecute(cursors);
+            ArrayList<Map<Integer,Float>> statisticDataByIntervals;
+            Map<Integer, Float> statisticData;
+            ArrayList<List<Integer>> rawDataByIntervals;
+            int currentTimeValue;
+            int firstX, lastX;
+            int sum;
+            int minValue;
+            int maxValue;
+            float mean;
+            float median;
+            float standardDeviation;
+            int lowQuartile, highQuartile;
+            Calendar calendar = Calendar.getInstance();
+            Log.w(TAG, "jsem v postexecute");
+            for (Cursor cursor : cursors) {
+                if (cursor.getCount() == 0) {
+                    OnSelectHeartRateData.onSelectFailed();
+                    Log.w(TAG, "jsem v selhal jsem");
+                } else {
+                    cursor.moveToFirst();
+                    Calendar firstRecordTimeStamp = Calendar.getInstance();
+                    firstRecordTimeStamp.setTime(new Date(cursor.getLong(cursor.getColumnIndexOrThrow(TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP))));
+                    cursor.moveToLast();
+                    Calendar lastRecordTimeStamp = Calendar.getInstance();
+                    lastRecordTimeStamp.setTime(new Date(cursor.getLong(cursor.getColumnIndexOrThrow(TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP))));
+                    cursor.moveToFirst();
+                    switch (Sorting) {
+                        case YEAR:
+                            firstX = firstRecordTimeStamp.get(Calendar.YEAR);
+                            lastX = lastRecordTimeStamp.get(Calendar.YEAR);
+                            rawDataByIntervals = new ArrayList (Collections.nCopies (lastX - firstX + 1, null));
+                            statisticDataByIntervals = new ArrayList(Collections.nCopies (lastX - firstX + 1, null));
+                            do{
+                                calendar.setTimeInMillis(cursor.getLong(cursor.getColumnIndexOrThrow(TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP)));
+                                currentTimeValue = calendar.get(Calendar.YEAR) - firstX;
+                                if(rawDataByIntervals.get(currentTimeValue) == null) {
+                                    rawDataByIntervals.set(currentTimeValue, new ArrayList<Integer>());
+                                }
+                                rawDataByIntervals.get(currentTimeValue).add(cursor.getInt(cursor.getColumnIndexOrThrow(TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_VALUE)));
+                            } while (cursor.moveToNext());
+                            break;
+                        case MONTH:
+                            firstX = firstRecordTimeStamp.getActualMinimum(Calendar.MONTH) + 1;
+                            lastX = lastRecordTimeStamp.getActualMaximum(Calendar.MONTH) + 1;
+                            rawDataByIntervals = new ArrayList (Collections.nCopies (lastX, null));
+                            statisticDataByIntervals = new ArrayList (Collections.nCopies (lastX, null));
+                            do {
+                                calendar.setTimeInMillis(cursor.getLong(cursor.getColumnIndexOrThrow(TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP)));
+                                currentTimeValue = calendar.get(Calendar.MONTH);
+                                if(rawDataByIntervals.get(currentTimeValue) == null) {
+                                    rawDataByIntervals.set(currentTimeValue, new ArrayList<Integer>());
+                                }
+                                rawDataByIntervals.get(currentTimeValue).add(cursor.getInt(cursor.getColumnIndexOrThrow(TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_VALUE)));
+                            } while (cursor.moveToNext());
+                            break;
+                        case DAY_OF_MONTH:
+                            firstX = firstRecordTimeStamp.getActualMinimum(Calendar.DAY_OF_MONTH);
+                            lastX = lastRecordTimeStamp.getActualMaximum(Calendar.DAY_OF_MONTH);
+                            rawDataByIntervals = new ArrayList (Collections.nCopies (lastX, null));
+                            statisticDataByIntervals = new ArrayList (Collections.nCopies (lastX, null));
+                            do {
+                                calendar.setTimeInMillis(cursor.getLong(cursor.getColumnIndexOrThrow(TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP)));
+                                currentTimeValue = calendar.get(Calendar.DAY_OF_MONTH) - 1;
+                                if(rawDataByIntervals.get(currentTimeValue) == null) {
+                                    rawDataByIntervals.set(currentTimeValue, new ArrayList<Integer>());
+                                }
+                                rawDataByIntervals.get(currentTimeValue).add(cursor.getInt(cursor.getColumnIndexOrThrow(TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_VALUE)));
+                            } while (cursor.moveToNext());
+                            break;
+                        case HOUR_OF_DAY:
+                            firstX = firstRecordTimeStamp.getActualMinimum(Calendar.HOUR_OF_DAY);
+                            lastX = lastRecordTimeStamp.getActualMaximum(Calendar.HOUR_OF_DAY);
+                            rawDataByIntervals = new ArrayList (Collections.nCopies (lastX + 1, null));
+                            statisticDataByIntervals = new ArrayList (Collections.nCopies (lastX + 1, null));
+                            do {
+                                calendar.setTimeInMillis(cursor.getLong(cursor.getColumnIndexOrThrow(TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP)));
+                                currentTimeValue = calendar.get(Calendar.HOUR_OF_DAY);
+                                if(rawDataByIntervals.get(currentTimeValue) == null) {
+                                    rawDataByIntervals.set(currentTimeValue, new ArrayList<Integer>());
+                                }
+                                rawDataByIntervals.get(currentTimeValue).add(cursor.getInt(cursor.getColumnIndexOrThrow(TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_VALUE)));
+                            } while (cursor.moveToNext());
+                            break;
+
+                        case MINUTE:
+                            firstX = firstRecordTimeStamp.getActualMinimum(Calendar.MINUTE);
+                            lastX = lastRecordTimeStamp.getActualMaximum(Calendar.MINUTE);
+                            rawDataByIntervals = new ArrayList (Collections.nCopies (lastX + 1, null));
+                            statisticDataByIntervals = new ArrayList (Collections.nCopies (lastX + 1, null));
+                            do {
+                                calendar.setTimeInMillis(cursor.getLong(cursor.getColumnIndexOrThrow(TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP)));
+                                currentTimeValue = calendar.get(Calendar.MINUTE);
+                                if(rawDataByIntervals.get(currentTimeValue) == null) {
+                                    rawDataByIntervals.set(currentTimeValue, new ArrayList<Integer>());
+                                }
+                                rawDataByIntervals.get(currentTimeValue).add(cursor.getInt(cursor.getColumnIndexOrThrow(TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_VALUE)));
+                            } while (cursor.moveToNext());
+                            break;
+
+                        case SECONDS:
+                            firstX = firstRecordTimeStamp.getActualMinimum(Calendar.SECOND);
+                            lastX = lastRecordTimeStamp.getActualMaximum(Calendar.SECOND);
+                            rawDataByIntervals = new ArrayList (Collections.nCopies (lastX + 1, null));
+                            statisticDataByIntervals = new ArrayList (Collections.nCopies (lastX + 1, null));
+                            do {
+                                calendar.setTimeInMillis(cursor.getLong(cursor.getColumnIndexOrThrow(TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP)));
+                                currentTimeValue = calendar.get(Calendar.SECOND);
+                                if(rawDataByIntervals.get(currentTimeValue) == null) {
+                                    rawDataByIntervals.set(currentTimeValue, new ArrayList<Integer>());
+                                }
+                                rawDataByIntervals.get(currentTimeValue).add(cursor.getInt(cursor.getColumnIndexOrThrow(TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_VALUE)));
+                            } while (cursor.moveToNext());
+                            break;
+                        default:
+                            throw new IllegalStateException("Unexpected value: " + Sorting);
+                    }
+                    cursor.close();
+
+                    for (int i = 0 ; i < rawDataByIntervals.size() ; i++ ){
+                        minValue = HEART_RATE_SENSOR_MAX_VALUE;
+                        maxValue = HEART_RATE_SENSOR_MIN_VALUE;
+                        sum = 0;
+                        if (rawDataByIntervals.get(i) != null) {
+                            Collections.sort(rawDataByIntervals.get(i));
+                            lowQuartile = rawDataByIntervals.get(i).get((int) Math.ceil(rawDataByIntervals.get(i).size() * 25/100));
+                            highQuartile = rawDataByIntervals.get(i).get((int) Math.ceil(rawDataByIntervals.get(i).size() * 75/100));
+                            for (int teplota : rawDataByIntervals.get(i)) {
+                                if (minValue > teplota) {
+                                    minValue = teplota;
+                                }
+                                if (maxValue < teplota) {
+                                    maxValue = teplota;
+                                }
+                                sum = sum + teplota;
+                            }
+                            mean = sum / rawDataByIntervals.get(i).size();
+
+                            statisticData = new HashMap<>();
+                            statisticData.put(DATA_SET_SIZE, (float) rawDataByIntervals.get(i).size());
+                            statisticData.put(MIN_VALUE, (float) minValue);
+                            statisticData.put(MAX_VALUE, (float) maxValue);
+                            statisticData.put(LOW_QUARTILE, (float) lowQuartile);
+                            statisticData.put(HIGH_QUARTILE, (float) highQuartile);
+                            statisticData.put(MEAN_VALUE, mean);
+
+                            statisticDataByIntervals.set(i, statisticData);
+                        }
+                    }
+                    OnSelectHeartRateData.onSelectSuccess(statisticDataByIntervals, firstX, lastX);
+                    Log.w(TAG, "jsem pryč z postexecute");
+                }
+            }
+
+        }
     }
+
+    public class SelectTemperatureData extends SelectFromDatabase {
+
+        int Sorting;
+
+        public SelectTemperatureData(int sorting) {
+            Sorting = sorting;
+        }
+
+        @Override
+        protected void onPostExecute(List<Cursor> cursors) {
+            super.onPostExecute(cursors);
+            ArrayList<Map<Integer,Float>> statisticDataByIntervals;
+            Map<Integer, Float> statisticData;
+            ArrayList<List<Float>> rawDataByIntervals;
+            int currentTimeValue;
+            int firstX, lastX;
+            float sum;
+            float minValue;
+            float maxValue;
+            float mean;
+            float median;
+            float standardDeviation;
+            float lowQuartile, highQuartile;
+            Calendar calendar = Calendar.getInstance();
+            Log.w(TAG, "jsem v postexecute");
+                  for (Cursor cursor : cursors) {
+                if (cursor.getCount() == 0) {
+                    OnSelectTemperatureData.onSelectFailed();
+                    Log.w(TAG, "jsem v selhal jsem");
+                } else {
+                    cursor.moveToFirst();
+                    Calendar firstRecordTimeStamp = Calendar.getInstance();
+                    firstRecordTimeStamp.setTime(new Date(cursor.getLong(cursor.getColumnIndexOrThrow(TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP))));
+                    cursor.moveToLast();
+                    Calendar lastRecordTimeStamp = Calendar.getInstance();
+                    lastRecordTimeStamp.setTime(new Date(cursor.getLong(cursor.getColumnIndexOrThrow(TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP))));
+                    cursor.moveToFirst();
+                    switch (Sorting) {
+                        case YEAR:
+                            firstX = firstRecordTimeStamp.get(Calendar.YEAR);
+                            lastX = lastRecordTimeStamp.get(Calendar.YEAR);
+                            rawDataByIntervals = new ArrayList (Collections.nCopies (lastX - firstX + 1, null));
+                            statisticDataByIntervals = new ArrayList(Collections.nCopies (lastX - firstX + 1, null));
+                            do {
+                                calendar.setTimeInMillis(cursor.getLong(cursor.getColumnIndexOrThrow(TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP)));
+                                currentTimeValue = calendar.get(Calendar.YEAR) - firstX;
+                                if(rawDataByIntervals.get(currentTimeValue) == null) {
+                                    rawDataByIntervals.set(currentTimeValue, new ArrayList<Float>());
+                                }
+                                rawDataByIntervals.get(currentTimeValue).add(cursor.getFloat(cursor.getColumnIndexOrThrow(TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_VALUE)));
+                            } while (cursor.moveToNext());
+                            break;
+                        case MONTH:
+                            firstX = firstRecordTimeStamp.getActualMinimum(Calendar.MONTH) + 1;
+                            lastX = lastRecordTimeStamp.getActualMaximum(Calendar.MONTH) + 1;
+                            rawDataByIntervals = new ArrayList (Collections.nCopies (lastX, null));
+                            statisticDataByIntervals = new ArrayList (Collections.nCopies (lastX, null));
+                            do {
+                                calendar.setTimeInMillis(cursor.getLong(cursor.getColumnIndexOrThrow(TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP)));
+                                currentTimeValue = calendar.get(Calendar.MONTH);
+                                if(rawDataByIntervals.get(currentTimeValue) == null) {
+                                    rawDataByIntervals.set(currentTimeValue, new ArrayList<Float>());
+                                }
+                                rawDataByIntervals.get(currentTimeValue).add(cursor.getFloat(cursor.getColumnIndexOrThrow(TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_VALUE)));
+                            } while (cursor.moveToNext());
+                            break;
+                        case DAY_OF_MONTH:
+                            firstX = firstRecordTimeStamp.getActualMinimum(Calendar.DAY_OF_MONTH);
+                            lastX = lastRecordTimeStamp.getActualMaximum(Calendar.DAY_OF_MONTH);
+                            rawDataByIntervals = new ArrayList (Collections.nCopies (lastX, null));
+                            statisticDataByIntervals = new ArrayList (Collections.nCopies (lastX, null));
+                           do {
+                                calendar.setTimeInMillis(cursor.getLong(cursor.getColumnIndexOrThrow(TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP)));
+                                currentTimeValue = calendar.get(Calendar.DAY_OF_MONTH) - 1;
+                                if(rawDataByIntervals.get(currentTimeValue) == null) {
+                                    rawDataByIntervals.set(currentTimeValue, new ArrayList<Float>());
+                                }
+                                rawDataByIntervals.get(currentTimeValue).add(cursor.getFloat(cursor.getColumnIndexOrThrow(TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_VALUE)));
+                            } while (cursor.moveToNext());
+                            break;
+                        case HOUR_OF_DAY:
+                            firstX = firstRecordTimeStamp.getActualMinimum(Calendar.HOUR_OF_DAY);
+                            lastX = lastRecordTimeStamp.getActualMaximum(Calendar.HOUR_OF_DAY);
+                            rawDataByIntervals = new ArrayList (Collections.nCopies (lastX + 1, null));
+                            statisticDataByIntervals = new ArrayList (Collections.nCopies (lastX + 1, null));
+                            do {
+                                calendar.setTimeInMillis(cursor.getLong(cursor.getColumnIndexOrThrow(TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP)));
+                                currentTimeValue = calendar.get(Calendar.HOUR_OF_DAY);
+                                if(rawDataByIntervals.get(currentTimeValue) == null) {
+                                    rawDataByIntervals.set(currentTimeValue, new ArrayList<Float>());
+                                }
+                                rawDataByIntervals.get(currentTimeValue).add(cursor.getFloat(cursor.getColumnIndexOrThrow(TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_VALUE)));
+                            } while (cursor.moveToNext());
+                            break;
+
+                        case MINUTE:
+                            firstX = firstRecordTimeStamp.getActualMinimum(Calendar.MINUTE);
+                            lastX = lastRecordTimeStamp.getActualMaximum(Calendar.MINUTE);
+                            rawDataByIntervals = new ArrayList (Collections.nCopies (lastX + 1, null));
+                            statisticDataByIntervals = new ArrayList (Collections.nCopies (lastX + 1, null));
+                            do {
+                                calendar.setTimeInMillis(cursor.getLong(cursor.getColumnIndexOrThrow(TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP)));
+                                currentTimeValue = calendar.get(Calendar.MINUTE);
+                                if(rawDataByIntervals.get(currentTimeValue) == null) {
+                                    rawDataByIntervals.set(currentTimeValue, new ArrayList<Float>());
+                                }
+                                rawDataByIntervals.get(currentTimeValue).add(cursor.getFloat(cursor.getColumnIndexOrThrow(TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_VALUE)));
+                            }  while (cursor.moveToNext());
+                            break;
+
+                        case SECONDS:
+                            firstX = firstRecordTimeStamp.getActualMinimum(Calendar.SECOND);
+                            lastX = lastRecordTimeStamp.getActualMaximum(Calendar.SECOND);
+                            rawDataByIntervals = new ArrayList (Collections.nCopies (lastX + 1, null));
+                            statisticDataByIntervals = new ArrayList (Collections.nCopies (lastX + 1, null));
+                            do {
+                                calendar.setTimeInMillis(cursor.getLong(cursor.getColumnIndexOrThrow(TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP)));
+                                currentTimeValue = calendar.get(Calendar.SECOND);
+                                if(rawDataByIntervals.get(currentTimeValue) == null) {
+                                    rawDataByIntervals.set(currentTimeValue, new ArrayList<Float>());
+                                }
+                                rawDataByIntervals.get(currentTimeValue).add(cursor.getFloat(cursor.getColumnIndexOrThrow(TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_VALUE)));
+                            } while (cursor.moveToNext());
+                            break;
+                        default:
+                            throw new IllegalStateException("Unexpected value: " + Sorting);
+                    }
+                    cursor.close();
+
+                    for (int i = 0 ; i < rawDataByIntervals.size() ; i++ ){
+                        minValue = TEMPERATURE_SENSOR_MAX_VALUE;
+                        maxValue = TEMPERATURE_SENSOR_MIN_VALUE;
+                        sum = 0;
+                        if (rawDataByIntervals.get(i) != null) {
+                            Collections.sort(rawDataByIntervals.get(i));
+                            lowQuartile = rawDataByIntervals.get(i).get((int) Math.ceil(rawDataByIntervals.get(i).size() * 25/100));
+                            highQuartile = rawDataByIntervals.get(i).get((int) Math.ceil(rawDataByIntervals.get(i).size() * 75/100));
+                            for (Float teplota : rawDataByIntervals.get(i)) {
+                                if (minValue > teplota) {
+                                    minValue = teplota;
+                                }
+                                if (maxValue < teplota) {
+                                    maxValue = teplota;
+                                }
+                                sum = sum + teplota;
+                            }
+                            mean = sum / rawDataByIntervals.get(i).size();
+
+                            statisticData = new HashMap<>();
+                            statisticData.put(DATA_SET_SIZE, (float) rawDataByIntervals.get(i).size());
+                            statisticData.put(MIN_VALUE, minValue);
+                            statisticData.put(MAX_VALUE, maxValue);
+                            statisticData.put(LOW_QUARTILE, lowQuartile);
+                            statisticData.put(HIGH_QUARTILE, highQuartile);
+                            statisticData.put(MEAN_VALUE, mean);
+
+                            statisticDataByIntervals.set(i, statisticData);
+                        }
+                    }
+                    OnSelectTemperatureData.onSelectSuccess(statisticDataByIntervals, firstX, lastX);
+                    Log.w(TAG, "jsem pryč z postexecute");
+                }
+            }
+
+        }
+    }
+
+        public final static int YEAR = 0;
+        public final static int MONTH = 1;
+        public final static int DAY_OF_MONTH = 2;
+        public final static int HOUR_OF_DAY = 3;
+        public final static int MINUTE = 4;
+        public final static int SECONDS = 5;
 
     public void close(){
         WritableDatabase.close();
