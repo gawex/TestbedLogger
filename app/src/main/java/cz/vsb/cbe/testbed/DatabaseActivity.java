@@ -76,14 +76,15 @@ public class DatabaseActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.main_menu, menu);
+        getMenuInflater().inflate(R.menu.database_activity_menu, menu);
         return true;
     }
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         MenuItem menuItem = menu.findItem(R.id.scaning_state);
-        menuItem.setTitle(getString(R.string.activity_database_options_menu_title_system_time) + ": " + systemTimeFormat.format(System.currentTimeMillis()));
+        menuItem.setTitle("");
+        //menuItem.setTitle(getString(R.string.activity_database_options_menu_title_system_time) + ": " + systemTimeFormat.format(System.currentTimeMillis()));
         return super.onPrepareOptionsMenu(menu);
     }
 
@@ -110,6 +111,17 @@ public class DatabaseActivity extends AppCompatActivity {
                 alertDialog.setCancelable(false);
                 alertDialog.setCanceledOnTouchOutside(false);
                 alertDialog.show();
+                return true;
+
+            case R.id.disconnect:
+                stopService(new Intent(DatabaseActivity.this, BluetoothLeService.class));
+                bluetoothLeService = null;
+                finish();
+                startActivity(new Intent(DatabaseActivity.this, DiscoverDevicesActivity.class));
+                return true;
+
+            case R.id.close_application:
+                finish();
                 return true;
 
             default:
@@ -337,7 +349,7 @@ public class DatabaseActivity extends AppCompatActivity {
                 if(currentFragment instanceof  PedometerFragment){
                     pedometerFragment.updateLastStepsValue(intent.getIntExtra(BluetoothLeService.STEPS_DATA, 0), new Date(), true);
                     if(pedometerFragment.intervals[0].before(Calendar.getInstance().getTime()) && pedometerFragment.intervals[1].after(Calendar.getInstance().getTime())){
-                        pedometerFragment.setChartData(pedometerFragment.actualInterval, pedometerFragment.actualSortingLevel, false);
+                        pedometerFragment.setChartData(pedometerFragment.actualInterval, pedometerFragment.actualSortingLevelNew, false);
                     }
                 }
 
@@ -393,29 +405,53 @@ public class DatabaseActivity extends AppCompatActivity {
         super.onDestroy();
         stopService(new Intent(this, BluetoothLeService.class));
         bluetoothLeService=null;
-
         Log.w(TAG, "Zniceno");
     }
 
     @Override
     public void onBackPressed() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Opravdu chcete odejít!?");
+        builder.setIcon(getResources().getDrawable(R.drawable.ic_testbed_id));
+        builder.setPositiveButton("ANO, Ukončit aplikaci", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                DatabaseActivity.super.onBackPressed();
+            }
+        });
+        builder.setNegativeButton("NE, zůstat", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+            }
+        });
+        builder.setNeutralButton("Odpojit od zařízení", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                stopService(new Intent(DatabaseActivity.this, BluetoothLeService.class));
+                bluetoothLeService=null;
+                finish();
+                startActivity(new Intent(DatabaseActivity.this, DiscoverDevicesActivity.class));
+            }
+        });
+        AlertDialog dialog = builder.create();
+
         if(currentFragment instanceof PedometerFragment) {
             if (pedometerFragment.decrementSortingNew() >= Calendar.YEAR) {
-                pedometerFragment.setChartData(pedometerFragment.actualInterval, pedometerFragment.actualSortingLevel, true);
+                pedometerFragment.setChartData(pedometerFragment.actualInterval, pedometerFragment.actualSortingLevelNew, true);
             } else {
-                super.onBackPressed();
+                dialog.show();
             }
         } else if(currentFragment instanceof HeartRateFragment){
             if(heartRateFragment.decrementSorting() >= 0){
                 heartRateFragment.setChartData(heartRateFragment.actualInterval, heartRateFragment.actualSortingLevel, true);
             } else {
-                super.onBackPressed();
+                dialog.show();
             }
         } else if(currentFragment instanceof TemperatureFragment){
             if(temperatureFragment.decrementSorting() >= 0){
                 temperatureFragment.setChartData(temperatureFragment.actualInterval, temperatureFragment.actualSortingLevel, true);
             } else {
-                super.onBackPressed();
+                dialog.show();
             }
         }
     }

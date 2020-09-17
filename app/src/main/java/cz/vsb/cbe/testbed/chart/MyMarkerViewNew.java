@@ -5,6 +5,7 @@ import android.content.Context;
 import android.widget.TextView;
 
 import com.github.mikephil.charting.components.MarkerView;
+import com.github.mikephil.charting.data.BarEntry;
 import com.github.mikephil.charting.data.CandleEntry;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.highlight.Highlight;
@@ -82,7 +83,10 @@ public class MyMarkerViewNew extends MarkerView {
             default:
                 XLabelAndValue = "x: " + e.getX();
         }
-        if(e instanceof CandleEntry){
+        if (e instanceof BarEntry){
+            tvContent.setText(XLabelAndValue + "\n" +
+                    String.format("celk. krok.: %s %s", format.format(e.getY()), Unit));
+        } else if(e instanceof CandleEntry){
             CandleEntry candleEntry = (CandleEntry) e;
             tvContent.setText(XLabelAndValue + "\n" +
                     String.format("min: %s %s",format.format(candleEntry.getLow()), Unit) + "\n" +

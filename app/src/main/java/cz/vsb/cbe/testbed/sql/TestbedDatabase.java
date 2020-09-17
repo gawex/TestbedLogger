@@ -29,14 +29,15 @@ public class TestbedDatabase {
     public static int HEART_RATE_SENSOR_MIN_VALUE = 0;
     public static int HEART_RATE_SENSOR_MAX_VALUE = 255;
 
-    public static int DATA_SET_SIZE = 0;
-    public static int MIN_VALUE = 1;
-    public static int MAX_VALUE = 2;
-    public static int LOW_QUARTILE = 3;
-    public static int HIGH_QUARTILE = 4;
-    public static int MEAN_VALUE = 5;
-    public static int MEDIAN_VALUE = 6;
-    public static int STANDARD_DEVIATION_VALUE = 7;
+    public static final int DATA_SET_SIZE = 0;
+    public static final int DATA_SET_SUM = 1;
+    public static final int MIN_VALUE = 2;
+    public static final int MAX_VALUE = 3;
+    public static final int LOW_QUARTILE = 4;
+    public static final int HIGH_QUARTILE = 5;
+    public static final int MEAN_VALUE = 6;
+    public static final int MEDIAN_VALUE = 7;
+    public static final int STANDARD_DEVIATION_VALUE = 8;
 
     private static TestbedDatabase TestbedDatabase;
     private static Context Context;
@@ -1039,6 +1040,7 @@ public class TestbedDatabase {
     public void close(){
         WritableDatabase.close();
         ReadableDatabase.close();
+        TestbedDatabase = null;
         TestbedDatabaseHelper.getInstance(Context).close();
     }
 }

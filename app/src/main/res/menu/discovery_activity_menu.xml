@@ -17,4 +17,9 @@
         android:title="@string/options_menu_title_about_application"
         app:showAsAction="collapseActionView|withText" />
 
+    <item
+        android:id="@+id/close_application"
+        android:title="Ukončit aplikaci"
+        app:showAsAction="collapseActionView|withText" />
+
 </menu>

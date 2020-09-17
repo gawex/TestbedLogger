@@ -163,8 +163,8 @@ public class TemperatureFragment extends BaseFragment {
                     meanFloatValues = new ArrayList<>();
                     minimumFloatValue = TestbedDatabase.TEMPERATURE_SENSOR_MAX_VALUE;
                     maximumFloatValue = TestbedDatabase.TEMPERATURE_SENSOR_MIN_VALUE;
-                    xAxis.setAxisMinimum(firstXValue - (CANDLE_WIDTH + CANDLE_SPACE) / 2);
-                    xAxis.setAxisMaximum(lastXValue + (CANDLE_WIDTH + CANDLE_SPACE) / 2);
+                    xAxis.setAxisMinimum(firstXValue - (BAR_AND_CANDLE_WIDTH + BAR_AND_CANDLE_SPACE) / 2);
+                    xAxis.setAxisMaximum(lastXValue + (BAR_AND_CANDLE_WIDTH + BAR_AND_CANDLE_SPACE) / 2);
                     switch (scale) {
                         case TestbedDatabase.YEAR:
                             txvInterval.setText(firstXValue + " až " + lastXValue);
@@ -259,6 +259,7 @@ public class TemperatureFragment extends BaseFragment {
                 }
                 @Override
                 public void onSelectFailed() {
+                    dataAvailable(false);
                     //TODO: Handle selection ERROR
                 }
             });

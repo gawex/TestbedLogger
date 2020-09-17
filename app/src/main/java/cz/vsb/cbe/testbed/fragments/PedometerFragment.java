@@ -1,7 +1,6 @@
 package cz.vsb.cbe.testbed.fragments;
 
 import android.annotation.SuppressLint;
-import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
@@ -11,9 +10,9 @@ import android.view.ViewGroup;
 import android.widget.CompoundButton;
 import android.widget.Toast;
 
-import com.github.mikephil.charting.data.CandleData;
-import com.github.mikephil.charting.data.CandleDataSet;
-import com.github.mikephil.charting.data.CandleEntry;
+import com.github.mikephil.charting.data.BarData;
+import com.github.mikephil.charting.data.BarDataSet;
+import com.github.mikephil.charting.data.BarEntry;
 import com.github.mikephil.charting.data.CombinedData;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
@@ -31,11 +30,9 @@ import cz.vsb.cbe.testbed.BluetoothLeService;
 import cz.vsb.cbe.testbed.R;
 import cz.vsb.cbe.testbed.TestbedDevice;
 import cz.vsb.cbe.testbed.chart.MyBarChart;
-import cz.vsb.cbe.testbed.chart.MyMarkerView;
 import cz.vsb.cbe.testbed.chart.MyMarkerViewNew;
 import cz.vsb.cbe.testbed.sql.Record;
 import cz.vsb.cbe.testbed.sql.TestbedDatabase;
-import cz.vsb.cbe.testbed.sql.TestbedDatabaseHelper;
 import cz.vsb.cbe.testbed.sql.TestbedDatabaseNew;
 
 
@@ -93,31 +90,31 @@ public class PedometerFragment extends BaseFragment {
                     Log.w("onMyLongClick", "(" + e.getX() + " | " + e.getY() + ")");
                     combinedChart.setMarker(null); // Set the marker to the chart
 
-                    switch (actualSortingLevel) {
+                    switch (actualSortingLevelNew) {
                         case Calendar.YEAR:
                             actualInterval.set(Calendar.YEAR, (int) e.getX());
-                            actualSortingLevel = Calendar.MONTH;
+                            actualSortingLevelNew = Calendar.MONTH;
                             break;
                         case Calendar.MONTH:
                             actualInterval.set(Calendar.MONTH, (int) e.getX() - 1);
-                            actualSortingLevel = Calendar.DAY_OF_MONTH;
+                            actualSortingLevelNew = Calendar.DAY_OF_MONTH;
                             break;
                         case Calendar.DAY_OF_MONTH:
                             actualInterval.set(Calendar.DAY_OF_MONTH, (int) e.getX());
-                            actualSortingLevel = Calendar.HOUR_OF_DAY;
+                            actualSortingLevelNew = Calendar.HOUR_OF_DAY;
                             break;
                         case Calendar.HOUR_OF_DAY:
                             actualInterval.set(Calendar.HOUR_OF_DAY, (int) e.getX());
-                            actualSortingLevel = Calendar.MINUTE;
+                            actualSortingLevelNew = Calendar.MINUTE;
                             break;
                         case Calendar.MINUTE:
                             actualInterval.set(Calendar.MINUTE, (int) e.getX());
-                            actualSortingLevel = Calendar.SECOND;
+                            actualSortingLevelNew = Calendar.SECOND;
                             break;
                         default:
                             break;
                     }
-                    setChartData(actualInterval, actualSortingLevel, true);
+                    setChartData(actualInterval, actualSortingLevelNew, true);
                 }
             }
         });
@@ -127,7 +124,7 @@ public class PedometerFragment extends BaseFragment {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
                 rangeVisible = b;
-                setChartData(actualInterval, actualSortingLevel, false);
+                setChartData(actualInterval, actualSortingLevelNew, false);
             }
         });
 
@@ -136,7 +133,7 @@ public class PedometerFragment extends BaseFragment {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
                 meanVisible = b;
-                setChartData(actualInterval, actualSortingLevel, false);
+                setChartData(actualInterval, actualSortingLevelNew, false);
             }
         });
 
@@ -152,7 +149,7 @@ public class PedometerFragment extends BaseFragment {
         setUpYAxisRight();
         setUpLegend();
 
-        setChartData(actualInterval, actualSortingLevel, true);
+        setChartData(actualInterval, actualSortingLevelNew, true);
 
         return view;
     }
@@ -226,37 +223,37 @@ public class PedometerFragment extends BaseFragment {
         @Override
         protected void onPostExecute(List<Map<Integer, Float>> records) {
             super.onPostExecute(records);
-            minMaxAndQuartileFloatValues = new ArrayList<>();
+            maxFloatValues = new ArrayList<>();
             meanFloatValues = new ArrayList<>();
             minimumFloatValue = TestbedDatabaseNew.PEDOMETER_MAX_VALUE;
             maximumFloatValue = TestbedDatabaseNew.PEDOMETER_MIN_VALUE;
             switch (IntervalScale) {
                 case Calendar.YEAR:
-                    xAxis.setAxisMinimum(FirstRecordTimeStamp.get(Calendar.YEAR) - (CANDLE_WIDTH + CANDLE_SPACE) / 2);
-                    xAxis.setAxisMaximum(LastRecordTimeStamp.get(Calendar.YEAR) + (CANDLE_WIDTH + CANDLE_SPACE) / 2);
+                    xAxis.setAxisMinimum(FirstRecordTimeStamp.get(Calendar.YEAR) - (BAR_AND_CANDLE_WIDTH + BAR_AND_CANDLE_SPACE) / 2);
+                    xAxis.setAxisMaximum(LastRecordTimeStamp.get(Calendar.YEAR) + (BAR_AND_CANDLE_WIDTH + BAR_AND_CANDLE_SPACE) / 2);
                     txvInterval.setText(FirstRecordTimeStamp.get(Calendar.YEAR) + " až " + LastRecordTimeStamp.get(Calendar.YEAR));
                     XAxisIntegerValueFormatter.setSuffix("");
                     xAxis.setValueFormatter(XAxisIntegerValueFormatter);
                     FirstXValue = FirstRecordTimeStamp.get(Calendar.YEAR);
                     break;
                 case Calendar.MONTH:
-                    xAxis.setAxisMinimum(IntervalBase.getActualMinimum(Calendar.MONTH) + 1 - (CANDLE_WIDTH + CANDLE_SPACE) / 2);
-                    xAxis.setAxisMaximum(IntervalBase.getActualMaximum(Calendar.MONTH) + 1 + (CANDLE_WIDTH + CANDLE_SPACE) / 2);
+                    xAxis.setAxisMinimum(IntervalBase.getActualMinimum(Calendar.MONTH) + 1 - (BAR_AND_CANDLE_WIDTH + BAR_AND_CANDLE_SPACE) / 2);
+                    xAxis.setAxisMaximum(IntervalBase.getActualMaximum(Calendar.MONTH) + 1 + (BAR_AND_CANDLE_WIDTH + BAR_AND_CANDLE_SPACE) / 2);
                     txvInterval.setText("leden až  prosinec " + yearFormatter.format(IntervalBase.getTime()));
                     xAxis.setValueFormatter(monthValueFormater);
                     FirstXValue = IntervalBase.getActualMinimum(Calendar.MONTH);
                     break;
                 case Calendar.DAY_OF_MONTH:
-                    xAxis.setAxisMinimum(IntervalBase.getActualMinimum(Calendar.DAY_OF_MONTH) - (CANDLE_WIDTH + CANDLE_SPACE) / 2);
-                    xAxis.setAxisMaximum(IntervalBase.getActualMaximum(Calendar.DAY_OF_MONTH) + (CANDLE_WIDTH + CANDLE_SPACE) / 2);
+                    xAxis.setAxisMinimum(IntervalBase.getActualMinimum(Calendar.DAY_OF_MONTH) - (BAR_AND_CANDLE_WIDTH + BAR_AND_CANDLE_SPACE) / 2);
+                    xAxis.setAxisMaximum(IntervalBase.getActualMaximum(Calendar.DAY_OF_MONTH) + (BAR_AND_CANDLE_WIDTH + BAR_AND_CANDLE_SPACE) / 2);
                     txvInterval.setText(dayOfMonthFormatter.format(StartDate) + "- " + dayOfMonthFormatter.format(EndDate) + monthFormatter.format(IntervalBase.getTime()) + " " + yearFormatter.format(IntervalBase.getTime()));
                     XAxisIntegerValueFormatter.setSuffix(".");
                     xAxis.setValueFormatter(XAxisIntegerValueFormatter);
                     FirstXValue = IntervalBase.getActualMinimum(Calendar.DAY_OF_MONTH) - 1;
                     break;
                 case Calendar.HOUR_OF_DAY:
-                    xAxis.setAxisMinimum(IntervalBase.getActualMinimum(Calendar.HOUR_OF_DAY) - (CANDLE_WIDTH + CANDLE_SPACE) / 2);
-                    xAxis.setAxisMaximum(IntervalBase.getActualMaximum(Calendar.HOUR_OF_DAY) + (CANDLE_WIDTH + CANDLE_SPACE) / 2);
+                    xAxis.setAxisMinimum(IntervalBase.getActualMinimum(Calendar.HOUR_OF_DAY) - (BAR_AND_CANDLE_WIDTH + BAR_AND_CANDLE_SPACE) / 2);
+                    xAxis.setAxisMaximum(IntervalBase.getActualMaximum(Calendar.HOUR_OF_DAY) + (BAR_AND_CANDLE_WIDTH + BAR_AND_CANDLE_SPACE) / 2);
                     txvInterval.setText(dayOfMonthFormatter.format(IntervalBase.getTime()) + monthFormatter.format(IntervalBase.getTime()) +
                             " " + yearFormatter.format(IntervalBase.getTime()) + " " + hourOfDayFormatter.format(StartDate) + " - " + hourOfDayFormatter.format(EndDate));
                     XAxisIntegerValueFormatter.setSuffix(" h");
@@ -264,8 +261,8 @@ public class PedometerFragment extends BaseFragment {
                     FirstXValue = IntervalBase.getActualMinimum(Calendar.HOUR_OF_DAY);
                     break;
                 case Calendar.MINUTE:
-                    xAxis.setAxisMinimum(IntervalBase.getActualMinimum(Calendar.MINUTE) - (CANDLE_WIDTH + CANDLE_SPACE) / 2);
-                    xAxis.setAxisMaximum(IntervalBase.getActualMaximum(Calendar.MINUTE) + (CANDLE_WIDTH + CANDLE_SPACE) / 2);
+                    xAxis.setAxisMinimum(IntervalBase.getActualMinimum(Calendar.MINUTE) - (BAR_AND_CANDLE_WIDTH + BAR_AND_CANDLE_SPACE) / 2);
+                    xAxis.setAxisMaximum(IntervalBase.getActualMaximum(Calendar.MINUTE) + (BAR_AND_CANDLE_WIDTH + BAR_AND_CANDLE_SPACE) / 2);
                     txvInterval.setText(dayOfMonthFormatter.format(IntervalBase.getTime()) + monthFormatter.format(IntervalBase.getTime()) +
                             " " + yearFormatter.format(IntervalBase.getTime()) + " " + hourOfDayFormatter.format(IntervalBase.getTime()) + ":" + minuteFormatter.format(StartDate) + " - " + minuteFormatter.format(EndDate));
                     XAxisIntegerValueFormatter.setSuffix(" m");
@@ -273,8 +270,8 @@ public class PedometerFragment extends BaseFragment {
                     FirstXValue = IntervalBase.getActualMinimum(Calendar.MINUTE);
                     break;
                 case Calendar.SECOND:
-                    xAxis.setAxisMinimum(IntervalBase.getActualMinimum(Calendar.SECOND) - (CANDLE_WIDTH + CANDLE_SPACE) / 2);
-                    xAxis.setAxisMaximum(IntervalBase.getActualMaximum(Calendar.SECOND) + (CANDLE_WIDTH + CANDLE_SPACE) / 2);
+                    xAxis.setAxisMinimum(IntervalBase.getActualMinimum(Calendar.SECOND) - (BAR_AND_CANDLE_WIDTH + BAR_AND_CANDLE_SPACE) / 2);
+                    xAxis.setAxisMaximum(IntervalBase.getActualMaximum(Calendar.SECOND) + (BAR_AND_CANDLE_WIDTH + BAR_AND_CANDLE_SPACE) / 2);
                     txvInterval.setText(dayOfMonthFormatter.format(IntervalBase.getTime()) + monthFormatter.format(IntervalBase.getTime()) +
                             " " + yearFormatter.format(IntervalBase.getTime()) + " " + hourOfDayFormatter.format(IntervalBase.getTime()) + ":" + minuteFormatter.format(IntervalBase.getTime()) + ":" + secondFormatter.format(StartDate) + " - " + secondFormatter.format(EndDate));
                     XAxisIntegerValueFormatter.setSuffix(" s");
@@ -288,31 +285,25 @@ public class PedometerFragment extends BaseFragment {
             }
             for (int i = 0; i < records.size(); i++) {
                 if (records.get(i) != null) {
-                    minMaxAndQuartileFloatValues.add(new CandleEntry(FirstXValue + i,
-                            records.get(i).get(TestbedDatabase.MAX_VALUE),
-                            records.get(i).get(TestbedDatabase.MIN_VALUE),
-                            records.get(i).get(TestbedDatabase.HIGH_QUARTILE),
-                            records.get(i).get(TestbedDatabase.LOW_QUARTILE)));
+                    maxFloatValues.add(new BarEntry(FirstXValue + i, records.get(i).get(TestbedDatabase.DATA_SET_SUM)));
                     meanFloatValues.add(new Entry(FirstXValue + i, records.get(i).get(TestbedDatabase.MEAN_VALUE)));
 
-                    if (records.get(i).get(TestbedDatabase.MIN_VALUE) < minimumFloatValue) {
-                        minimumFloatValue = records.get(i).get(TestbedDatabase.MIN_VALUE);
-                    }
-                    if (records.get(i).get(TestbedDatabase.MAX_VALUE) > maximumFloatValue) {
-                        maximumFloatValue = records.get(i).get(TestbedDatabase.MAX_VALUE);
+                    if (records.get(i).get(TestbedDatabase.DATA_SET_SUM) > maximumFloatValue) {
+                        maximumFloatValue = records.get(i).get(TestbedDatabase.DATA_SET_SUM);
                     }
                 }
             }
 
-            yAxisLeft.setAxisMinimum(minimumFloatValue - 0.5f);
+            yAxisLeft.setAxisMinimum(0);
             yAxisLeft.setAxisMaximum(maximumFloatValue + 0.5f);
 
             if (!meanFloatValues.isEmpty() || !minMaxAndQuartileFloatValues.isEmpty()) {
 
-                candleDataSet = new CandleDataSet(minMaxAndQuartileFloatValues, "Rozpětí kroků");
-                setUpCandleDataSet();
+                barDataSet = new BarDataSet(maxFloatValues, "Rozpětí kroků");
+                setUpBarDataSet();
 
-                candleData = new CandleData(candleDataSet);
+                barData = new BarData(barDataSet);
+                barData.setBarWidth(BAR_AND_CANDLE_WIDTH);
 
                 lineDataSet = new LineDataSet(meanFloatValues, "Průměr kroků");
                 setUpLineDataSet();
@@ -321,7 +312,7 @@ public class PedometerFragment extends BaseFragment {
 
                 combinedData = new CombinedData();
                 if (rangeVisible) {
-                    combinedData.setData(candleData);
+                    combinedData.setData(barData);
                 }
                 if (meanVisible) {
                     combinedData.setData(lineData);

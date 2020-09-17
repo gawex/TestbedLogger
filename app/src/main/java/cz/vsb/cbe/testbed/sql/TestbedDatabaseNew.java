@@ -203,6 +203,7 @@ public class TestbedDatabaseNew {
                 Collections.sort(quartileList);
                 Map<Integer,Float> statisticData = new HashMap<>();
                 statisticData.put(TestbedDatabase.DATA_SET_SIZE, (float) recordsByIntervals.get(i).size());
+                statisticData.put(TestbedDatabase.DATA_SET_SUM, (float) sum);
                 statisticData.put(TestbedDatabase.MIN_VALUE, minValue);
                 statisticData.put(TestbedDatabase.MAX_VALUE, maxValue);
                 statisticData.put(TestbedDatabase.LOW_QUARTILE, quartileList.get( (int) Math.ceil(quartileList.size() * 25 / 100)));

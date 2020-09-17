@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto" >
+
+    <item
+        android:id="@+id/scaning_state"
+        android:title="@string/activity_discover_devices_options_menu_title_scanning_started"
+        app:showAsAction="always|withText" />
+
+    <item
+        android:id="@+id/settings"
+        android:title="@string/options_menu_title_settings"
+        app:showAsAction="collapseActionView|withText" />
+
+    <item
+        android:id="@+id/about_application"
+        android:title="@string/options_menu_title_about_application"
+        app:showAsAction="collapseActionView|withText" />
+
+    <item
+        android:id="@+id/disconnect"
+        android:title="Odpojit od zařízení"
+        app:showAsAction="collapseActionView|withText" />
+
+    <item
+        android:id="@+id/close_application"
+        android:title="Ukončit aplikaci"
+        app:showAsAction="collapseActionView|withText" />
+
+</menu>

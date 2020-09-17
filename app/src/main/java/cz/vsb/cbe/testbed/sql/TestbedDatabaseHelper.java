@@ -37,6 +37,7 @@ public class TestbedDatabaseHelper extends SQLiteOpenHelper {
     private static final String SQL_DELETE_DATA_TABLE =
             "DROP TABLE IF EXISTS " + Data.TABLE_NAME;
 
+
     public static TestbedDatabaseHelper getInstance(Context context) {
         if (TestbedDatabaseHelper == null) {
             TestbedDatabaseHelper = new TestbedDatabaseHelper(context);
@@ -83,6 +84,8 @@ public class TestbedDatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public synchronized void close() {
+        TestbedDatabaseHelper = null;
         super.close();
+
     }
 }

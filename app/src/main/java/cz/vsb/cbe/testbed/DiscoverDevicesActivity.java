@@ -136,7 +136,7 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.main_menu, menu);
+        getMenuInflater().inflate(R.menu.discovery_activity_menu, menu);
         return true;
     }
 
@@ -186,7 +186,8 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
                 return true;
 
             case R.id.settings:
-                startActivity(new Intent(this, SettingsActivity.class));
+                Toast.makeText(getApplicationContext(), "Not implement yet :-(", Toast.LENGTH_SHORT).show();
+                //startActivity(new Intent(this, SettingsActivity.class));
                 return true;
 
             case R.id.about_application:
@@ -204,6 +205,10 @@ public class DiscoverDevicesActivity extends AppCompatActivity {
                 alertDialog.setCancelable(false);
                 alertDialog.setCanceledOnTouchOutside(false);
                 alertDialog.show();
+                return true;
+
+            case R.id.close_application:
+                finish();
                 return true;
 
             default:

@@ -17,6 +17,9 @@ import androidx.fragment.app.Fragment;
 import com.github.mikephil.charting.components.Legend;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.YAxis;
+import com.github.mikephil.charting.data.BarData;
+import com.github.mikephil.charting.data.BarDataSet;
+import com.github.mikephil.charting.data.BarEntry;
 import com.github.mikephil.charting.data.CandleData;
 import com.github.mikephil.charting.data.CandleDataSet;
 import com.github.mikephil.charting.data.CandleEntry;
@@ -45,8 +48,8 @@ abstract public class BaseFragment extends Fragment {
 
     public static final int BLINK_TIME = 250;
 
-    public static final float CANDLE_WIDTH = 0.9f;
-    public static final float CANDLE_SPACE = 1 - CANDLE_WIDTH;
+    public static final float BAR_AND_CANDLE_WIDTH = 0.9f;
+    public static final float BAR_AND_CANDLE_SPACE = 1 - BAR_AND_CANDLE_WIDTH;
 
 
 
@@ -63,6 +66,7 @@ abstract public class BaseFragment extends Fragment {
     public MyMarkerViewNew myMarkerViewNew;
 
     public int actualSortingLevel;
+    public int actualSortingLevelNew;
 
     protected float minimumFloatValue;
     protected float maximumFloatValue;
@@ -84,8 +88,12 @@ abstract public class BaseFragment extends Fragment {
     protected SimpleDateFormat minuteFormatter;
     protected SimpleDateFormat secondFormatter;
 
+    protected ArrayList<BarEntry> maxFloatValues;
     protected ArrayList<CandleEntry> minMaxAndQuartileFloatValues;
     protected ArrayList<Entry> meanFloatValues;
+
+    protected BarDataSet barDataSet;
+    protected BarData barData;
 
     protected CandleDataSet candleDataSet;
     protected CandleData candleData;
@@ -149,7 +157,8 @@ abstract public class BaseFragment extends Fragment {
         testbedDevice = getArguments().getParcelable(DatabaseActivity.TESTBED_DEVICE);
 
         actualInterval = Calendar.getInstance();
-        actualSortingLevel = TestbedDatabase.DAY_OF_MONTH;
+        actualSortingLevel = TestbedDatabase.MINUTE;
+        actualSortingLevelNew = Calendar.MINUTE;
 
         rangeVisible = true;
         meanVisible = true;
@@ -169,6 +178,7 @@ abstract public class BaseFragment extends Fragment {
             swcValuesMean.setVisibility(View.INVISIBLE);
             btnMoreStatsInfo.setVisibility(View.INVISIBLE);
             txvNoDataAvailable.setVisibility(View.VISIBLE);
+            txvInterval.setText(null);
         }
     }
 
@@ -227,6 +237,11 @@ abstract public class BaseFragment extends Fragment {
         legend.setFormSize(11);
         legend.setTextSize(11);
         legend.setXEntrySpace(4);
+    }
+
+    protected void setUpBarDataSet(){
+        barDataSet.setColor(colorFei);
+        barDataSet.setAxisDependency(YAxis.AxisDependency.LEFT);
     }
 
     protected void setUpCandleDataSet(){
@@ -417,28 +432,28 @@ abstract public class BaseFragment extends Fragment {
     }
 
     public int decrementSortingNew(){
-        switch (actualSortingLevel) {
+        switch (actualSortingLevelNew) {
             default:
             case Calendar.YEAR:
-                actualSortingLevel = -1;
+                actualSortingLevelNew = -1;
                 break;
             case Calendar.MONTH:
-                actualSortingLevel = Calendar.YEAR;
+                actualSortingLevelNew = Calendar.YEAR;
                 break;
             case Calendar.DAY_OF_MONTH:
-                actualSortingLevel = Calendar.MONTH;
+                actualSortingLevelNew = Calendar.MONTH;
                 break;
             case Calendar.HOUR_OF_DAY:
-                actualSortingLevel = Calendar.DAY_OF_MONTH;
+                actualSortingLevelNew = Calendar.DAY_OF_MONTH;
                 break;
             case Calendar.MINUTE:
-                actualSortingLevel = Calendar.HOUR_OF_DAY;
+                actualSortingLevelNew = Calendar.HOUR_OF_DAY;
                 break;
             case Calendar.SECOND:
-                actualSortingLevel = Calendar.MINUTE;
+                actualSortingLevelNew = Calendar.MINUTE;
                 break;
         }
-        return actualSortingLevel;
+        return actualSortingLevelNew;
     }
 
     private void updateLastDataValue(String data, Date date, boolean blink){
