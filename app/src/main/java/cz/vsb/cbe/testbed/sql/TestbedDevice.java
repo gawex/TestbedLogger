@@ -2,7 +2,7 @@
   @author  Bc. Lukas Tatarin
  * @supervisor Ing. Jaromir Konecny, Ph.D.
  * @email   lukas@tatarin.cz
- * @version v1.00
+ * @version 1.00
  * @ide     Android Studio 4.1.2
  * @license GNU GPL v3
  * @brief   TestbedDivice
