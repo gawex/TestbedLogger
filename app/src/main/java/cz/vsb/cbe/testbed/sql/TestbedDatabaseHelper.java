@@ -1,3 +1,30 @@
+/*
+  @author  Bc. Lukas Tatarin
+ * @supervisor Ing. Jaromir Konecny, Ph.D.
+ * @email   lukas@tatarin.cz
+ * @version 1.00
+ * @ide     Android Studio 4.1.2
+ * @license GNU GPL v3
+ * @brief   TestbedDatabaseHelper
+ * @lastmodify 2021/02/15 11:10:38
+ * @verbatim
+----------------------------------------------------------------------
+Copyright (C) Bc. Lukas Tatarin, 2021
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+See the GNU General Public License for more details.
+
+<http://www.gnu.org/licenses/>
+ @endverbatim
+ */
+
 package cz.vsb.cbe.testbed.sql;
 
 import android.content.Context;
@@ -5,19 +32,18 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.provider.BaseColumns;
 
-import com.github.mikephil.charting.charts.ScatterChart;
-
 public class TestbedDatabaseHelper extends SQLiteOpenHelper {
 
     protected static TestbedDatabaseHelper TestbedDatabaseHelper;
 
     // If you change the database schema, you must increment the database version.
-    public static final int DATABASE_VERSION = 2;
+    public static final int DATABASE_VERSION = 1;
     public static final String DATABASE_NAME = "Testbed.db";
 
     private static final String SQL_CREATE_DEVICES_TABLE =
             "CREATE TABLE " + Device.TABLE_NAME + " (" +
                     Device.COLUMN_NAME_DEVICE_ID + " INTEGER PRIMARY KEY," +
+                    Device.COLUMN_NAME_DEVICE_NAME + " TEXT," +
                     Device.COLUMN_NAME_AVAILABLE_SENSORS + " INTEGER," +
                     Device.COLUMN_NAME_BLUETOOTH_MAC_ADDRESS + " TEXT," +
                     Device.COLUMN_NAME_IS_LAST_CONNECTED + " INTEGER," +
@@ -37,7 +63,6 @@ public class TestbedDatabaseHelper extends SQLiteOpenHelper {
     private static final String SQL_DELETE_DATA_TABLE =
             "DROP TABLE IF EXISTS " + Data.TABLE_NAME;
 
-
     public static TestbedDatabaseHelper getInstance(Context context) {
         if (TestbedDatabaseHelper == null) {
             TestbedDatabaseHelper = new TestbedDatabaseHelper(context);
@@ -53,6 +78,7 @@ public class TestbedDatabaseHelper extends SQLiteOpenHelper {
         db.execSQL(SQL_CREATE_DATA_TABLE);
         db.execSQL(SQL_CREATE_DEVICES_TABLE);
     }
+
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         // This database is only a cache for online data, so its upgrade policy is
         // to simply to discard the data and start over
@@ -60,6 +86,7 @@ public class TestbedDatabaseHelper extends SQLiteOpenHelper {
         db.execSQL(SQL_DELETE_DATA_TABLE);
         onCreate(db);
     }
+
     public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         onUpgrade(db, oldVersion, newVersion);
     }
@@ -67,6 +94,7 @@ public class TestbedDatabaseHelper extends SQLiteOpenHelper {
     public static class Device implements BaseColumns {
         public static final String TABLE_NAME = "devices";
         public static final String COLUMN_NAME_DEVICE_ID = "de_id";
+        public static final String COLUMN_NAME_DEVICE_NAME = "de_name";
         public static final String COLUMN_NAME_AVAILABLE_SENSORS = "de_available_sensors";
         public static final String COLUMN_NAME_BLUETOOTH_MAC_ADDRESS = "de_bluetooth_mac_address";
         public static final String COLUMN_NAME_IS_LAST_CONNECTED = "de_is_last_connected";
@@ -86,6 +114,5 @@ public class TestbedDatabaseHelper extends SQLiteOpenHelper {
     public synchronized void close() {
         TestbedDatabaseHelper = null;
         super.close();
-
     }
 }
