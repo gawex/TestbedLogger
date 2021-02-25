@@ -2,115 +2,121 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/list_item_device_lnl_main"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="@color/colorGrey"
     android:orientation="vertical">
 
     <LinearLayout
+        android:id="@+id/list_item_device_lnl_top"
         android:layout_width="fill_parent"
         android:layout_height="30dp"
         android:orientation="horizontal"
-        android:padding="2dp"
-        android:weightSum="120">
+        android:padding="2dp">
 
         <TextView
-            android:id="@+id/devices_list_txv_name"
+            android:id="@+id/list_item_device_txv_device_name"
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="60"
-            android:text="Testbed"
+            android:layout_weight="55"
+            android:gravity="start"
+            android:textAlignment="textStart"
             android:textColor="@android:color/background_dark"
             android:textSize="24sp"
             android:textStyle="bold" />
 
         <ImageView
-            android:id="@+id/devices_list_imv_database"
+            android:id="@+id/list_item_device_imv_stored_status"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="10"
-            app:srcCompat="@drawable/ic_database_unknown" />
+            app:srcCompat="@drawable/ic_database_unknown"
+            tools:ignore="ContentDescription" />
 
         <TextView
-            android:id="@+id/devices_list_txv_id"
+            android:id="@+id/list_item_device_txt_device_id"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="20"
             android:fontFamily="@font/digital7"
-            android:gravity="clip_vertical"
-            android:text="10000"
+            android:gravity="start"
             android:textAlignment="textStart"
-            android:textAllCaps="false"
             android:textColor="@android:color/background_dark"
             android:textSize="30sp"
             android:textStyle="italic" />
 
         <ImageView
-            android:id="@+id/device_list_imv_signal_strenght"
+            android:id="@+id/list_item_device_imv_signal_strength"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="10"
-            app:srcCompat="@drawable/ic_singnal_no_signal" />
+            app:srcCompat="@drawable/ic_singnal_no_signal"
+            tools:ignore="ContentDescription" />
 
         <TextView
-            android:id="@+id/device_list_txv_rssi"
+            android:id="@+id/list_item_device_txt_rssi"
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="20"
+            android:layout_weight="25"
             android:gravity="center"
-            android:text="-127 dBm"
             android:textStyle="bold" />
     </LinearLayout>
 
     <LinearLayout
+        android:id="@+id/list_item_device_lnl_bottom"
         android:layout_width="fill_parent"
         android:layout_height="25dp"
         android:orientation="horizontal"
-        android:padding="2dp"
-        android:weightSum="120">
+        android:padding="2dp">
 
         <ImageView
-            android:id="@+id/devices_list_imv_pedometer"
+            android:id="@+id/list_item_device_imv_pedometer"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="10"
             app:srcCompat="@drawable/ic_pedometer_no_available"
+            tools:ignore="ContentDescription"
             tools:srcCompat="@drawable/ic_pedometer_no_available" />
 
         <ImageView
-            android:id="@+id/devices_list_imv_heart_rate_meter"
+            android:id="@+id/list_item_device_imv_heart_rate_meter"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="10"
             app:srcCompat="@drawable/ic_heart_rate_meter_no_available"
+            tools:ignore="ContentDescription"
             tools:srcCompat="@drawable/ic_heart_rate_meter_no_available" />
 
         <ImageView
-            android:id="@+id/devices_list_imv_thermometer"
+            android:id="@+id/list_item_device_imv_thermometer"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="10"
-            app:srcCompat="@drawable/ic_thermometer_no_available" />
+            app:srcCompat="@drawable/ic_thermometer_no_available"
+            tools:ignore="ContentDescription" />
 
         <Space
+            android:id="@+id/list_item_device_spc"
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="30" />
+            android:layout_weight="25" />
 
         <ImageView
-            android:id="@+id/devices_list_imv_mac_address"
+            android:id="@+id/list_item_device_imv_mac_address"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_gravity="center"
             android:layout_weight="10"
-            app:srcCompat="@drawable/ic_mac_address" />
+            app:srcCompat="@drawable/ic_mac_address"
+            tools:ignore="ContentDescription" />
 
         <TextView
-            android:id="@+id/devices_list_txv_mac_address"
+            android:id="@+id/list_item_device_txv_mac_address"
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="50"
-            android:gravity="center"
-            android:text="AA:BB:CC:DD:EE:FF"
+            android:layout_weight="55"
+            android:gravity="start"
             android:textAlignment="textStart" />
 
     </LinearLayout>
