@@ -27,7 +27,7 @@
         android:scrollHorizontally="false"
         android:textAlignment="center"
         android:textAllCaps="true"
-        android:textColor="@color/VSB"
+        android:textColor="@color/ColorVsb"
         android:textStyle="bold"
         tools:ignore="RtlCompat" />
 
@@ -42,7 +42,7 @@
         android:scrollHorizontally="false"
         android:textAlignment="viewStart"
         android:textAllCaps="false"
-        android:textColor="@color/FEI"
+        android:textColor="@color/ColorFei"
         android:textSize="14sp"
         android:textStyle="bold"
         tools:ignore="RtlCompat" />

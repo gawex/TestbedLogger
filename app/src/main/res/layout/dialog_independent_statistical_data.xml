@@ -47,7 +47,7 @@
                 android:minLines="2"
                 android:scrollHorizontally="false"
                 android:textAlignment="center"
-                android:textColor="@color/VSB"
+                android:textColor="@color/ColorVsb"
                 android:textSize="30sp"
                 android:textStyle="bold" />
         </LinearLayout>
@@ -85,7 +85,7 @@
                 android:minLines="2"
                 android:scrollHorizontally="false"
                 android:textAlignment="center"
-                android:textColor="@color/VSB"
+                android:textColor="@color/ColorVsb"
                 android:textSize="30sp"
                 android:textStyle="bold" />
         </LinearLayout>
@@ -123,7 +123,7 @@
                 android:minLines="2"
                 android:scrollHorizontally="false"
                 android:textAlignment="center"
-                android:textColor="@color/VSB"
+                android:textColor="@color/ColorVsb"
                 android:textSize="30sp"
                 android:textStyle="bold" />
         </LinearLayout>
@@ -169,7 +169,7 @@
                 android:minLines="2"
                 android:scrollHorizontally="false"
                 android:textAlignment="center"
-                android:textColor="@color/VSB"
+                android:textColor="@color/ColorVsb"
                 android:textSize="30sp"
                 android:textStyle="bold" />
 
@@ -182,7 +182,7 @@
                 android:minLines="3"
                 android:scrollHorizontally="false"
                 android:textAlignment="center"
-                android:textColor="@color/FEI"
+                android:textColor="@color/ColorFei"
                 android:textSize="12sp"
                 android:textStyle="bold" />
 
@@ -230,7 +230,7 @@
                 android:minLines="2"
                 android:scrollHorizontally="false"
                 android:textAlignment="center"
-                android:textColor="@color/VSB"
+                android:textColor="@color/ColorVsb"
                 android:textSize="30sp"
                 android:textStyle="bold" />
 
@@ -243,7 +243,7 @@
                 android:minLines="3"
                 android:scrollHorizontally="false"
                 android:textAlignment="center"
-                android:textColor="@color/FEI"
+                android:textColor="@color/ColorFei"
                 android:textSize="12sp"
                 android:textStyle="bold" />
 
@@ -291,7 +291,7 @@
                 android:minLines="2"
                 android:scrollHorizontally="false"
                 android:textAlignment="center"
-                android:textColor="@color/VSB"
+                android:textColor="@color/ColorVsb"
                 android:textSize="30sp"
                 android:textStyle="bold" />
 
@@ -304,7 +304,7 @@
                 android:minLines="3"
                 android:scrollHorizontally="false"
                 android:textAlignment="center"
-                android:textColor="@color/FEI"
+                android:textColor="@color/ColorFei"
                 android:textSize="12sp"
                 android:textStyle="bold"
                 tools:ignore="RtlCompat" />

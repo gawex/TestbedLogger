@@ -16,7 +16,7 @@
         android:fontFamily="@font/digital7"
         android:gravity="center_vertical"
         android:textAlignment="textEnd"
-        android:textColor="@color/VSB"
+        android:textColor="@color/ColorVsb"
         android:textSize="18sp"
         android:textStyle="bold"
         tools:ignore="RtlCompat" />
@@ -30,7 +30,7 @@
         android:gravity="bottom"
         android:textAlignment="viewStart"
         android:textAllCaps="false"
-        android:textColor="@color/FEI"
+        android:textColor="@color/ColorFei"
         android:textSize="14sp"
         tools:ignore="RtlCompat" />
 
