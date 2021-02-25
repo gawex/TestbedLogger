@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/list_item_condition_lnl_main"
     android:layout_width="match_parent"
@@ -10,7 +9,7 @@
 
     <RelativeLayout
         android:id="@+id/list_item_condition_rel_status"
-        android:layout_width="50dp"
+        android:layout_width="40dp"
         android:layout_height="match_parent"
         android:layout_margin="2dp">
 
@@ -19,7 +18,6 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:adjustViewBounds="true"
-            app:srcCompat="@drawable/ic_fail"
             tools:ignore="ContentDescription" />
 
         <ProgressBar
@@ -41,8 +39,8 @@
         android:minLines="2"
         android:scrollHorizontally="false"
         android:textAlignment="textStart"
-        android:textSize="18sp"
-        android:textStyle="bold"
+        android:textColor="@android:color/black"
+        android:textSize="14sp"
         tools:ignore="RtlCompat" />
 
 </LinearLayout>
