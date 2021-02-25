@@ -20,11 +20,12 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="55"
-            android:gravity="start"
+            android:gravity="center_vertical"
             android:textAlignment="textStart"
             android:textColor="@android:color/background_dark"
             android:textSize="24sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            tools:ignore="RtlCompat" />
 
         <ImageView
             android:id="@+id/list_item_device_imv_stored_status"
@@ -40,11 +41,12 @@
             android:layout_height="match_parent"
             android:layout_weight="20"
             android:fontFamily="@font/digital7"
-            android:gravity="start"
+            android:gravity="center_vertical"
             android:textAlignment="textStart"
             android:textColor="@android:color/background_dark"
             android:textSize="30sp"
-            android:textStyle="italic" />
+            android:textStyle="italic"
+            tools:ignore="RtlCompat" />
 
         <ImageView
             android:id="@+id/list_item_device_imv_signal_strength"
