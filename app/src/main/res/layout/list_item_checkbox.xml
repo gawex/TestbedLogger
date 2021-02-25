@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/item_checkbox_lnl_main"
+    android:id="@+id/list_item_checkbox_lnl_main"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content">
 
     <CheckBox
-        android:id="@+id/item_checkbox_chb"
+        android:id="@+id/list_item_checkbox_chb"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 </LinearLayout>
