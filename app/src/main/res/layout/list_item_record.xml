@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/list_item_record_lnl_main"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/colorGrey"
+    android:padding="2dp">
+
+    <TextView
+        android:id="@+id/list_item_record_txv_value"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_marginEnd="1dp"
+        android:layout_weight="30"
+        android:fontFamily="@font/digital7"
+        android:gravity="center_vertical"
+        android:textAlignment="textEnd"
+        android:textColor="@color/VSB"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        tools:ignore="RtlCompat" />
+
+    <TextView
+        android:id="@+id/list_item_record_txv_time_stamp"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="1dp"
+        android:layout_weight="80"
+        android:gravity="bottom"
+        android:textAlignment="viewStart"
+        android:textAllCaps="false"
+        android:textColor="@color/FEI"
+        android:textSize="14sp"
+        tools:ignore="RtlCompat" />
+
+</LinearLayout>
