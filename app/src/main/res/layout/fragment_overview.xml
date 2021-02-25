@@ -5,6 +5,7 @@
     android:id="@+id/fragment_overview_csl_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:layout_marginTop="2dp"
     tools:context=".fragments.OverviewFragment">
 
     <LinearLayout
