@@ -2,26 +2,28 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/list_item_condition_lnl_main"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:gravity="center_vertical"
     android:padding="2dp">
 
     <RelativeLayout
-        android:layout_width="30dp"
-        android:layout_height="30dp"
+        android:id="@+id/list_item_condition_rel_status"
+        android:layout_width="50dp"
+        android:layout_height="match_parent"
         android:layout_margin="2dp">
 
         <ImageView
-            android:id="@+id/conditions_list_imv_status"
+            android:id="@+id/list_item_condition_imv_status"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:adjustViewBounds="true"
-            android:visibility="invisible"
-            app:srcCompat="@drawable/ic_fail" />
+            app:srcCompat="@drawable/ic_fail"
+            tools:ignore="ContentDescription" />
 
         <ProgressBar
-            android:id="@+id/conditions_list_pgb_progress"
+            android:id="@+id/list_item_condition_pgb_progress"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:indeterminate="true"
@@ -30,15 +32,17 @@
     </RelativeLayout>
 
     <TextView
-        android:id="@+id/conditions_list_txv_item"
-        android:layout_width="200dp"
+        android:id="@+id/list_item_condition_txv_condition"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="2dp"
-        android:gravity="clip_vertical"
-        android:text="ssss"
+        android:ellipsize="none"
+        android:gravity="center_vertical"
+        android:minLines="2"
+        android:scrollHorizontally="false"
         android:textAlignment="textStart"
-        android:textColor="@android:color/background_dark"
-        android:textSize="18sp" />
-
+        android:textSize="18sp"
+        android:textStyle="bold"
+        tools:ignore="RtlCompat" />
 
 </LinearLayout>
