@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/list_item_record_details_lnl_main"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/colorGrey"
+    android:padding="2dp">
+
+    <ImageView
+        android:id="@+id/list_item_record_details_imv_icon"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_marginEnd="1dp"
+        android:layout_weight="10"
+        tools:ignore="ContentDescription" />
+
+    <TextView
+        android:id="@+id/list_item_record_details_txv_label"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_marginStart="1dp"
+        android:layout_marginEnd="1dp"
+        android:layout_weight="30"
+        android:gravity="center_vertical"
+        android:minLines="2"
+        android:scrollHorizontally="false"
+        android:textAlignment="center"
+        android:textAllCaps="true"
+        android:textColor="@color/VSB"
+        android:textStyle="bold"
+        tools:ignore="RtlCompat" />
+
+    <TextView
+        android:id="@+id/list_item_record_details_lnl_txv_value"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_marginStart="1dp"
+        android:layout_weight="60"
+        android:gravity="center_vertical"
+        android:minLines="2"
+        android:scrollHorizontally="false"
+        android:textAlignment="viewStart"
+        android:textAllCaps="false"
+        android:textColor="@color/FEI"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        tools:ignore="RtlCompat" />
+</LinearLayout>
