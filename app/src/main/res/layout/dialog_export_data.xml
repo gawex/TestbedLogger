@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/dialog_export_data_lnl_main"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="4dp">
+
+    <TextView
+        android:id="@+id/dialog_export_data_txv_data_for_export_label"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="2dp"
+        android:text="@string/dialog_export_data_data_for_export_label"
+        android:textAllCaps="true"
+        android:textColor="@color/FEI"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:id="@+id/dialog_export_data_lnl_data_for_export"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="2dp"
+        android:orientation="horizontal">
+
+        <CheckBox
+            android:id="@+id/dialog_export_data_chb_steps_data"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/dialog_export_data_steps_data_label" />
+
+        <CheckBox
+            android:id="@+id/dialog_export_data_chb_heart_rate_data"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/dialog_export_data_heart_rate_data_label" />
+
+        <CheckBox
+            android:id="@+id/dialog_export_data_chb_temperature_data"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/dialog_export_data_temperature_data_label" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/dialog_export_data_txv_devices_for_export_label"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="2dp"
+        android:text="@string/dialog_export_data_devices_for_export_label"
+        android:textAllCaps="true"
+        android:textColor="@color/FEI"
+        android:textStyle="bold" />
+
+    <ListView
+        android:id="@+id/dialog_export_data_lsv_devices_for_export"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="2dp"
+        android:divider="@null" />
+
+</LinearLayout>
