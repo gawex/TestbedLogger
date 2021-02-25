@@ -1,25 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     xmlns:app="http://schemas.android.com/apk/res-auto" >
 
     <item
         android:id="@+id/scaning_state"
-        android:title="@string/activity_discover_devices_options_menu_title_scanning_started"
-        app:showAsAction="always|withText" />
-
-    <item
-        android:id="@+id/settings"
-        android:title="@string/options_menu_title_settings"
-        app:showAsAction="collapseActionView|withText" />
+        android:title="@string/menu_scan_devices_again"
+        app:showAsAction="always|withText"
+        tools:ignore="AlwaysShowAction" />
 
     <item
         android:id="@+id/about_application"
-        android:title="@string/options_menu_title_about_application"
+        android:title="@string/menu_about_application"
         app:showAsAction="collapseActionView|withText" />
 
     <item
         android:id="@+id/close_application"
-        android:title="Ukončit aplikaci"
+        android:title="@string/menu_close_application"
         app:showAsAction="collapseActionView|withText" />
 
 </menu>
