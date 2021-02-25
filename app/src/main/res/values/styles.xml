@@ -1,20 +1,16 @@
 <resources xmlns:android="http://schemas.android.com/apk/res/android">
-
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
-
         <item name="android:datePickerStyle">@style/MyDatePickerDialogStyle</item>
         <item name="android:timePickerStyle">@style/MyTimePickerDialogStyle</item>
         <item name="actionBarStyle">@style/MyActionBarStyle</item>
         <item name="actionMenuTextAppearance">@style/MyActionBarStyle.Menu</item>
-
         <item name="overlapAnchor">false</item>
         <item name="android:dropDownVerticalOffset">?attr/actionBarSize</item>
-
     </style>
 
     <style name="MyDatePickerDialogStyle" parent="@android:style/Widget.Material.Light.DatePicker">
@@ -28,19 +24,17 @@
 
     <style name="MyActionBarStyle" parent="Widget.AppCompat.ActionBar.Solid">
         <item name="titleTextStyle">@style/MyActionBarStyle.Title</item>
-
     </style>
 
     <style name="MyActionBarStyle.Title" parent="TextAppearance.AppCompat.Widget.ActionBar.Title">
-        <item name="android:textSize">16dp</item>
+        <item name="android:textSize">16sp</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textAllCaps">true</item>
     </style>
 
     <style name="MyActionBarStyle.Menu" parent="TextAppearance.AppCompat.Widget.ActionBar.Menu">
         <item name="android:textStyle">normal</item>
-        <item name="android:textSize">12dp</item>
-
+        <item name="android:textSize">12sp</item>
     </style>
 
     <style name="AppTheme.NoActionBar">
@@ -49,22 +43,17 @@
     </style>
 
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
-
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
-
     <style name="AppTheme.SwitchActivatedColorVsb" parent="Theme.AppCompat.Light">
-        <!-- active thumb & track color (30% transparency) -->
-        <item name="colorControlActivated">@color/VSB</item>
+        <item name="colorControlActivated">@color/ColorVsb</item>
     </style>
 
     <style name="AppTheme.SwitchActivatedColorFei" parent="Theme.AppCompat.Light">
-        <!-- active thumb & track color (30% transparency) -->
-        <item name="colorControlActivated">@color/FEI</item>
+        <item name="colorControlActivated">@color/ColorFei</item>
     </style>
 
     <style name="DefaultNumberPickerTheme" parent="AppTheme">
-        <item name="colorControlNormal">@color/VSB</item>
+        <item name="colorControlNormal">@color/ColorVsb</item>
     </style>
-
 
 </resources>
