@@ -2,12 +2,13 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/marker_view_csl_main"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:background="@drawable/marker2">
+    android:background="@drawable/marker">
 
     <TextView
-        android:id="@+id/tvContent5"
+        android:id="@+id/marker_view_txv"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="5dp"
@@ -19,7 +20,6 @@
         android:maxLines="5"
         android:paddingBottom="10dp"
         android:singleLine="true"
-        android:text="test\nazase test"
         android:textAlignment="center"
         android:textAppearance="?android:attr/textAppearanceSmall"
         android:textColor="@android:color/white"
@@ -27,6 +27,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        tools:ignore="TextViewEdits" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
