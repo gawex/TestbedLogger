@@ -13,7 +13,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="2dp"
         android:orientation="horizontal"
-        app:layout_constraintBottom_toTopOf="@id/fragment_chart_pgb_working"
+        app:layout_constraintBottom_toTopOf="@id/fragment_chart_view_pgb_working"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
@@ -42,7 +42,7 @@
             android:textStyle="bold" />
 
         <ImageButton
-            android:id="@+id/fragment_chart_view_imb_change_interval"
+            android:id="@+id/fragment_chart_view_imb_change_actual_interval"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -54,7 +54,7 @@
     </LinearLayout>
 
     <me.zhanghai.android.materialprogressbar.MaterialProgressBar
-        android:id="@+id/fragment_chart_pgb_working"
+        android:id="@+id/fragment_chart_view_pgb_working"
         style="@style/Widget.MaterialProgressBar.ProgressBar.Horizontal"
         android:layout_width="match_parent"
         android:layout_height="2dp"
@@ -77,9 +77,10 @@
         app:layout_constraintBottom_toTopOf="@+id/fragment_chart_view_lnl_controls"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/fragment_chart_pgb_working">
+        app:layout_constraintTop_toBottomOf="@+id/fragment_chart_view_pgb_working">
 
         <LinearLayout
+            android:id="@+id/fragment_chart_view_lnl_no_data_available"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
