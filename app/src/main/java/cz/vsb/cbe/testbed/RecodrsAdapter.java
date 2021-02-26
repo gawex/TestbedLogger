@@ -83,8 +83,8 @@ public class RecodrsAdapter extends BaseAdapter {
         if (view == null) {
             view = mLayoutInflater.inflate(R.layout.list_item_record, null);
             viewHolder = new ViewHolder();
-            viewHolder.mValue = view.findViewById(R.id.list_item_record_txv_value);
-            viewHolder.mTimeStamp = view.findViewById(R.id.list_item_record_txv_time_stamp);
+            viewHolder.mTxvValue = view.findViewById(R.id.list_item_record_txv_value);
+            viewHolder.mTxvTimeStamp = view.findViewById(R.id.list_item_record_txv_time_stamp);
             view.setTag(viewHolder);
         } else {
             viewHolder = (ViewHolder) view.getTag();
@@ -92,26 +92,27 @@ public class RecodrsAdapter extends BaseAdapter {
         Record record = mRecords.get(position);
         switch (mSensorType) {
             case R.id.pedometer:
-                viewHolder.mValue.setText(
+                viewHolder.mTxvValue.setText(
                         RecordValueFormater.formatSteps("###,###", record.getValue()));
                 break;
 
             case R.id.heart_rate:
-                viewHolder.mValue.setText(
+                viewHolder.mTxvValue.setText(
                         RecordValueFormater.formatHearRate("###", record.getValue()));
                 break;
 
             case R.id.temperature:
-                viewHolder.mValue.setText(
+                viewHolder.mTxvValue.setText(
                         RecordValueFormater.formatTemperature("##0.00", record.getValue()));
                 break;
         }
-        viewHolder.mTimeStamp.setText(RecordValueFormater.formatTimeStamp(record.getTimeStamp()));
+        viewHolder.mTxvTimeStamp.setText(
+                RecordValueFormater.formatTimeStamp(record.getTimeStamp()));
         return view;
     }
 
     static class ViewHolder {
-        TextView mValue;
-        TextView mTimeStamp;
+        TextView mTxvValue;
+        TextView mTxvTimeStamp;
     }
 }
