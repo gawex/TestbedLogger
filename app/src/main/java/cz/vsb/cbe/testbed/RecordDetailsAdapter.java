@@ -87,19 +87,19 @@ public class RecordDetailsAdapter extends BaseAdapter {
         if (view == null) {
             view = mLayoutInflater.inflate(R.layout.list_item_record_details, null);
             viewHolder = new ViewHolder();
-            viewHolder.mIcon = view.findViewById(R.id.list_item_record_details_imv_icon);
-            viewHolder.mKey = view.findViewById(R.id.list_item_record_details_txv_label);
-            viewHolder.mValue = view.findViewById(R.id.list_item_record_details_lnl_txv_value);
+            viewHolder.mImvIcon = view.findViewById(R.id.list_item_record_details_imv_icon);
+            viewHolder.mTxvKey = view.findViewById(R.id.list_item_record_details_txv_label);
+            viewHolder.mTxvValue = view.findViewById(R.id.list_item_record_details_lnl_txv_value);
             view.setTag(viewHolder);
         } else {
             viewHolder = (ViewHolder) view.getTag();
         }
 
-        viewHolder.mIcon.setImageDrawable(
+        viewHolder.mImvIcon.setImageDrawable(
                 AppCompatResources.getDrawable(
                         mContext, mDetailsItems.get(position).mIconDrawableId));
-        viewHolder.mKey.setText(mContext.getString(mDetailsItems.get(position).mLabelId));
-        viewHolder.mValue.setText(mDetailsItems.get(position).mValue);
+        viewHolder.mTxvKey.setText(mContext.getString(mDetailsItems.get(position).mLabelId));
+        viewHolder.mTxvValue.setText(mDetailsItems.get(position).mValue);
 
         return view;
     }
@@ -113,9 +113,9 @@ public class RecordDetailsAdapter extends BaseAdapter {
     }
 
     private static class ViewHolder {
-        ImageView mIcon;
-        TextView mKey;
-        TextView mValue;
+        ImageView mImvIcon;
+        TextView mTxvKey;
+        TextView mTxvValue;
     }
 
     @SuppressWarnings("InnerClassMayBeStatic")
