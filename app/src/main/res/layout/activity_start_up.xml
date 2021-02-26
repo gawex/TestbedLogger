@@ -13,13 +13,14 @@
         android:id="@+id/activity_start_up_imv_logo"
         android:layout_width="0dp"
         android:layout_height="150dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/ic_fei"
-        tools:ignore="ContentDescription"
-        tools:srcCompat="@drawable/ic_fei" />
+        app:srcCompat="@drawable/img_main_graphic"
+        tools:ignore="ContentDescription" />
 
     <ListView
         android:id="@+id/activity_start_up_lsv_conditions"

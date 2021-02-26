@@ -26,7 +26,7 @@
             android:layout_weight="1"
             android:background="@color/ColorVsb"
             android:padding="4dp"
-            android:src="@drawable/ic_arrow_back"
+            android:src="@drawable/ic_arrow_back_20dp_color_white"
             tools:ignore="ContentDescription" />
 
         <TextView
@@ -48,7 +48,7 @@
             android:layout_weight="1"
             android:background="@color/ColorVsb"
             android:padding="4dp"
-            android:src="@drawable/ic_change_interval"
+            android:src="@drawable/ic_change_interval_20dp_color_white"
             tools:ignore="ContentDescription" />
 
     </LinearLayout>
@@ -143,7 +143,7 @@
             android:id="@+id/fragment_chart_view_chb_sum_and_candle_values"
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="1"
+            android:layout_weight="45"
             android:ellipsize="none"
             android:gravity="center_vertical"
             android:inputType="textMultiLine"
@@ -157,7 +157,7 @@
             android:id="@+id/fragment_chart_view_chb_mean_values"
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="1"
+            android:layout_weight="45"
             android:ellipsize="none"
             android:gravity="center_vertical"
             android:inputType="textMultiLine"
@@ -171,9 +171,9 @@
             android:id="@+id/fragment_chart_view_imb_show_statistical_data"
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="1"
+            android:layout_weight="10"
             android:background="@color/ColorVsb"
-            android:src="@drawable/ic_statistics"
+            android:src="@drawable/ic_statistical_data_20dp_color_white"
             tools:ignore="ContentDescription" />
 
     </LinearLayout>

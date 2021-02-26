@@ -15,7 +15,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:tabBackground="@drawable/tab_background_vsb"
+        app:tabBackground="@drawable/tab_item_background_color_vsb"
         app:tabIndicatorColor="@color/ColorVsb"
         app:tabSelectedTextColor="@android:color/white">
 

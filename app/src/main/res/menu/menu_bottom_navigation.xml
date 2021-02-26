@@ -3,17 +3,17 @@
 
     <item
         android:id="@+id/pedometer"
-        android:icon="@drawable/ic_pedometer_no_available"
+        android:icon="@drawable/ic_steps_20dp_color_gray"
         android:title="@string/activity_database_fragment_title_pedometer" />
 
     <item
         android:id="@+id/heart_rate"
-        android:icon="@drawable/ic_heart_rate_meter_no_available"
+        android:icon="@drawable/ic_heart_20dp_color_gray"
         android:title="@string/activity_database_fragment_title_heart_rate_meter" />
 
     <item
         android:id="@+id/temperature"
-        android:icon="@drawable/ic_thermometer_no_available"
+        android:icon="@drawable/ic_thermometer_20dp_color_gray"
         android:title="@string/activity_database_fragment_title_thermometer" />
 
 </menu>

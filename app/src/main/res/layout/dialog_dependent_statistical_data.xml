@@ -13,7 +13,7 @@
         android:layout_height="match_parent"
         android:layout_margin="2dp"
         android:layout_weight="1"
-        android:background="@color/colorGrey"
+        android:background="@color/colorGrayLight"
         android:orientation="vertical">
 
         <TextView
@@ -51,7 +51,7 @@
         android:layout_height="match_parent"
         android:layout_margin="2dp"
         android:layout_weight="1"
-        android:background="@color/colorGrey"
+        android:background="@color/colorGrayLight"
         android:orientation="vertical">
 
         <TextView

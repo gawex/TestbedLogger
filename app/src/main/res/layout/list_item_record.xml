@@ -4,7 +4,7 @@
     android:id="@+id/list_item_record_lnl_main"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@color/colorGrey"
+    android:background="@color/colorGrayLight"
     android:padding="2dp">
 
     <TextView

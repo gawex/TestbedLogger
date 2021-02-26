@@ -5,7 +5,7 @@
     android:id="@+id/list_item_device_lnl_main"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@color/colorGrey"
+    android:background="@color/colorGrayLight"
     android:orientation="vertical">
 
     <LinearLayout
@@ -32,7 +32,6 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="10"
-            app:srcCompat="@drawable/ic_database_unknown"
             tools:ignore="ContentDescription" />
 
         <TextView
@@ -53,7 +52,6 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="10"
-            app:srcCompat="@drawable/ic_singnal_no_signal"
             tools:ignore="ContentDescription" />
 
         <TextView
@@ -77,25 +75,20 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="10"
-            app:srcCompat="@drawable/ic_pedometer_no_available"
-            tools:ignore="ContentDescription"
-            tools:srcCompat="@drawable/ic_pedometer_no_available" />
+            tools:ignore="ContentDescription" />
 
         <ImageView
             android:id="@+id/list_item_device_imv_heart_rate_meter"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="10"
-            app:srcCompat="@drawable/ic_heart_rate_meter_no_available"
-            tools:ignore="ContentDescription"
-            tools:srcCompat="@drawable/ic_heart_rate_meter_no_available" />
+            tools:ignore="ContentDescription" />
 
         <ImageView
             android:id="@+id/list_item_device_imv_thermometer"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="10"
-            app:srcCompat="@drawable/ic_thermometer_no_available"
             tools:ignore="ContentDescription" />
 
         <Space
@@ -110,7 +103,7 @@
             android:layout_height="match_parent"
             android:layout_gravity="center"
             android:layout_weight="10"
-            app:srcCompat="@drawable/ic_mac_address"
+            app:srcCompat="@drawable/ic_bluetooth_20dp_color_vsb"
             tools:ignore="ContentDescription" />
 
         <TextView
