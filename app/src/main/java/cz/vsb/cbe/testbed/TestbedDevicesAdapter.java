@@ -118,72 +118,73 @@ public class TestbedDevicesAdapter extends BaseAdapter {
         if (view == null) {
             view = mLayoutInflater.inflate(R.layout.list_item_device, null);
             viewHolder = new ViewHolder();
-            viewHolder.mTestbedDeviceName =
+            viewHolder.mTxvTestbedDeviceName =
                     view.findViewById(R.id.list_item_device_txv_device_name);
-            viewHolder.mDatabaseStatus = view.findViewById(R.id.list_item_device_imv_stored_status);
-            viewHolder.mTestbedDeviceId = view.findViewById(R.id.list_item_device_txt_device_id);
-            viewHolder.mSignalStrenght =
+            viewHolder.mImvDatabaseStatus =
+                    view.findViewById(R.id.list_item_device_imv_stored_status);
+            viewHolder.mTxvTestbedDeviceId = view.findViewById(R.id.list_item_device_txt_device_id);
+            viewHolder.mImvSignalStrenght =
                     view.findViewById(R.id.list_item_device_imv_signal_strength);
-            viewHolder.mRssi = view.findViewById(R.id.list_item_device_txt_rssi);
-            viewHolder.mPedometerStatus = view.findViewById(R.id.list_item_device_imv_pedometer);
-            viewHolder.mHeartRateMeterStatus =
+            viewHolder.mTxvRssi = view.findViewById(R.id.list_item_device_txt_rssi);
+            viewHolder.mImvPedometerStatus = view.findViewById(R.id.list_item_device_imv_pedometer);
+            viewHolder.mImvHeartRateMeterStatus =
                     view.findViewById(R.id.list_item_device_imv_heart_rate_meter);
-            viewHolder.mThermometerStatus =
+            viewHolder.mImvThermometerStatus =
                     view.findViewById(R.id.list_item_device_imv_thermometer);
-            viewHolder.mMacAddress = view.findViewById(R.id.list_item_device_txv_mac_address);
+            viewHolder.mImvMacAddress = view.findViewById(R.id.list_item_device_txv_mac_address);
             view.setTag(viewHolder);
         } else {
             viewHolder = (ViewHolder) view.getTag();
         }
         TestbedDevice testbedDevice = mTestbedDevices.get(position);
-        viewHolder.mTestbedDeviceName.setText(testbedDevice.getName());
-        viewHolder.mMacAddress.setText(testbedDevice.getMacAddress());
+        viewHolder.mTxvTestbedDeviceName.setText(testbedDevice.getName());
+        viewHolder.mImvMacAddress.setText(testbedDevice.getMacAddress());
 
         if (testbedDevice.getRssi() > EXCELLENT_SIGNAL_LIMIT) {
-            viewHolder.mSignalStrenght.setImageDrawable(
+            viewHolder.mImvSignalStrenght.setImageDrawable(
                     AppCompatResources.getDrawable(
                             mContext, R.drawable.ic_signal_excelent_20dp_color_vsb));
-            viewHolder.mRssi.setText(testbedDevice.getRssi() + " dBm");
+            viewHolder.mTxvRssi.setText(testbedDevice.getRssi() + " dBm");
         } else if (testbedDevice.getRssi() <= EXCELLENT_SIGNAL_LIMIT &&
                 testbedDevice.getRssi() >= GOOD_SIGNAL_LIMIT) {
-            viewHolder.mSignalStrenght.setImageDrawable(
+            viewHolder.mImvSignalStrenght.setImageDrawable(
                     AppCompatResources.getDrawable(
                             mContext, R.drawable.ic_signal_good_20dp_color_vsb));
-            viewHolder.mRssi.setText(testbedDevice.getRssi() + " dBm");
+            viewHolder.mTxvRssi.setText(testbedDevice.getRssi() + " dBm");
         } else if (testbedDevice.getRssi() < GOOD_SIGNAL_LIMIT &&
                 testbedDevice.getRssi() >= POOR_SIGNAL_LIMIT) {
-            viewHolder.mSignalStrenght.setImageDrawable(
+            viewHolder.mImvSignalStrenght.setImageDrawable(
                     AppCompatResources.getDrawable(
                             mContext, R.drawable.ic_signal_poor_20dp_color_vsb));
-            viewHolder.mRssi.setText(testbedDevice.getRssi() + " dBm");
+            viewHolder.mTxvRssi.setText(testbedDevice.getRssi() + " dBm");
         } else {
-            viewHolder.mSignalStrenght.setImageDrawable(
+            viewHolder.mImvSignalStrenght.setImageDrawable(
                     AppCompatResources.getDrawable(
                             mContext, R.drawable.ic_signal_bad_20dp_color_vsb));
-            viewHolder.mRssi.setText(testbedDevice.getRssi() + " dBm");
+            viewHolder.mTxvRssi.setText(testbedDevice.getRssi() + " dBm");
         }
 
         if (!testbedDevice.isTestbedDeviceDiscovered()) {
-            viewHolder.mDatabaseStatus.setImageDrawable(
+            viewHolder.mImvDatabaseStatus.setImageDrawable(
                     AppCompatResources.getDrawable(mContext, android.R.color.transparent));
-            viewHolder.mTestbedDeviceId.setText(null);
-            viewHolder.mPedometerStatus.setImageDrawable(
+            viewHolder.mTxvTestbedDeviceId.setText(null);
+            viewHolder.mImvPedometerStatus.setImageDrawable(
                     AppCompatResources.getDrawable(mContext, android.R.color.transparent));
-            viewHolder.mHeartRateMeterStatus.setImageDrawable(
+            viewHolder.mImvHeartRateMeterStatus.setImageDrawable(
                     AppCompatResources.getDrawable(mContext, android.R.color.transparent));
-            viewHolder.mThermometerStatus.setImageDrawable(
+            viewHolder.mImvThermometerStatus.setImageDrawable(
                     AppCompatResources.getDrawable(mContext, android.R.color.transparent));
         } else {
             if (testbedDevice.getStoredState() == TestbedDevice.STORED_CONSISTENTLY) {
-                viewHolder.mDatabaseStatus.setImageDrawable(
+                viewHolder.mImvDatabaseStatus.setImageDrawable(
                         AppCompatResources.getDrawable(mContext,
                                 R.drawable.ic_database_20dp_color_fei));
             } else if (testbedDevice.getStoredState() == TestbedDevice.NOT_STORED) {
-                viewHolder.mDatabaseStatus.setImageDrawable(
+                viewHolder.mImvDatabaseStatus.setImageDrawable(
                         AppCompatResources.getDrawable(mContext,
                                 R.drawable.ic_database_20dp_color_gray));
             } else {
-                viewHolder.mDatabaseStatus.setImageDrawable(
+                viewHolder.mImvDatabaseStatus.setImageDrawable(
                         AppCompatResources.getDrawable(mContext,
                                 R.drawable.ic_database_20dp_color_red));
             }
@@ -191,34 +192,34 @@ public class TestbedDevicesAdapter extends BaseAdapter {
             String id = String.format("%04X", testbedDevice.getDeviceId());
             id = id.replace("B", "b");
             id = id.replace("D", "d");
-            viewHolder.mTestbedDeviceId.setText(id);
+            viewHolder.mTxvTestbedDeviceId.setText(id);
 
             if (BigInteger.valueOf(testbedDevice.getAvailableSensors()).testBit(2)) {
-                viewHolder.mPedometerStatus.setImageDrawable(
+                viewHolder.mImvPedometerStatus.setImageDrawable(
                         AppCompatResources.getDrawable(mContext,
                                 R.drawable.ic_steps_20dp_color_fei));
             } else {
-                viewHolder.mPedometerStatus.setImageDrawable(
+                viewHolder.mImvPedometerStatus.setImageDrawable(
                         AppCompatResources.getDrawable(mContext,
                                 R.drawable.ic_steps_20dp_color_gray));
             }
 
             if (BigInteger.valueOf(testbedDevice.getAvailableSensors()).testBit(1)) {
-                viewHolder.mHeartRateMeterStatus.setImageDrawable(
+                viewHolder.mImvHeartRateMeterStatus.setImageDrawable(
                         AppCompatResources.getDrawable(mContext,
                                 R.drawable.ic_heart_20dp_color_fei));
             } else {
-                viewHolder.mHeartRateMeterStatus.setImageDrawable(
+                viewHolder.mImvHeartRateMeterStatus.setImageDrawable(
                         AppCompatResources.getDrawable(mContext,
                                 R.drawable.ic_heart_20dp_color_gray));
             }
 
             if (BigInteger.valueOf(testbedDevice.getAvailableSensors()).testBit(0)) {
-                viewHolder.mThermometerStatus.setImageDrawable(
+                viewHolder.mImvThermometerStatus.setImageDrawable(
                         AppCompatResources.getDrawable(mContext,
                                 R.drawable.ic_thermometer_20dp_color_fei));
             } else {
-                viewHolder.mThermometerStatus.setImageDrawable(
+                viewHolder.mImvThermometerStatus.setImageDrawable(
                         AppCompatResources.getDrawable(mContext,
                                 R.drawable.ic_thermometer_20dp_color_gray));
             }
@@ -227,14 +228,14 @@ public class TestbedDevicesAdapter extends BaseAdapter {
     }
 
     static class ViewHolder {
-        TextView mTestbedDeviceName;
-        ImageView mDatabaseStatus;
-        TextView mTestbedDeviceId;
-        ImageView mSignalStrenght;
-        TextView mRssi;
-        ImageView mPedometerStatus;
-        ImageView mHeartRateMeterStatus;
-        ImageView mThermometerStatus;
-        TextView mMacAddress;
+        TextView mTxvTestbedDeviceName;
+        ImageView mImvDatabaseStatus;
+        TextView mTxvTestbedDeviceId;
+        ImageView mImvSignalStrenght;
+        TextView mTxvRssi;
+        ImageView mImvPedometerStatus;
+        ImageView mImvHeartRateMeterStatus;
+        ImageView mImvThermometerStatus;
+        TextView mImvMacAddress;
     }
 }
