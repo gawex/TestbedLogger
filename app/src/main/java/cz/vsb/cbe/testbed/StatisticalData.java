@@ -5,7 +5,7 @@
  * @version 1.00
  * @ide     Android Studio 4.1.2
  * @license GNU GPL v3
- * @brief   StatisticalData
+ * @brief   StatisticalData.java
  * @lastmodify 2021/02/26 12:25:52
  * @verbatim
 ----------------------------------------------------------------------
