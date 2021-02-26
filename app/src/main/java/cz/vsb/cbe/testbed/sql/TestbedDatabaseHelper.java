@@ -5,7 +5,7 @@
  * @version 1.00
  * @ide     Android Studio 4.1.2
  * @license GNU GPL v3
- * @brief   TestbedDatabaseHelper
+ * @brief   TestbedDatabaseHelper.java
  * @lastmodify 2021/02/15 11:10:38
  * @verbatim
 ----------------------------------------------------------------------
