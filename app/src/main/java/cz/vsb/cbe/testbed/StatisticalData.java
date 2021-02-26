@@ -5,8 +5,8 @@
  * @version 1.00
  * @ide     Android Studio 4.1.2
  * @license GNU GPL v3
- * @brief   StatisticData
- * @lastmodify 2021/02/15 12:17:53
+ * @brief   StatisticalData
+ * @lastmodify 2021/02/26 12:25:52
  * @verbatim
 ----------------------------------------------------------------------
 Copyright (C) Bc. Lukas Tatarin, 2021
@@ -32,7 +32,7 @@ import java.util.List;
 
 import cz.vsb.cbe.testbed.sql.Record;
 
-public class StatisticData {
+public class StatisticalData {
 
     private final int mDataSetSize;
     private final float mMeanValue;
@@ -44,15 +44,27 @@ public class StatisticData {
     private final float mStandardDeviation;
     private float mDataSetSum;
 
-    public StatisticData(List<Record> records) {
+    public StatisticalData(List<Record> records) {
         Collections.sort(records);
 
         this.mDataSetSum = 0;
         this.mDataSetSize = records.size();
         this.mMinValue = records.get(0);
-        this.mFirstQuartile = records.get((int) Math.ceil((float) records.size() * 25 / 100));
-        this.mMedian = records.get((int) Math.ceil((float) records.size() * 50 / 100));
-        this.mThirdQuartile = records.get((int) Math.ceil((float) records.size() * 75 / 100));
+        if ((int) Math.ceil((float) records.size() * 25 / 100) >= records.size()) {
+            this.mFirstQuartile = records.get(records.size() - 1);
+        } else {
+            this.mFirstQuartile = records.get((int) Math.ceil((float) records.size() * 25 / 100));
+        }
+        if ((int) Math.ceil((float) records.size() * 50 / 100) >= records.size()) {
+            this.mMedian = records.get(records.size() - 1);
+        } else {
+            this.mMedian = records.get((int) Math.ceil((float) records.size() * 50 / 100));
+        }
+        if ((int) Math.ceil((float) records.size() * 75 / 100) >= records.size()) {
+            this.mThirdQuartile = records.get(records.size() - 1);
+        } else {
+            this.mThirdQuartile = records.get((int) Math.ceil((float) records.size() * 75 / 100));
+        }
         this.mMaxValue = records.get(records.size() - 1);
         float variance;
 
