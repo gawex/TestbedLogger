@@ -5,8 +5,8 @@
  * @version 1.00
  * @ide     Android Studio 4.1.2
  * @license GNU GPL v3
- * @brief   RecordsListAdapter.java
- * @lastmodify 2021/02/25 16:30:08
+ * @brief   RecordsAdapter.java
+ * @lastmodify 2021/02/26 13:14:25
  * @verbatim
 ----------------------------------------------------------------------
 Copyright (C) Bc. Lukas Tatarin, 2021
@@ -40,13 +40,13 @@ import java.util.List;
 import cz.vsb.cbe.testbed.chart.axisValueFormater.RecordValueFormater;
 import cz.vsb.cbe.testbed.sql.Record;
 
-public class RecodrsListAdapter extends BaseAdapter {
+public class RecodrsAdapter extends BaseAdapter {
 
     private final LayoutInflater mLayoutInflater;
     private final List<Record> mRecords;
     private int mSensorType;
 
-    public RecodrsListAdapter(LayoutInflater inflater) {
+    public RecodrsAdapter(LayoutInflater inflater) {
         mLayoutInflater = inflater;
         mRecords = new ArrayList<>();
     }
@@ -81,34 +81,37 @@ public class RecodrsListAdapter extends BaseAdapter {
     public View getView(int position, View view, ViewGroup parent) {
         ViewHolder viewHolder;
         if (view == null) {
-            view = mLayoutInflater.inflate(R.layout.list_item_database, null);
+            view = mLayoutInflater.inflate(R.layout.list_item_record, null);
             viewHolder = new ViewHolder();
-            viewHolder.value = view.findViewById(R.id.value);
-            viewHolder.timeStamp = view.findViewById(R.id.textView4);
+            viewHolder.mValue = view.findViewById(R.id.list_item_record_txv_value);
+            viewHolder.mTimeStamp = view.findViewById(R.id.list_item_record_txv_time_stamp);
             view.setTag(viewHolder);
         } else {
             viewHolder = (ViewHolder) view.getTag();
         }
         Record record = mRecords.get(position);
         switch (mSensorType) {
-            case R.id.navigation_pedometer:
-                viewHolder.value.setText(RecordValueFormater.formatSteps("###,###", record.getValue()));
+            case R.id.pedometer:
+                viewHolder.mValue.setText(
+                        RecordValueFormater.formatSteps("###,###", record.getValue()));
                 break;
 
-            case R.id.navigation_heart_rate:
-                viewHolder.value.setText(RecordValueFormater.formatHearRate("###", record.getValue()));
+            case R.id.heart_rate:
+                viewHolder.mValue.setText(
+                        RecordValueFormater.formatHearRate("###", record.getValue()));
                 break;
 
-            case R.id.navigation_temperature:
-                viewHolder.value.setText(RecordValueFormater.formatTemperature("##0.00", record.getValue()));
+            case R.id.temperature:
+                viewHolder.mValue.setText(
+                        RecordValueFormater.formatTemperature("##0.00", record.getValue()));
                 break;
         }
-        viewHolder.timeStamp.setText(RecordValueFormater.formatTimeStamp(record.getTimeStamp()));
+        viewHolder.mTimeStamp.setText(RecordValueFormater.formatTimeStamp(record.getTimeStamp()));
         return view;
     }
 
     static class ViewHolder {
-        TextView value;
-        TextView timeStamp;
+        TextView mValue;
+        TextView mTimeStamp;
     }
 }
