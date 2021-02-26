@@ -31,11 +31,12 @@ import android.bluetooth.BluetoothDevice;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.Objects;
 
 public class TestbedDevice implements Serializable {
 
     public static final String TESTBED_DEVICE =
-            TestbedDevice.class.getPackage().toString() + ".TESTBED_DEVICE";
+            Objects.requireNonNull(TestbedDevice.class.getPackage()).toString() + ".TESTBED_DEVICE";
 
     public static final Integer NOT_STORED = 0;
     public static final Integer STORED_BUT_MODIFIED = 1;
@@ -68,6 +69,7 @@ public class TestbedDevice implements Serializable {
         mDeTimeStamp = new Date(deTimeStamp);
     }
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean isTestbedDeviceDiscovered() {
         return mIsDeviceDiscovered;
     }
