@@ -5,7 +5,7 @@
  * @version 1.00
  * @ide     Android Studio 4.1.2
  * @license GNU GPL v3
- * @brief   TestbedDeviceListAdapter.java
+ * @brief   TestbedDeviceAdapter.java
  * @lastmodify 2021/02/126 11:56:50
  * @verbatim
 ----------------------------------------------------------------------
@@ -44,7 +44,7 @@ import java.util.List;
 
 import cz.vsb.cbe.testbed.sql.TestbedDevice;
 
-public class TestbedDevicesListAdapter extends BaseAdapter {
+public class TestbedDevicesAdapter extends BaseAdapter {
 
     private static final int DEFAULT_POSITION_VALUE = -1;
 
@@ -56,7 +56,7 @@ public class TestbedDevicesListAdapter extends BaseAdapter {
     private final List<TestbedDevice> mTestbedDevices;
     private final Context mContext;
 
-    public TestbedDevicesListAdapter(LayoutInflater layoutInflater, Context context) {
+    public TestbedDevicesAdapter(LayoutInflater layoutInflater, Context context) {
         mLayoutInflater = layoutInflater;
         mTestbedDevices = new ArrayList<>();
         mContext = context;
