@@ -6,7 +6,7 @@
  * @ide     Android Studio 4.1.2
  * @license GNU GPL v3
  * @brief   TestbedDatabase
- * @lastmodify 2021/02/15 12:11:40
+ * @lastmodify 2021/02/26 14:10:40
  * @verbatim
 ----------------------------------------------------------------------
 Copyright (C) Bc. Lukas Tatarin, 2021
@@ -35,15 +35,130 @@ import android.database.sqlite.SQLiteDatabase;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
-import cz.vsb.cbe.testbed.BluetoothLeService;
+import cz.vsb.cbe.testbed.chart.Result;
 
+@SuppressWarnings({"unchecked", "rawtypes"})
 public class TestbedDatabase {
 
-    private final Context mContext;
+    private final Executor mExecutor;
 
     public TestbedDatabase(Context context) {
         mContext = context;
+        mExecutor = Executors.newSingleThreadExecutor();
+
+    }
+
+    private final Context mContext;
+
+    public void insertRecord(TestbedDevice testbedDevice, String dataType, float value,
+                             OnInsertListener onInsertListener) {
+        mExecutor.execute(() -> {
+            String tableName = TestbedDatabaseHelper.Data.TABLE_NAME;
+            ContentValues newRecord = new ContentValues();
+            newRecord.put(TestbedDatabaseHelper.Data.COLUMN_NAME_DEVICE_ID,
+                    testbedDevice.getDeviceId());
+            newRecord.put(TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_KEY,
+                    dataType);
+            newRecord.put(TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_VALUE, value);
+            newRecord.put(TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP,
+                    System.currentTimeMillis());
+            getWritableDatabase().insert(tableName, null, newRecord);
+            onInsertListener.onInsertDone(new Result.Success<>(value));
+        });
+    }
+
+    public void selectRecordsBetweenTimeStamp(TestbedDevice testbedDevice, String dataType,
+                                              Date[] intervals, SORT_BY sort_by,
+                                              SORT_ORDER sort_order,
+                                              OnSelectListener onSelectListener) {
+        mExecutor.execute(() -> {
+            try {
+                String tableName = TestbedDatabaseHelper.Data.TABLE_NAME;
+                String[] columns = new String[]{
+                        TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_ID,
+                        TestbedDatabaseHelper.Data.COLUMN_NAME_DEVICE_ID,
+                        TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_KEY,
+                        TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_VALUE,
+                        TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP};
+                String selection = TestbedDatabaseHelper.Data.COLUMN_NAME_DEVICE_ID +
+                        " = ? AND " +
+                        TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_KEY + " = ? AND " +
+                        TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP + " BETWEEN ? AND ?";
+                String[] selectionArgs = new String[]{Integer.toString(
+                        testbedDevice.getDeviceId()),
+                        dataType, Long.toString(intervals[0].getTime()),
+                        Long.toString(intervals[1].getTime())};
+                String sortBy;
+                switch (sort_by) {
+                    case VALUE:
+                        sortBy = TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_VALUE;
+                        break;
+
+                    default:
+                    case TIME:
+                        sortBy = TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP;
+                        break;
+                }
+                String sortOrder;
+                switch (sort_order) {
+                    default:
+                    case ASC:
+                        sortOrder = " ASC";
+                        break;
+
+                    case DESC:
+                        sortOrder = " DESC";
+                        break;
+                }
+
+                onSelectListener.onSelectDone(new Result.Success<>(
+                        getRecordsFromCursor(getReadableDatabase().query(
+                                tableName, columns, selection, selectionArgs, null,
+                                null, sortBy + sortOrder))));
+            } catch (Exception e) {
+                //noinspection unchecked
+                onSelectListener.onSelectDone(new Result.Error<>(e));
+            }
+        });
+    }
+
+    public Record selectFirstRecord(TestbedDevice testbedDevice, String dataType)
+            throws EmptyCursorException {
+        String tableName = TestbedDatabaseHelper.Data.TABLE_NAME;
+        String[] columns = new String[]{
+                TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_ID,
+                TestbedDatabaseHelper.Data.COLUMN_NAME_DEVICE_ID,
+                TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_KEY,
+                TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_VALUE,
+                TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP};
+        String selection = TestbedDatabaseHelper.Data.COLUMN_NAME_DEVICE_ID + " = ? AND " +
+                TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_KEY + " = ?";
+        String[] selectionArgs = new String[]{Integer.toString(testbedDevice.getDeviceId()),
+                dataType};
+        return getRecordFromCursor(getReadableDatabase().query(
+                tableName, columns, selection, selectionArgs, null, null,
+                TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP + " ASC LIMIT 1"));
+    }
+
+    public Record selectLastRecord(TestbedDevice testbedDevice, String dataType)
+            throws EmptyCursorException {
+        String tableName = TestbedDatabaseHelper.Data.TABLE_NAME;
+        String[] columns = new String[]{
+                TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_ID,
+                TestbedDatabaseHelper.Data.COLUMN_NAME_DEVICE_ID,
+                TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_KEY,
+                TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_VALUE,
+                TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP};
+        String selection = TestbedDatabaseHelper.Data.COLUMN_NAME_DEVICE_ID + " = ? AND " +
+                TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_KEY + " = ?";
+        String[] selectionArgs = new String[]{Integer.toString(testbedDevice.getDeviceId()),
+                dataType};
+        return getRecordFromCursor(getReadableDatabase().query(
+                tableName, columns, selection, selectionArgs, null, null,
+                TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP + " DESC LIMIT 1"));
     }
 
     private SQLiteDatabase getReadableDatabase() {
@@ -143,16 +258,34 @@ public class TestbedDatabase {
         }
     }
 
-    public void insertRecord(TestbedDevice testbedDevice, String dataType, float value) {
-        String tableName = TestbedDatabaseHelper.Data.TABLE_NAME;
-        ContentValues newRecord = new ContentValues();
-        newRecord.put(TestbedDatabaseHelper.Data.COLUMN_NAME_DEVICE_ID, testbedDevice.getDeviceId());
-        newRecord.put(TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_KEY, dataType);
-        newRecord.put(TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_VALUE, value);
-        newRecord.put(TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP, System.currentTimeMillis());
-        if (!(dataType.equals(BluetoothLeService.HEART_RATE_DATA) && value == 0)) {
-            getWritableDatabase().insert(tableName, null, newRecord);
-        }
+    public void selectFirstRecordLessThanTimeStamp(TestbedDevice testbedDevice, String dataType,
+                                                   Date limitDate,
+                                                   OnSelectListener onSelectListener) {
+        mExecutor.execute(() -> {
+            try {
+                String tableName = TestbedDatabaseHelper.Data.TABLE_NAME;
+                String[] columns = new String[]{
+                        TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_ID,
+                        TestbedDatabaseHelper.Data.COLUMN_NAME_DEVICE_ID,
+                        TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_KEY,
+                        TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_VALUE,
+                        TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP};
+                String selection = TestbedDatabaseHelper.Data.COLUMN_NAME_DEVICE_ID +
+                        " = ? AND " +
+                        TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_KEY + " = ? AND " +
+                        TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP + " < ?";
+                String[] selectionArgs = new String[]{
+                        Integer.toString(testbedDevice.getDeviceId()), dataType,
+                        Long.toString(limitDate.getTime())};
+                onSelectListener.onSelectDone(new Result.Success<>(getRecordFromCursor(
+                        getReadableDatabase().query(tableName, columns, selection,
+                                selectionArgs, null, null,
+                                TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP +
+                                        " DESC LIMIT 1"))));
+            } catch (EmptyCursorException e) {
+                onSelectListener.onSelectDone(new Result.Error<>(e));
+            }
+        });
     }
 
     public List<Record> selectAllRecords(TestbedDevice testbedDevice, String dataType)
@@ -175,68 +308,24 @@ public class TestbedDatabase {
                 TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP + " ASC"));
     }
 
-    public List<Record> selectRecordsBetweenTimeStamp(TestbedDevice testbedDevice, String dataType,
-                                                      Date[] intervals, SORT_BY sort_by,
-                                                      SORT_ORDER sort_order)
-            throws EmptyCursorException {
-        String tableName = TestbedDatabaseHelper.Data.TABLE_NAME;
-        String[] columns = new String[]{
-                TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_ID,
-                TestbedDatabaseHelper.Data.COLUMN_NAME_DEVICE_ID,
-                TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_KEY,
-                TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_VALUE,
-                TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP};
-        String selection = TestbedDatabaseHelper.Data.COLUMN_NAME_DEVICE_ID + " = ? AND " +
-                TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_KEY + " = ? AND " +
-                TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP + " BETWEEN ? AND ?";
-        String[] selectionArgs = new String[]{Integer.toString(testbedDevice.getDeviceId()),
-                dataType, Long.toString(intervals[0].getTime()), Long.toString(intervals[1].getTime())};
-        String sortBy;
-        switch (sort_by) {
-            case VALUE:
-                sortBy = TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_VALUE;
-                break;
-
-            default:
-            case TIME:
-                sortBy = TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP;
-                break;
-        }
-        String sortOrder;
-        switch (sort_order) {
-            default:
-            case ASC:
-                sortOrder = " ASC";
-                break;
-
-            case DESC:
-                sortOrder = " DESC";
-                break;
-        }
-        return getRecordsFromCursor(getReadableDatabase().query(
-                tableName, columns, selection, selectionArgs, null, null,
-                sortBy + sortOrder));
+    public enum SORT_BY {
+        VALUE,
+        TIME,
+        DEFAULT
     }
 
-    public Record selectFirstRecordLessThanTimeStamp(TestbedDevice testbedDevice, String dataType,
-                                                     Date limitDate)
-            throws EmptyCursorException {
-        String tableName = TestbedDatabaseHelper.Data.TABLE_NAME;
-        String[] columns = new String[]{
-                TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_ID,
-                TestbedDatabaseHelper.Data.COLUMN_NAME_DEVICE_ID,
-                TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_KEY,
-                TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_VALUE,
-                TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP};
-        String selection = TestbedDatabaseHelper.Data.COLUMN_NAME_DEVICE_ID + " = ? AND " +
-                TestbedDatabaseHelper.Data.COLUMN_NAME_DATA_KEY + " = ? AND " +
-                TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP + " < ?";
-        String[] selectionArgs = new String[]{Integer.toString(testbedDevice.getDeviceId()),
-                dataType,
-                Long.toString(limitDate.getTime())};
-        return getRecordFromCursor(getReadableDatabase().query(
-                tableName, columns, selection, selectionArgs, null, null,
-                TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP + " DESC LIMIT 1"));
+    public enum SORT_ORDER {
+        ASC,
+        DESC,
+        DEFAULT
+    }
+
+    public interface OnInsertListener<T> {
+        void onInsertDone(Result<T> result);
+    }
+
+    public interface OnSelectListener<T> {
+        void onSelectDone(Result<T> result);
     }
 
     public Record getFirstRecord(List<Record> records) {
@@ -355,18 +444,6 @@ public class TestbedDatabase {
         getReadableDatabase().close();
         getWritableDatabase().close();
         TestbedDatabaseHelper.getInstance(mContext).close();
-    }
-
-    public enum SORT_BY {
-        VALUE,
-        TIME,
-        DEFAULT
-    }
-
-    public enum SORT_ORDER {
-        ASC,
-        DESC,
-        DEFAULT
     }
 
     @SuppressWarnings("InnerClassMayBeStatic")
