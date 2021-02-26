@@ -1,0 +1,31 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="20dp"
+    android:height="20dp"
+    android:autoMirrored="true"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <path
+        android:fillColor="@color/ColorFei"
+        android:pathData="M24,0C10.745,0 0,10.746 0,24c0,13.255 10.745,24 24,24s24,-10.745 24,-24C48,10.746 37.255,0 24,0zM24,44C12.954,44 4,35.046 4,24S12.954,4 24,4s20,8.954 20,20S35.046,44 24,44z" />
+    <path
+        android:fillColor="@color/ColorFei"
+        android:pathData="M22.5,7h3v3h-3z" />
+    <path
+        android:fillColor="@color/ColorFei"
+        android:pathData="M7,22.5h3v3h-3z" />
+    <path
+        android:fillColor="@color/ColorFei"
+        android:pathData="M35.0404,10.8368l2.121,2.1216l-2.1216,2.121l-2.121,-2.1216z" />
+    <path
+        android:fillColor="@color/ColorFei"
+        android:pathData="M13.1226,37.0005l-2.1207,-2.1219l2.1219,-2.1207l2.1207,2.1219z" />
+    <path
+        android:fillColor="@color/ColorFei"
+        android:pathData="M13.0402,10.9186l2.1213,2.1213l-2.1213,2.1213l-2.1213,-2.1213z" />
+    <path
+        android:fillColor="@color/ColorFei"
+        android:pathData="M34.9596,37.0825l-2.1213,-2.1213l2.1213,-2.1213l2.1213,2.1213z" />
+    <path
+        android:fillColor="@color/ColorFei"
+        android:pathData="M38,22.5l-15.5,0l0,1.5l0,1.5l0,12.5l0,3l3,0l0,-3l0,-12.5l12.5,0l3,0l0,-3z" />
+</vector>
