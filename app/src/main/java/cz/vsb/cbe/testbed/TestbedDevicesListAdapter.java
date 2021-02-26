@@ -1,5 +1,33 @@
+/*
+  @author  Bc. Lukas Tatarin
+ * @supervisor Ing. Jaromir Konecny, Ph.D.
+ * @email   lukas@tatarin.cz
+ * @version 1.00
+ * @ide     Android Studio 4.1.2
+ * @license GNU GPL v3
+ * @brief   TestbedDeviceListAdapter.java
+ * @lastmodify 2021/02/126 11:56:50
+ * @verbatim
+----------------------------------------------------------------------
+Copyright (C) Bc. Lukas Tatarin, 2021
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+See the GNU General Public License for more details.
+
+<http://www.gnu.org/licenses/>
+ @endverbatim
+ */
+
 package cz.vsb.cbe.testbed;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -8,67 +36,74 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.appcompat.content.res.AppCompatResources;
+
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
+import cz.vsb.cbe.testbed.sql.TestbedDevice;
+
 public class TestbedDevicesListAdapter extends BaseAdapter {
+
+    private static final int DEFAULT_POSITION_VALUE = -1;
 
     private static final int EXCELLENT_SIGNAL_LIMIT = -70;
     private static final int GOOD_SIGNAL_LIMIT = -85;
     private static final int POOR_SIGNAL_LIMIT = -100;
 
-    private LayoutInflater LayoutInflater;
-    private List<TestbedDevice> TestbedDevices;
-    private Context Context;
-    private int storedStatus;
+    private final LayoutInflater mLayoutInflater;
+    private final List<TestbedDevice> mTestbedDevices;
+    private final Context mContext;
 
-    public TestbedDevicesListAdapter(LayoutInflater inflater, Context context) {
-        LayoutInflater = inflater ;
-        TestbedDevices = new ArrayList<>();
-        Context = context;
+    public TestbedDevicesListAdapter(LayoutInflater layoutInflater, Context context) {
+        mLayoutInflater = layoutInflater;
+        mTestbedDevices = new ArrayList<>();
+        mContext = context;
     }
 
-    public void setDevice(TestbedDevice testbedDevice){
+    public void setTestbedDevice(TestbedDevice testbedDevice) {
         boolean existAtLeastOneTestBedDevice = false;
-        int position = -1;
-        for(int index = 0; index < TestbedDevices.size(); index++) {
-            if (TestbedDevices.get(index).getBluetoothDevice().getAddress().equals(testbedDevice.getBluetoothDevice().getAddress())) {
+        int position = DEFAULT_POSITION_VALUE;
+        for (int index = 0; index < mTestbedDevices.size(); index++) {
+            if (mTestbedDevices.get(index).getMacAddress().equals(testbedDevice.getMacAddress())) {
                 existAtLeastOneTestBedDevice = true;
                 position = index;
                 break;
             }
         }
 
-        if(existAtLeastOneTestBedDevice && position != -1)
-            TestbedDevices.set(position, testbedDevice);
-        else
-            TestbedDevices.add(testbedDevice);
+        if (existAtLeastOneTestBedDevice) {
+            mTestbedDevices.set(position, testbedDevice);
+        } else {
+            mTestbedDevices.add(testbedDevice);
+        }
     }
 
-    public void removeDevices(List<TestbedDevice> testbedDevices){
-            TestbedDevices.removeAll(testbedDevices);
+    public void removeTestbedDevices(List<TestbedDevice> testbedDevices) {
+        mTestbedDevices.removeAll(testbedDevices);
     }
 
-    public TestbedDevice getDevice(int position) {
-        return TestbedDevices.get(position);
+    public TestbedDevice getTestbedDevice(int position) {
+        return mTestbedDevices.get(position);
     }
 
-    public List<TestbedDevice> getDevices(){
-        return TestbedDevices;
+    public List<TestbedDevice> getTestbedDevices() {
+        return mTestbedDevices;
     }
 
     public void clear() {
-        TestbedDevices.clear();
+        mTestbedDevices.clear();
     }
 
     @Override
     public int getCount() {
-        return TestbedDevices.size();
+        return mTestbedDevices.size();
     }
 
     @Override
     public Object getItem(int i) {
-        return TestbedDevices.get(i);
+        return mTestbedDevices.get(i);
     }
 
     @Override
@@ -76,139 +111,130 @@ public class TestbedDevicesListAdapter extends BaseAdapter {
         return i;
     }
 
+    @SuppressLint({"InflateParams", "SetTextI18n"})
     @Override
     public View getView (int position, View view, ViewGroup parent){
         ViewHolder viewHolder ;
-        // General ListView optimization code .
         if (view == null) {
-            view = LayoutInflater.inflate(R.layout.list_item_device, null);
+            view = mLayoutInflater.inflate(R.layout.list_item_device, null);
             viewHolder = new ViewHolder();
-            viewHolder.name = (TextView) view.findViewById(R.id.devices_list_txv_name);
-            viewHolder.databaseIcon = (ImageView) view.findViewById(R.id.devices_list_imv_database);
-            viewHolder.id = (TextView) view.findViewById(R.id.devices_list_txv_id);
-            viewHolder.signalStrenght = (ImageView) view.findViewById(R.id.device_list_imv_signal_strenght);
-            viewHolder.rssi = (TextView) view.findViewById(R.id.device_list_txv_rssi);
-            viewHolder.pedometer = (ImageView) view.findViewById(R.id.devices_list_imv_pedometer);
-            viewHolder.heartRateMeter = (ImageView) view.findViewById(R.id.devices_list_imv_heart_rate_meter);
-            viewHolder.thermometer= (ImageView) view.findViewById(R.id.devices_list_imv_thermometer);
-            viewHolder.macAddress = (TextView) view.findViewById(R.id.devices_list_txv_mac_address);
+            viewHolder.mTestbedDeviceName =
+                    view.findViewById(R.id.list_item_device_txv_device_name);
+            viewHolder.mDatabaseStatus = view.findViewById(R.id.list_item_device_imv_stored_status);
+            viewHolder.mTestbedDeviceId = view.findViewById(R.id.list_item_device_txt_device_id);
+            viewHolder.mSignalStrenght =
+                    view.findViewById(R.id.list_item_device_imv_signal_strength);
+            viewHolder.mRssi = view.findViewById(R.id.list_item_device_txt_rssi);
+            viewHolder.mPedometerStatus = view.findViewById(R.id.list_item_device_imv_pedometer);
+            viewHolder.mHeartRateMeterStatus =
+                    view.findViewById(R.id.list_item_device_imv_heart_rate_meter);
+            viewHolder.mThermometerStatus =
+                    view.findViewById(R.id.list_item_device_imv_thermometer);
+            viewHolder.mMacAddress = view.findViewById(R.id.list_item_device_txv_mac_address);
             view.setTag(viewHolder);
-        }else{
+        } else {
             viewHolder = (ViewHolder) view.getTag();
         }
-        TestbedDevice item = TestbedDevices.get(position);
-        viewHolder.name.setText(item.getBluetoothDevice().getName());
-        if(item.getDeviceId() == 0x1FFFF) {
-            viewHolder.databaseIcon.setImageDrawable(Context.getDrawable(android.R.color.transparent));
-            viewHolder.id.setText(null);
+        TestbedDevice testbedDevice = mTestbedDevices.get(position);
+        viewHolder.mTestbedDeviceName.setText(testbedDevice.getName());
+        viewHolder.mMacAddress.setText(testbedDevice.getMacAddress());
+
+        if (testbedDevice.getRssi() > EXCELLENT_SIGNAL_LIMIT) {
+            viewHolder.mSignalStrenght.setImageDrawable(
+                    AppCompatResources.getDrawable(
+                            mContext, R.drawable.ic_signal_excelent_20dp_color_vsb));
+            viewHolder.mRssi.setText(testbedDevice.getRssi() + " dBm");
+        } else if (testbedDevice.getRssi() <= EXCELLENT_SIGNAL_LIMIT &&
+                testbedDevice.getRssi() >= GOOD_SIGNAL_LIMIT) {
+            viewHolder.mSignalStrenght.setImageDrawable(
+                    AppCompatResources.getDrawable(
+                            mContext, R.drawable.ic_signal_good_20dp_color_vsb));
+            viewHolder.mRssi.setText(testbedDevice.getRssi() + " dBm");
+        } else if (testbedDevice.getRssi() < GOOD_SIGNAL_LIMIT &&
+                testbedDevice.getRssi() >= POOR_SIGNAL_LIMIT) {
+            viewHolder.mSignalStrenght.setImageDrawable(
+                    AppCompatResources.getDrawable(
+                            mContext, R.drawable.ic_signal_poor_20dp_color_vsb));
+            viewHolder.mRssi.setText(testbedDevice.getRssi() + " dBm");
         } else {
-            if (item.getStoredStatus() == TestbedDevice.STORED_CONSISTENTLY)
-                viewHolder.databaseIcon.setImageDrawable(Context.getDrawable(R.drawable.ic_database_known));
-            else if (item.getStoredStatus() == TestbedDevice.STORED_BUT_MODIFIED)
-                viewHolder.databaseIcon.setImageDrawable((Context.getDrawable(R.drawable.ic_database_crashed)));
-            else
-                viewHolder.databaseIcon.setImageDrawable(Context.getDrawable(R.drawable.ic_database_unknown));
-            String id = String.format("%04X", item.getDeviceId());
-            id = id.replace("B","b");
-            id = id.replace("D","d");
-            viewHolder.id.setText(id);
+            viewHolder.mSignalStrenght.setImageDrawable(
+                    AppCompatResources.getDrawable(
+                            mContext, R.drawable.ic_signal_bad_20dp_color_vsb));
+            viewHolder.mRssi.setText(testbedDevice.getRssi() + " dBm");
         }
 
-        if (item.getRssi() > EXCELLENT_SIGNAL_LIMIT){
-            viewHolder.signalStrenght.setImageDrawable(Context.getDrawable(R.drawable.ic_signal_excelent));
-            viewHolder.rssi.setText(item.getRssi() + " dBm");
-        } else if (item.getRssi() <= EXCELLENT_SIGNAL_LIMIT && item.getRssi() >= GOOD_SIGNAL_LIMIT){
-            viewHolder.signalStrenght.setImageDrawable(Context.getDrawable(R.drawable.ic_signal_good));
-            viewHolder.rssi.setText(item.getRssi() + " dBm");
-        } else if (item.getRssi() < GOOD_SIGNAL_LIMIT && item.getRssi() >= POOR_SIGNAL_LIMIT){
-            viewHolder.signalStrenght.setImageDrawable(Context.getDrawable(R.drawable.ic_signal_poor));
-            viewHolder.rssi.setText(item.getRssi() + " dBm");
+        if (!testbedDevice.isTestbedDeviceDiscovered()) {
+            viewHolder.mDatabaseStatus.setImageDrawable(
+                    AppCompatResources.getDrawable(mContext, android.R.color.transparent));
+            viewHolder.mTestbedDeviceId.setText(null);
+            viewHolder.mPedometerStatus.setImageDrawable(
+                    AppCompatResources.getDrawable(mContext, android.R.color.transparent));
+            viewHolder.mHeartRateMeterStatus.setImageDrawable(
+                    AppCompatResources.getDrawable(mContext, android.R.color.transparent));
+            viewHolder.mThermometerStatus.setImageDrawable(
+                    AppCompatResources.getDrawable(mContext, android.R.color.transparent));
         } else {
-            viewHolder.signalStrenght.setImageDrawable(Context.getDrawable(R.drawable.ic_singnal_no_signal));
-            viewHolder.rssi.setText(item.getRssi() + " dBm");
-        }
-
-        viewHolder.macAddress.setText(item.getBluetoothDevice().getAddress());
-        switch (item.getAvailableSensors()) {
-                case 0b000: {
-                    viewHolder.pedometer.setImageDrawable(Context.getDrawable(R.drawable.ic_pedometer_no_available));
-                    viewHolder.heartRateMeter.setImageDrawable(Context.getDrawable(R.drawable.ic_heart_rate_meter_no_available));
-                    viewHolder.thermometer.setImageDrawable(Context.getDrawable(R.drawable.ic_thermometer_no_available));
-                }
-                break;
-
-                case 0b001: {
-                    viewHolder.pedometer.setImageDrawable(Context.getDrawable(R.drawable.ic_pedometer_no_available));
-                    viewHolder.heartRateMeter.setImageDrawable(Context.getDrawable(R.drawable.ic_heart_rate_meter_no_available));
-                    viewHolder.thermometer.setImageDrawable(Context.getDrawable(R.drawable.ic_thermometer_available));
-                }
-                break;
-
-                case 0b010: {
-                    viewHolder.pedometer.setImageDrawable(Context.getDrawable(R.drawable.ic_pedometer_no_available));
-                    viewHolder.heartRateMeter.setImageDrawable(Context.getDrawable(R.drawable.ic_heart_rate_meter_available));
-                    viewHolder.thermometer.setImageDrawable(Context.getDrawable(R.drawable.ic_thermometer_no_available));
-                }
-                break;
-
-                case 0b011: {
-                    viewHolder.pedometer.setImageDrawable(Context.getDrawable(R.drawable.ic_pedometer_no_available));
-                    viewHolder.heartRateMeter.setImageDrawable(Context.getDrawable(R.drawable.ic_heart_rate_meter_available));
-                    viewHolder.thermometer.setImageDrawable(Context.getDrawable(R.drawable.ic_thermometer_available));
-                }
-                break;
-
-                case 0b100: {
-                    viewHolder.pedometer.setImageDrawable(Context.getDrawable(R.drawable.ic_pedometer_available));
-                    viewHolder.heartRateMeter.setImageDrawable(Context.getDrawable(R.drawable.ic_heart_rate_meter_no_available));
-                    viewHolder.thermometer.setImageDrawable(Context.getDrawable(R.drawable.ic_thermometer_no_available));
-                }
-                break;
-
-                case 0b101: {
-                    viewHolder.pedometer.setImageDrawable(Context.getDrawable(R.drawable.ic_pedometer_available));
-                    viewHolder.heartRateMeter.setImageDrawable(Context.getDrawable(R.drawable.ic_heart_rate_meter_no_available));
-                    viewHolder.thermometer.setImageDrawable(Context.getDrawable(R.drawable.ic_thermometer_available));
-                }
-                break;
-
-                case 0b110: {
-                    viewHolder.pedometer.setImageDrawable(Context.getDrawable(R.drawable.ic_pedometer_available));
-                    viewHolder.heartRateMeter.setImageDrawable(Context.getDrawable(R.drawable.ic_heart_rate_meter_available));
-                    viewHolder.thermometer.setImageDrawable(Context.getDrawable(R.drawable.ic_thermometer_no_available));
-                }
-                break;
-
-                case 0b111: {
-                    viewHolder.pedometer.setImageDrawable(Context.getDrawable(R.drawable.ic_pedometer_available));
-                    viewHolder.heartRateMeter.setImageDrawable(Context.getDrawable(R.drawable.ic_heart_rate_meter_available));
-                    viewHolder.thermometer.setImageDrawable(Context.getDrawable(R.drawable.ic_thermometer_available));
-                }
-                break;
-
-                default: {
-                    viewHolder.pedometer.setImageDrawable(Context.getDrawable(android.R.color.transparent));
-                    viewHolder.heartRateMeter.setImageDrawable(Context.getDrawable(android.R.color.transparent));
-                    viewHolder.thermometer.setImageDrawable(Context.getDrawable(android.R.color.transparent));
-                }
-                break;
+            if (testbedDevice.getStoredState() == TestbedDevice.STORED_CONSISTENTLY) {
+                viewHolder.mDatabaseStatus.setImageDrawable(
+                        AppCompatResources.getDrawable(mContext,
+                                R.drawable.ic_database_20dp_color_fei));
+            } else if (testbedDevice.getStoredState() == TestbedDevice.NOT_STORED) {
+                viewHolder.mDatabaseStatus.setImageDrawable(
+                        AppCompatResources.getDrawable(mContext,
+                                R.drawable.ic_database_20dp_color_gray));
+            } else {
+                viewHolder.mDatabaseStatus.setImageDrawable(
+                        AppCompatResources.getDrawable(mContext,
+                                R.drawable.ic_database_20dp_color_red));
             }
 
-        //viewHolder.rssi.setch
+            String id = String.format("%04X", testbedDevice.getDeviceId());
+            id = id.replace("B", "b");
+            id = id.replace("D", "d");
+            viewHolder.mTestbedDeviceId.setText(id);
 
+            if (BigInteger.valueOf(testbedDevice.getAvailableSensors()).testBit(2)) {
+                viewHolder.mPedometerStatus.setImageDrawable(
+                        AppCompatResources.getDrawable(mContext,
+                                R.drawable.ic_steps_20dp_color_fei));
+            } else {
+                viewHolder.mPedometerStatus.setImageDrawable(
+                        AppCompatResources.getDrawable(mContext,
+                                R.drawable.ic_steps_20dp_color_gray));
+            }
+
+            if (BigInteger.valueOf(testbedDevice.getAvailableSensors()).testBit(1)) {
+                viewHolder.mHeartRateMeterStatus.setImageDrawable(
+                        AppCompatResources.getDrawable(mContext,
+                                R.drawable.ic_heart_20dp_color_fei));
+            } else {
+                viewHolder.mHeartRateMeterStatus.setImageDrawable(
+                        AppCompatResources.getDrawable(mContext,
+                                R.drawable.ic_heart_20dp_color_gray));
+            }
+
+            if (BigInteger.valueOf(testbedDevice.getAvailableSensors()).testBit(0)) {
+                viewHolder.mThermometerStatus.setImageDrawable(
+                        AppCompatResources.getDrawable(mContext,
+                                R.drawable.ic_thermometer_20dp_color_fei));
+            } else {
+                viewHolder.mThermometerStatus.setImageDrawable(
+                        AppCompatResources.getDrawable(mContext,
+                                R.drawable.ic_thermometer_20dp_color_gray));
+            }
+        }
         return view;
     }
 
     static class ViewHolder {
-        TextView name;
-        ImageView databaseIcon;
-        TextView id;
-        ImageView signalStrenght;
-        TextView rssi;
-        ImageView pedometer;
-        ImageView heartRateMeter;
-        ImageView thermometer;
-        TextView macAddress;
-
+        TextView mTestbedDeviceName;
+        ImageView mDatabaseStatus;
+        TextView mTestbedDeviceId;
+        ImageView mSignalStrenght;
+        TextView mRssi;
+        ImageView mPedometerStatus;
+        ImageView mHeartRateMeterStatus;
+        ImageView mThermometerStatus;
+        TextView mMacAddress;
     }
 }
