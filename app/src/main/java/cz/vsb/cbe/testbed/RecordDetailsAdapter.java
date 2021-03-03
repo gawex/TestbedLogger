@@ -6,7 +6,7 @@
  * @ide     Android Studio 4.1.2
  * @license GNU GPL v3
  * @brief   RecordDetailsAdapter.java
- * @lastmodify 2021/02/26 13:10:35
+ * @lastmodify 2021/03/03 12:42:35
  * @verbatim
 ----------------------------------------------------------------------
 Copyright (C) Bc. Lukas Tatarin, 2021
@@ -43,6 +43,7 @@ import java.util.List;
 
 import cz.vsb.cbe.testbed.chart.axisValueFormater.RecordValueFormater;
 import cz.vsb.cbe.testbed.sql.Record;
+import cz.vsb.cbe.testbed.sql.TestbedDevice;
 
 public class RecordDetailsAdapter extends BaseAdapter {
 
@@ -136,7 +137,7 @@ public class RecordDetailsAdapter extends BaseAdapter {
                 case DEVICE_ID:
                     mIconDrawableId = R.drawable.ic_device_id_20dp_color_fei;
                     mLabelId = R.string.record_details_adapter_device_id_label;
-                    mValue = "#" + String.format("%04X", record.getDeviceId());
+                    mValue = TestbedDevice.formatTestbedDeviceId(record.getDeviceId());
                     break;
 
                 case RECORD_KEY:
@@ -150,19 +151,19 @@ public class RecordDetailsAdapter extends BaseAdapter {
                         case BluetoothLeService.STEPS_DATA:
                             mIconDrawableId = R.drawable.ic_steps_20dp_color_fei;
                             mValue = RecordValueFormater.formatSteps(
-                                    "###,###", record.getValue());
+                                    RecordValueFormater.PATERN_6_0, record.getValue());
                             break;
 
                         case BluetoothLeService.HEART_RATE_DATA:
                             mIconDrawableId = R.drawable.ic_heart_20dp_color_fei;
                             mValue = RecordValueFormater.formatHearRate(
-                                    "###", record.getValue());
+                                    RecordValueFormater.PATERN_3_0, record.getValue());
                             break;
 
                         case BluetoothLeService.TEMPERATURE_DATA:
                             mIconDrawableId = R.drawable.ic_thermometer_20dp_color_fei;
                             mValue = RecordValueFormater.formatTemperature(
-                                    "##0.00", record.getValue());
+                                    RecordValueFormater.PATERN_3_2, record.getValue());
                             break;
 
                         default:
@@ -176,7 +177,7 @@ public class RecordDetailsAdapter extends BaseAdapter {
                 case RECORD_TIMESTAMP:
                     mIconDrawableId = R.drawable.ic_timestamp_20dp_color_fei;
                     mLabelId = R.string.record_details_adapter_record_timestamp_label;
-                    mValue = RecordValueFormater.formatTimeStamp(record.getTimeStamp());
+                    mValue = RecordValueFormater.formatTimeStampFull(record.getTimeStamp());
                     break;
 
                 default:
