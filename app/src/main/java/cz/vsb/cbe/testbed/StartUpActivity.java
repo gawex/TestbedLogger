@@ -81,7 +81,8 @@ public class StartUpActivity extends AppCompatActivity {
     private BluetoothAdapter mBluetoothAdapter;
     private Handler mFinishAppHandler;
     private ConditionsAdapter mStartUpConditionsAdapter;
-    final ActivityResultLauncher<Intent> mOnBluetoothAdapterEnabledActivityResult =
+
+    private final ActivityResultLauncher<Intent> mOnBluetoothAdapterEnabledActivityResult =
             registerForActivityResult(
                     new ActivityResultContracts.StartActivityForResult(),
                     new ActivityResultCallback<ActivityResult>() {
