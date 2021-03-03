@@ -93,21 +93,24 @@ public class RecodrsAdapter extends BaseAdapter {
         switch (mSensorType) {
             case R.id.pedometer:
                 viewHolder.mTxvValue.setText(
-                        RecordValueFormater.formatSteps("###,###", record.getValue()));
+                        RecordValueFormater.formatSteps(
+                                RecordValueFormater.PATERN_6_0, record.getValue()));
                 break;
 
             case R.id.heart_rate:
                 viewHolder.mTxvValue.setText(
-                        RecordValueFormater.formatHearRate("###", record.getValue()));
+                        RecordValueFormater.formatHearRate(
+                                RecordValueFormater.PATERN_3_0, record.getValue()));
                 break;
 
             case R.id.temperature:
                 viewHolder.mTxvValue.setText(
-                        RecordValueFormater.formatTemperature("##0.00", record.getValue()));
+                        RecordValueFormater.formatTemperature(
+                                RecordValueFormater.PATERN_3_2, record.getValue()));
                 break;
         }
         viewHolder.mTxvTimeStamp.setText(
-                RecordValueFormater.formatTimeStamp(record.getTimeStamp()));
+                RecordValueFormater.formatTimeStampFull(record.getTimeStamp()));
         return view;
     }
 
