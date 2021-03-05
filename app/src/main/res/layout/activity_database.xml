@@ -2,10 +2,9 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/activity_database_csl_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".DatabaseActivity">
+    tools:context=".activitiesAndServices.DatabaseActivity">
 
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/activity_database_tbl_select_view"
@@ -20,19 +19,16 @@
         app:tabSelectedTextColor="@android:color/white">
 
         <com.google.android.material.tabs.TabItem
-            android:id="@+id/activity_database_tbi_overview"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/activity_database_tbi_overview_label" />
 
         <com.google.android.material.tabs.TabItem
-            android:id="@+id/activity_database_tbi_chart_view"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/activity_database_tbi_chart_view_label" />
 
         <com.google.android.material.tabs.TabItem
-            android:id="@+id/activity_database_tbi_list_view"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/activity_database_tbi_list_view_label" />

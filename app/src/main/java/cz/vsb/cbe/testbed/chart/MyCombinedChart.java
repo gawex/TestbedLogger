@@ -1,12 +1,12 @@
 /*
- * @author  Bc. Lukas Tatarin
+  @author  Bc. Lukas Tatarin
  * @supervisor Ing. Jaromir Konecny, Ph.D.
  * @email   lukas@tatarin.cz
- * @version 1.00
+ * @version 1.10
  * @ide     Android Studio 4.1.2
  * @license GNU GPL v3
- * @brief   MyCombinedChart
- * @lastmodify 2021/02/15 12:37:47
+ * @brief   MyCombinedChart.java
+ * @lastmodify 2021/03/05 11:47:45
  * @verbatim
 ----------------------------------------------------------------------
 Copyright (C) Bc. Lukas Tatarin, 2021
@@ -28,6 +28,7 @@ See the GNU General Public License for more details.
 package cz.vsb.cbe.testbed.chart;
 
 import android.content.Context;
+import android.util.AttributeSet;
 import android.view.MotionEvent;
 
 import com.github.mikephil.charting.charts.CombinedChart;
@@ -39,11 +40,16 @@ public class MyCombinedChart extends CombinedChart implements OnChartGestureList
 
     private OnChartValueLongClickListener mOnChartValueLongClickListener;
 
+    public MyCombinedChart(Context context, AttributeSet attrs) {
+        super(context, attrs);
+    }
+
     public MyCombinedChart(Context context) {
         super(context);
     }
 
-    public void setOnChartValueLongClickListener(OnChartValueLongClickListener onChartValueClickListener) {
+    public void setOnChartValueLongClickListener(OnChartValueLongClickListener
+                                                         onChartValueClickListener) {
         this.mOnChartValueLongClickListener = onChartValueClickListener;
         setOnChartGestureListener(this);
     }
@@ -51,21 +57,25 @@ public class MyCombinedChart extends CombinedChart implements OnChartGestureList
     @Override
     public void onChartLongPressed(MotionEvent me) {
         Entry entry = getEntryByTouchPoint(me.getX(), me.getY());
-        mOnChartValueLongClickListener.onChartValueLongClickListener(entry);
+        if (entry != null) {
+            mOnChartValueLongClickListener.onValueSelected(entry);
+        }
     }
 
     @Override
-    public void onChartGestureStart(MotionEvent me, ChartTouchListener.ChartGesture lastPerformedGesture) {
+    public void onChartGestureStart(MotionEvent me,
+                                    ChartTouchListener.ChartGesture lastPerformedGesture) {
 
     }
 
     @Override
-    public void onChartGestureEnd(MotionEvent me, ChartTouchListener.ChartGesture lastPerformedGesture) {
+    public void onChartGestureEnd(MotionEvent me,
+                                  ChartTouchListener.ChartGesture lastPerformedGesture) {
 
     }
 
     public interface OnChartValueLongClickListener {
-        void onChartValueLongClickListener(Entry e);
+        void onValueSelected(Entry e);
     }
 
     @Override

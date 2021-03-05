@@ -22,9 +22,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".TestActivity"></activity>
         <activity
-            android:name=".StartUpActivity"
+            android:name=".activitiesAndServices.StartUpActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar">
@@ -35,20 +34,17 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".DiscoverDevicesActivity"
+            android:name=".activitiesAndServices.DiscoverDevicesActivity"
             android:configChanges="orientation|keyboardHidden"
             android:label="@string/activity_discover_devices_title"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".DatabaseActivity"
+            android:name=".activitiesAndServices.DatabaseActivity"
             android:configChanges="orientation|keyboardHidden"
             android:screenOrientation="portrait" />
-        <activity
-            android:name=".SettingsActivity"
-            android:label="@string/activity_settings_title" />
 
         <service
-            android:name=".BluetoothLeService"
+            android:name=".activitiesAndServices.BluetoothLeService"
             android:enabled="true"
             android:foregroundServiceType="location" />
     </application>

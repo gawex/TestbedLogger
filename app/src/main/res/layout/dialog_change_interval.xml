@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/dialog_change_interval_lnl_main"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:orientation="vertical"
@@ -19,13 +18,11 @@
         android:orientation="vertical">
 
         <LinearLayout
-            android:id="@+id/dialog_change_interval_lnl_labels"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal">
 
             <TextView
-                android:id="@+id/dialog_change_interval_txv_year"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
@@ -35,7 +32,6 @@
                 android:textStyle="bold" />
 
             <TextView
-                android:id="@+id/dialog_change_interval_txv_month"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
@@ -45,7 +41,6 @@
                 android:textStyle="bold" />
 
             <TextView
-                android:id="@+id/dialog_change_interval_txv_day_of_month"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
@@ -55,7 +50,6 @@
                 android:textStyle="bold" />
 
             <TextView
-                android:id="@+id/dialog_change_interval_txv_hour_of_day"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
@@ -65,7 +59,6 @@
                 android:textStyle="bold" />
 
             <TextView
-                android:id="@+id/dialog_change_interval_txv_minute"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
@@ -91,7 +84,6 @@
             android:thumbTint="@color/ColorFei" />
 
         <LinearLayout
-            android:id="@+id/dialog_change_interval_lnl_pickers"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal">

@@ -2,11 +2,11 @@
   @author  Bc. Lukas Tatarin
  * @supervisor Ing. Jaromir Konecny, Ph.D.
  * @email   lukas@tatarin.cz
- * @version 1.00
+ * @version 1.10
  * @ide     Android Studio 4.1.2
  * @license GNU GPL v3
- * @brief   Record
- * @lastmodify 2021/02/15 12:20:04
+ * @brief   Record.java
+ * @lastmodify 2021/03/05 12:01:36
  * @verbatim
 ----------------------------------------------------------------------
 Copyright (C) Bc. Lukas Tatarin, 2021

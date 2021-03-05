@@ -2,11 +2,11 @@
   @author  Bc. Lukas Tatarin
  * @supervisor Ing. Jaromir Konecny, Ph.D.
  * @email   lukas@tatarin.cz
- * @version 1.00
+ * @version 1.10
  * @ide     Android Studio 4.1.2
  * @license GNU GPL v3
  * @brief   TestbedDatabaseHelper.java
- * @lastmodify 2021/02/15 11:10:38
+ * @lastmodify 2021/03/05 12:03:43
  * @verbatim
 ----------------------------------------------------------------------
 Copyright (C) Bc. Lukas Tatarin, 2021

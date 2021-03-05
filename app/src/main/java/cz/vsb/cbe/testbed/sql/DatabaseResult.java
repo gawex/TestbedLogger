@@ -2,11 +2,11 @@
   @author  Bc. Lukas Tatarin
  * @supervisor Ing. Jaromir Konecny, Ph.D.
  * @email   lukas@tatarin.cz
- * @version 1.00
+ * @version 1.10
  * @ide     Android Studio 4.1.2
  * @license GNU GPL v3
  * @brief   DatabaseResult.java
- * @lastmodify 2021/02/26 14:15:34
+ * @lastmodify 2021/03/05 12:01:02
  * @verbatim
 ----------------------------------------------------------------------
 Copyright (C) Bc. Lukas Tatarin, 2021
@@ -27,9 +27,9 @@ See the GNU General Public License for more details.
 
 package cz.vsb.cbe.testbed.sql;
 
-public abstract class DatabaseResult<T> {
+public abstract class DatabaseResult {
 
-    public static final class Success<T> extends DatabaseResult<T> {
+    public static final class Success<T> extends DatabaseResult {
         public final T data;
 
         public Success(T data) {
@@ -37,7 +37,7 @@ public abstract class DatabaseResult<T> {
         }
     }
 
-    public static final class Error<T> extends DatabaseResult<T> {
+    public static final class Error extends DatabaseResult {
         public final Exception exception;
 
         public Error(Exception exception) {

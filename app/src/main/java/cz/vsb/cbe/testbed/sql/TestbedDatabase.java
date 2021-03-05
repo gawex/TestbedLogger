@@ -2,11 +2,11 @@
   @author  Bc. Lukas Tatarin
  * @supervisor Ing. Jaromir Konecny, Ph.D.
  * @email   lukas@tatarin.cz
- * @version 1.00
+ * @version 1.10
  * @ide     Android Studio 4.1.2
  * @license GNU GPL v3
- * @brief   TestbedDatabase
- * @lastmodify 2021/02/26 14:10:40
+ * @brief   TestbedDatabase.java
+ * @lastmodify 2021/03/05 12:03:19
  * @verbatim
 ----------------------------------------------------------------------
 Copyright (C) Bc. Lukas Tatarin, 2021
@@ -38,9 +38,6 @@ import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-import cz.vsb.cbe.testbed.chart.Result;
-
-@SuppressWarnings({"unchecked", "rawtypes"})
 public class TestbedDatabase {
 
     private final Executor mExecutor;
@@ -48,7 +45,6 @@ public class TestbedDatabase {
     public TestbedDatabase(Context context) {
         mContext = context;
         mExecutor = Executors.newSingleThreadExecutor();
-
     }
 
     private final Context mContext;
@@ -66,7 +62,7 @@ public class TestbedDatabase {
             newRecord.put(TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP,
                     System.currentTimeMillis());
             getWritableDatabase().insert(tableName, null, newRecord);
-            onInsertListener.onInsertDone(new Result.Success<>(value));
+            onInsertListener.onInsertDone(new DatabaseResult.Success<>(value));
         });
     }
 
@@ -114,13 +110,12 @@ public class TestbedDatabase {
                         break;
                 }
 
-                onSelectListener.onSelectDone(new Result.Success<>(
+                onSelectListener.onSelectDone(new DatabaseResult.Success<>(
                         getRecordsFromCursor(getReadableDatabase().query(
                                 tableName, columns, selection, selectionArgs, null,
                                 null, sortBy + sortOrder))));
             } catch (Exception e) {
-                //noinspection unchecked
-                onSelectListener.onSelectDone(new Result.Error<>(e));
+                onSelectListener.onSelectDone(new DatabaseResult.Error(e));
             }
         });
     }
@@ -277,13 +272,13 @@ public class TestbedDatabase {
                 String[] selectionArgs = new String[]{
                         Integer.toString(testbedDevice.getDeviceId()), dataType,
                         Long.toString(limitDate.getTime())};
-                onSelectListener.onSelectDone(new Result.Success<>(getRecordFromCursor(
+                onSelectListener.onSelectDone(new DatabaseResult.Success<>(getRecordFromCursor(
                         getReadableDatabase().query(tableName, columns, selection,
                                 selectionArgs, null, null,
                                 TestbedDatabaseHelper.Data.COLUMN_NAME_TIMESTAMP +
                                         " DESC LIMIT 1"))));
             } catch (EmptyCursorException e) {
-                onSelectListener.onSelectDone(new Result.Error<>(e));
+                onSelectListener.onSelectDone(new DatabaseResult.Error(e));
             }
         });
     }
@@ -320,12 +315,12 @@ public class TestbedDatabase {
         DEFAULT
     }
 
-    public interface OnInsertListener<T> {
-        void onInsertDone(Result<T> result);
+    public interface OnInsertListener {
+        void onInsertDone(DatabaseResult databaseResult);
     }
 
-    public interface OnSelectListener<T> {
-        void onSelectDone(Result<T> result);
+    public interface OnSelectListener {
+        void onSelectDone(DatabaseResult databaseResult);
     }
 
     public Record getFirstRecord(List<Record> records) {

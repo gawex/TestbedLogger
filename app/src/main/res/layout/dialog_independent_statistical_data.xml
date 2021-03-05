@@ -1,21 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/dialog_independent_statistical_data_lnl_main"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="4dp">
 
     <LinearLayout
-        android:id="@+id/dialog_independent_statistical_data_lnl_variations"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:baselineAligned="false"
         android:orientation="horizontal">
 
         <LinearLayout
-            android:id="@+id/dialog_independent_statistical_data_lnl_data_set_size"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_margin="2dp"
@@ -24,7 +21,6 @@
             android:orientation="vertical">
 
             <TextView
-                android:id="@+id/dialog_independent_statistical_data_txv_data_set_size_label"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:ellipsize="none"
@@ -53,7 +49,6 @@
         </LinearLayout>
 
         <LinearLayout
-            android:id="@+id/dialog_independent_statistical_data_lnl_mean_value"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_margin="2dp"
@@ -62,7 +57,6 @@
             android:orientation="vertical">
 
             <TextView
-                android:id="@+id/dialog_independent_statistical_data_txv_mean_value_label"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:ellipsize="none"
@@ -91,7 +85,6 @@
         </LinearLayout>
 
         <LinearLayout
-            android:id="@+id/dialog_independent_statistical_data_lnl_standard_deviation"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_margin="2dp"
@@ -100,7 +93,6 @@
             android:orientation="vertical">
 
             <TextView
-                android:id="@+id/dialog_independent_statistical_data_txv_standard_deviation_label"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:ellipsize="none"
@@ -130,14 +122,12 @@
     </LinearLayout>
 
     <LinearLayout
-        android:id="@+id/dialog_independent_statistical_data_lnl_quartils"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:baselineAligned="false"
         android:orientation="horizontal">
 
         <LinearLayout
-            android:id="@+id/dialog_independent_statistical_data_lnl_min_value"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_margin="2dp"
@@ -146,7 +136,6 @@
             android:orientation="vertical">
 
             <TextView
-                android:id="@+id/dialog_independent_statistical_data_txv_min_value_label"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:ellipsize="none"
@@ -198,7 +187,6 @@
         </LinearLayout>
 
         <LinearLayout
-            android:id="@+id/dialog_independent_statistical_data_lnl_median"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_margin="2dp"
@@ -207,7 +195,6 @@
             android:orientation="vertical">
 
             <TextView
-                android:id="@+id/dialog_independent_statistical_data_txv_median_label"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:ellipsize="none"
@@ -259,7 +246,6 @@
         </LinearLayout>
 
         <LinearLayout
-            android:id="@+id/dialog_independent_statistical_data_lnl_max_value"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_margin="2dp"
@@ -268,7 +254,6 @@
             android:orientation="vertical">
 
             <TextView
-                android:id="@+id/dialog_independent_statistical_data_txv_max_value_label"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:ellipsize="none"

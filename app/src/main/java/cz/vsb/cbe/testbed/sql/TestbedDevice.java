@@ -2,11 +2,11 @@
   @author  Bc. Lukas Tatarin
  * @supervisor Ing. Jaromir Konecny, Ph.D.
  * @email   lukas@tatarin.cz
- * @version 1.00
+ * @version 1.10
  * @ide     Android Studio 4.1.2
  * @license GNU GPL v3
- * @brief   TestbedDivice
- * @lastmodify 2021/02/15 11:10:38
+ * @brief   TestbedDevice.java
+ * @lastmodify 2021/03/05 12:04:32
  * @verbatim
 ----------------------------------------------------------------------
 Copyright (C) Bc. Lukas Tatarin, 2021
@@ -53,6 +53,14 @@ public class TestbedDevice implements Serializable {
     private boolean mDeIsLastConnected;
     private Date mDeTimeStamp;
 
+    public static String formatTestbedDeviceId(int testbedDeviceId) {
+        return "#" + String.format("%04X", testbedDeviceId);
+    }
+
+    public static String formatTestbedDeviceId(TestbedDevice testbedDevice) {
+        return "#" + String.format("%04X", testbedDevice.getDeviceId());
+    }
+
     public TestbedDevice(BluetoothDevice bluetoothDevice, int rssi) {
         mDeName = bluetoothDevice.getName();
         mDeMacAddress = bluetoothDevice.getAddress();
@@ -69,7 +77,6 @@ public class TestbedDevice implements Serializable {
         mDeTimeStamp = new Date(deTimeStamp);
     }
 
-    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean isTestbedDeviceDiscovered() {
         return mIsDeviceDiscovered;
     }

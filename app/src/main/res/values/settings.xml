@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-    <resources>
-        <string name="ble_devices_name">Testbed</string>
-        <string name="notification_channel_id">cz.vsb.cbe.testbed.LOGGING_CHANNEL</string>
-    </resources>

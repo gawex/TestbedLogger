@@ -1,13 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/dialog_export_data_lnl_main"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="4dp">
 
     <TextView
-        android:id="@+id/dialog_export_data_txv_data_for_export_label"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="2dp"
@@ -17,7 +15,6 @@
         android:textStyle="bold" />
 
     <LinearLayout
-        android:id="@+id/dialog_export_data_lnl_data_for_export"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_margin="2dp"
@@ -46,7 +43,6 @@
     </LinearLayout>
 
     <TextView
-        android:id="@+id/dialog_export_data_txv_devices_for_export_label"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="2dp"
