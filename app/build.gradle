@@ -7,8 +7,8 @@ android {
         applicationId "cz.vsb.cbe.testbed"
         minSdkVersion 23
         targetSdkVersion 30
-        versionCode 5
-        versionName "1.11"
+        versionCode 6
+        versionName "1.12"
         testInstrumentationRunner "androidx.graph_navigation.runner.AndroidJUnitRunner"
     }
     buildTypes {
