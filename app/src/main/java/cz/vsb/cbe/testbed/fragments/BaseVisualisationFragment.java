@@ -66,7 +66,7 @@ import cz.vsb.cbe.testbed.utils.RecordValueFormatter;
 import cz.vsb.cbe.testbed.utils.StatisticalData;
 
 @SuppressWarnings("ALL")
-public class BaseVisualisationFragment extends Fragment {
+public abstract class BaseVisualisationFragment extends Fragment {
 
     public static final int BLINK_TIME_MS = 250;
 
