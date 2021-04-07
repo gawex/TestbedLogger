@@ -34,7 +34,7 @@ import android.provider.BaseColumns;
 
 public class TestbedDatabaseHelper extends SQLiteOpenHelper {
 
-    protected static TestbedDatabaseHelper TestbedDatabaseHelper;
+    protected static TestbedDatabaseHelper mTestbedDatabaseHelper;
 
     // If you change the database schema, you must increment the database version.
     public static final int DATABASE_VERSION = 1;
@@ -64,10 +64,10 @@ public class TestbedDatabaseHelper extends SQLiteOpenHelper {
             "DROP TABLE IF EXISTS " + Data.TABLE_NAME;
 
     public static TestbedDatabaseHelper getInstance(Context context) {
-        if (TestbedDatabaseHelper == null) {
-            TestbedDatabaseHelper = new TestbedDatabaseHelper(context);
+        if (mTestbedDatabaseHelper == null) {
+            mTestbedDatabaseHelper = new TestbedDatabaseHelper(context);
         }
-        return TestbedDatabaseHelper;
+        return mTestbedDatabaseHelper;
     }
 
     private TestbedDatabaseHelper(Context context) {
@@ -112,7 +112,7 @@ public class TestbedDatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public synchronized void close() {
-        TestbedDatabaseHelper = null;
+        mTestbedDatabaseHelper = null;
         super.close();
     }
 }

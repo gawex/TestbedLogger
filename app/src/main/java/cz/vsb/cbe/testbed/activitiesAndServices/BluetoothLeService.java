@@ -196,7 +196,6 @@ public class BluetoothLeService extends Service {
                 } else {
                     broadcastUpdate(ACTION_GATT_ALL_DESCRIPTORS_WRITTEN);
                 }
-                //broadcastUpdate(ACTION_GATT_DESCRIPTOR_WRITTEN);
             }
         }
 
